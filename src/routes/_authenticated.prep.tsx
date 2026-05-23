@@ -52,7 +52,14 @@ function Prep() {
             </button>
           ))}
         </div>
-        {mut.isPending && <p className="mt-4 text-center text-sm text-muted-foreground">{t("recs.generating")}</p>}
+        {mut.isPending && (
+          <div className="fixed inset-0 z-50 grid place-items-center bg-background/80 backdrop-blur-sm">
+            <div className="flex flex-col items-center gap-3 rounded-2xl border border-border bg-card px-6 py-5 shadow-[var(--shadow-card)]">
+              <div className="size-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+              <p className="text-sm font-medium">{t("recs.generating")}</p>
+            </div>
+          </div>
+        )}
       </div>
     </>
   );
