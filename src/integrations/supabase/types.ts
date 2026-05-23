@@ -14,7 +14,203 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          full_name: string | null
+          id: string
+          language: string
+          updated_at: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          full_name?: string | null
+          id: string
+          language?: string
+          updated_at?: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          full_name?: string | null
+          id?: string
+          language?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      quiz_attempts: {
+        Row: {
+          answers: Json
+          completed_at: string
+          id: string
+          quiz_id: string
+          score: number
+          total: number
+          user_id: string
+          xp_earned: number
+        }
+        Insert: {
+          answers?: Json
+          completed_at?: string
+          id?: string
+          quiz_id: string
+          score: number
+          total: number
+          user_id: string
+          xp_earned?: number
+        }
+        Update: {
+          answers?: Json
+          completed_at?: string
+          id?: string
+          quiz_id?: string
+          score?: number
+          total?: number
+          user_id?: string
+          xp_earned?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quiz_attempts_quiz_id_fkey"
+            columns: ["quiz_id"]
+            isOneToOne: false
+            referencedRelation: "quizzes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      quizzes: {
+        Row: {
+          category: string
+          created_at: string
+          id: string
+          language: string
+          questions: Json
+          topic: string
+          user_id: string | null
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          id?: string
+          language?: string
+          questions: Json
+          topic: string
+          user_id?: string | null
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          id?: string
+          language?: string
+          questions?: Json
+          topic?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      recommendations: {
+        Row: {
+          career_name: string
+          created_at: string
+          id: string
+          match_score: number
+          reasoning: string
+          tags: string[]
+          universities: Json
+          user_id: string
+        }
+        Insert: {
+          career_name: string
+          created_at?: string
+          id?: string
+          match_score: number
+          reasoning: string
+          tags?: string[]
+          universities?: Json
+          user_id: string
+        }
+        Update: {
+          career_name?: string
+          created_at?: string
+          id?: string
+          match_score?: number
+          reasoning?: string
+          tags?: string[]
+          universities?: Json
+          user_id?: string
+        }
+        Relationships: []
+      }
+      streaks: {
+        Row: {
+          current_streak: number
+          last_active_date: string | null
+          longest_streak: number
+          total_xp: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          current_streak?: number
+          last_active_date?: string | null
+          longest_streak?: number
+          total_xp?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          current_streak?: number
+          last_active_date?: string | null
+          longest_streak?: number
+          total_xp?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_profile_data: {
+        Row: {
+          budget_currency: string | null
+          budget_monthly: number | null
+          country: string | null
+          favorite_subjects: Json
+          hobbies: string[]
+          interests: string
+          skills: string[]
+          university_type: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          budget_currency?: string | null
+          budget_monthly?: number | null
+          country?: string | null
+          favorite_subjects?: Json
+          hobbies?: string[]
+          interests?: string
+          skills?: string[]
+          university_type?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          budget_currency?: string | null
+          budget_monthly?: number | null
+          country?: string | null
+          favorite_subjects?: Json
+          hobbies?: string[]
+          interests?: string
+          skills?: string[]
+          university_type?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
