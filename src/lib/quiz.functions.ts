@@ -24,7 +24,7 @@ export const generateQuiz = createServerFn({ method: "POST" })
       method: "POST",
       headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
       body: JSON.stringify({
-        model: "google/gemini-3-flash-preview",
+        model: "google/gemini-2.5-flash",
         messages: [{ role: "system", content: sys }, { role: "user", content: userMsg }],
         tools: [{
           type: "function",
@@ -55,18 +55,33 @@ export const generateQuiz = createServerFn({ method: "POST" })
       }),
     });
 
-    if (res.status === 429) throw new Error("Rate limit. Try again soon.");
-    if (res.status === 402) throw new Error("AI credits exhausted.");
-    if (!res.ok) throw new Error(`AI error ${res.status}`);
+    if (res.status === 429) throw new Error("Demasiadas solicitudes. Intenta de nuevo en un momento.");
+    if (res.status === 402) throw new Error("Créditos de IA agotados.");
+    if (!res.ok) {
+      const t = await res.text().catch(() => "");
+      console.error("AI gateway error", res.status, t);
+      throw new Error(`Error de IA (${res.status})`);
+    }
 
     const json = await res.json();
-    const args = json.choices?.[0]?.message?.tool_calls?.[0]?.function?.arguments;
-    if (!args) throw new Error("AI returned no quiz");
-    const parsed = JSON.parse(args);
+    const msg = json.choices?.[0]?.message;
+    let parsed: { questions: unknown[] } | null = null;
+    const args = msg?.tool_calls?.[0]?.function?.arguments;
+    if (args) {
+      try { parsed = JSON.parse(args); } catch { /* ignore */ }
+    }
+    if (!parsed && typeof msg?.content === "string") {
+      const m = msg.content.match(/\{[\s\S]*\}/);
+      if (m) { try { parsed = JSON.parse(m[0]); } catch { /* ignore */ } }
+    }
+    if (!parsed?.questions?.length) {
+      console.error("AI returned no quiz", JSON.stringify(json).slice(0, 500));
+      throw new Error("La IA no devolvió un quiz válido. Intenta de nuevo.");
+    }
 
     const { data: row, error } = await supabase.from("quizzes").insert({
       user_id: userId, category: data.category, topic: data.topic,
-      language: data.language, questions: parsed.questions,
+      language: data.language, questions: parsed.questions as never,
     }).select("id").single();
     if (error) throw new Error(error.message);
     return { quizId: row.id };

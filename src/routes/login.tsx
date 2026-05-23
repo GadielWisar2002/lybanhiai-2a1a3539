@@ -23,13 +23,13 @@ function Login() {
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     setBusy(false);
     if (error) return toast.error(error.message);
-    navigate({ to: "/dashboard" });
+    navigate({ to: "/onboarding" });
   };
 
   const onGoogle = async () => {
     const r = await lovable.auth.signInWithOAuth("google", { redirect_uri: window.location.origin });
     if (r.error) toast.error("Google sign-in failed");
-    else if (!r.redirected) navigate({ to: "/dashboard" });
+    else if (!r.redirected) navigate({ to: "/onboarding" });
   };
 
   return (
