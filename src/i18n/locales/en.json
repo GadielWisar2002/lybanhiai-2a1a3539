@@ -1,0 +1,79 @@
+{
+  "app": { "name": "Lybanhi", "tagline": "Discover what to study and prepare to achieve it" },
+  "nav": { "dashboard": "Home", "library": "Library", "prep": "Prep", "profile": "Profile" },
+  "common": {
+    "continue": "Continue", "back": "Back", "next": "Next", "save": "Save",
+    "loading": "Loading…", "error": "Something went wrong", "retry": "Retry",
+    "start": "Start now", "viewAll": "View all", "language": "Language",
+    "signOut": "Sign out", "days": "days", "xp": "XP", "match": "match"
+  },
+  "language": { "es": "Español", "en": "English", "fr": "Français", "choose": "Choose your language" },
+  "landing": {
+    "title": "Discover what to study",
+    "subtitle": "Lybanhi helps you find the right career, best universities for your budget, and prepares you for exams.",
+    "cta": "Get started free", "login": "I have an account",
+    "f1Title": "Your unique profile", "f1Desc": "Tell us your hobbies, skills and interests.",
+    "f2Title": "AI-powered careers", "f2Desc": "Personalized recommendations and universities for you.",
+    "f3Title": "Get prepared", "f3Desc": "Admission, TOEFL and Cambridge quizzes."
+  },
+  "auth": {
+    "loginTitle": "Welcome back", "signupTitle": "Create your account",
+    "email": "Email", "password": "Password", "fullName": "Full name",
+    "login": "Sign in", "signup": "Sign up", "google": "Continue with Google",
+    "noAccount": "Don't have an account?", "haveAccount": "Already have an account?",
+    "or": "or", "checkEmail": "Check your email to confirm your account."
+  },
+  "onboarding": {
+    "title": "Discover your Strengths",
+    "subtitle": "Help us get to know you to find your ideal path.",
+    "step1": "Skills & interests", "step2": "Favorite subjects", "step3": "Budget & location",
+    "skillsTitle": "My Skills", "skillsHelp": "Pick the ones that best describe you",
+    "interestsTitle": "My Interests", "interestsQ": "What do you enjoy in your free time?",
+    "interestsPlaceholder": "Tell us about your hobbies, personal projects or curiosities...",
+    "subjectsTitle": "Favorite Subjects", "subjectsHelp": "Rate each subject from 1 to 5",
+    "budgetTitle": "Monthly budget (USD)", "countryTitle": "Country", "uniTypeTitle": "University type",
+    "uniPublic": "Public", "uniPrivate": "Private", "uniOnline": "Online", "uniAny": "Any",
+    "submit": "Get Recommendations",
+    "skills": {
+      "problemSolving": "Problem solving", "creativity": "Creativity", "leadership": "Leadership",
+      "dataAnalysis": "Data analysis", "communication": "Communication", "teamwork": "Teamwork",
+      "criticalThinking": "Critical thinking", "adaptability": "Adaptability", "empathy": "Empathy",
+      "discipline": "Discipline"
+    },
+    "subjects": {
+      "math": "Math", "science": "Science", "literature": "Literature", "tech": "Technology",
+      "art": "Art", "history": "History", "languages": "Languages", "biology": "Biology"
+    }
+  },
+  "dashboard": {
+    "hello": "Hi, {{name}}", "ready": "Ready to reach your goals today?",
+    "streak": "Streak", "nextChallenge": "Your next challenge",
+    "progress": "Your Progress", "viewDetails": "View detailed analysis",
+    "recommended": "Recommended Careers", "noRecsYet": "Generate your first recommendations",
+    "generateNow": "Generate now", "needGuidance": "Need guidance?",
+    "guidanceDesc": "We're here to help you plan your university journey."
+  },
+  "recs": {
+    "title": "Your Recommendations", "regen": "Regenerate with AI", "generating": "Generating with AI…",
+    "universities": "Suggested universities", "why": "Why it fits you",
+    "noResults": "No recommendations yet. Complete your profile to generate them."
+  },
+  "prep": {
+    "title": "Preparation", "subtitle": "Quizzes for your career and English exams",
+    "career": "Career", "english": "English", "toefl": "TOEFL", "cambridge": "Cambridge",
+    "logic": "Logic", "math": "Math", "language": "Language", "modules": "modules",
+    "startQuiz": "Start quiz", "generateQuiz": "Generate quiz with AI"
+  },
+  "quiz": {
+    "questionOf": "QUESTION {{n}} OF {{total}}", "progress": "YOUR PROGRESS",
+    "completed": "{{percent}}% completed", "next": "Next question", "finish": "Finish",
+    "resultTitle": "Quiz completed!", "yourScore": "Your score", "xpEarned": "XP earned",
+    "reviewAnswers": "Review answers", "backToPrep": "Back to Prep",
+    "correct": "Correct", "incorrect": "Incorrect"
+  },
+  "profile": {
+    "title": "Profile", "language": "App language", "streak": "Current streak",
+    "longestStreak": "Longest streak", "totalXp": "Total XP"
+  },
+  "library": { "title": "Library", "empty": "Coming soon: saved resources and study materials." }
+}

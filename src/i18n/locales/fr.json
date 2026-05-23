@@ -1,0 +1,79 @@
+{
+  "app": { "name": "Lybanhi", "tagline": "Découvre quoi étudier et prépare-toi à réussir" },
+  "nav": { "dashboard": "Accueil", "library": "Bibliothèque", "prep": "Prep", "profile": "Profil" },
+  "common": {
+    "continue": "Continuer", "back": "Précédent", "next": "Suivant", "save": "Enregistrer",
+    "loading": "Chargement…", "error": "Une erreur s'est produite", "retry": "Réessayer",
+    "start": "Commencer", "viewAll": "Tout voir", "language": "Langue",
+    "signOut": "Se déconnecter", "days": "jours", "xp": "XP", "match": "compatibilité"
+  },
+  "language": { "es": "Español", "en": "English", "fr": "Français", "choose": "Choisis ta langue" },
+  "landing": {
+    "title": "Découvre quoi étudier",
+    "subtitle": "Lybanhi t'aide à trouver la carrière idéale, les meilleures universités pour ton budget et te prépare aux examens.",
+    "cta": "Commencer gratuitement", "login": "J'ai déjà un compte",
+    "f1Title": "Ton profil unique", "f1Desc": "Parle-nous de tes hobbies, compétences et intérêts.",
+    "f2Title": "Carrières par IA", "f2Desc": "Des recommandations personnalisées et des universités pour toi.",
+    "f3Title": "Prépare-toi", "f3Desc": "Quiz d'admission, TOEFL et Cambridge."
+  },
+  "auth": {
+    "loginTitle": "Bon retour", "signupTitle": "Créer ton compte",
+    "email": "Email", "password": "Mot de passe", "fullName": "Nom complet",
+    "login": "Se connecter", "signup": "S'inscrire", "google": "Continuer avec Google",
+    "noAccount": "Pas de compte ?", "haveAccount": "Déjà un compte ?",
+    "or": "ou", "checkEmail": "Vérifie ton email pour confirmer ton compte."
+  },
+  "onboarding": {
+    "title": "Découvre tes Forces",
+    "subtitle": "Aide-nous à mieux te connaître pour trouver ta voie idéale.",
+    "step1": "Compétences et intérêts", "step2": "Matières préférées", "step3": "Budget et localisation",
+    "skillsTitle": "Mes Compétences", "skillsHelp": "Choisis celles qui te décrivent le mieux",
+    "interestsTitle": "Mes Intérêts", "interestsQ": "Qu'aimes-tu faire pendant ton temps libre ?",
+    "interestsPlaceholder": "Parle-nous de tes hobbies, projets personnels ou curiosités...",
+    "subjectsTitle": "Matières Préférées", "subjectsHelp": "Note chaque matière de 1 à 5",
+    "budgetTitle": "Budget mensuel (USD)", "countryTitle": "Pays", "uniTypeTitle": "Type d'université",
+    "uniPublic": "Publique", "uniPrivate": "Privée", "uniOnline": "En ligne", "uniAny": "Indifférent",
+    "submit": "Obtenir des recommandations",
+    "skills": {
+      "problemSolving": "Résolution de problèmes", "creativity": "Créativité", "leadership": "Leadership",
+      "dataAnalysis": "Analyse de données", "communication": "Communication", "teamwork": "Travail d'équipe",
+      "criticalThinking": "Pensée critique", "adaptability": "Adaptabilité", "empathy": "Empathie",
+      "discipline": "Discipline"
+    },
+    "subjects": {
+      "math": "Mathématiques", "science": "Sciences", "literature": "Littérature", "tech": "Technologie",
+      "art": "Art", "history": "Histoire", "languages": "Langues", "biology": "Biologie"
+    }
+  },
+  "dashboard": {
+    "hello": "Salut, {{name}}", "ready": "Prêt à atteindre tes objectifs aujourd'hui ?",
+    "streak": "Série", "nextChallenge": "Ton prochain défi",
+    "progress": "Ton Progrès", "viewDetails": "Voir l'analyse détaillée",
+    "recommended": "Carrières Recommandées", "noRecsYet": "Génère tes premières recommandations",
+    "generateNow": "Générer", "needGuidance": "Besoin d'aide ?",
+    "guidanceDesc": "On est là pour t'aider à planifier ton parcours universitaire."
+  },
+  "recs": {
+    "title": "Tes Recommandations", "regen": "Régénérer avec l'IA", "generating": "Génération par IA…",
+    "universities": "Universités suggérées", "why": "Pourquoi ça te correspond",
+    "noResults": "Pas encore de recommandations. Complète ton profil pour les générer."
+  },
+  "prep": {
+    "title": "Préparation", "subtitle": "Quiz pour ta carrière et examens d'anglais",
+    "career": "Carrière", "english": "Anglais", "toefl": "TOEFL", "cambridge": "Cambridge",
+    "logic": "Logique", "math": "Maths", "language": "Langue", "modules": "modules",
+    "startQuiz": "Commencer le quiz", "generateQuiz": "Générer un quiz par IA"
+  },
+  "quiz": {
+    "questionOf": "QUESTION {{n}} SUR {{total}}", "progress": "TON PROGRÈS",
+    "completed": "{{percent}}% complété", "next": "Question suivante", "finish": "Terminer",
+    "resultTitle": "Quiz terminé !", "yourScore": "Ton score", "xpEarned": "XP gagné",
+    "reviewAnswers": "Revoir les réponses", "backToPrep": "Retour à Prep",
+    "correct": "Correct", "incorrect": "Incorrect"
+  },
+  "profile": {
+    "title": "Profil", "language": "Langue de l'app", "streak": "Série actuelle",
+    "longestStreak": "Plus longue série", "totalXp": "XP total"
+  },
+  "library": { "title": "Bibliothèque", "empty": "Bientôt : ressources sauvegardées et matériels d'étude." }
+}
