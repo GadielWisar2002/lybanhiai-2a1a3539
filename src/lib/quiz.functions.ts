@@ -81,7 +81,7 @@ export const generateQuiz = createServerFn({ method: "POST" })
 
     const { data: row, error } = await supabase.from("quizzes").insert({
       user_id: userId, category: data.category, topic: data.topic,
-      language: data.language, questions: parsed.questions,
+      language: data.language, questions: parsed.questions as never,
     }).select("id").single();
     if (error) throw new Error(error.message);
     return { quizId: row.id };
