@@ -1,0 +1,86 @@
+{
+  "app": { "name": "Lybanhi", "tagline": "Descubre qué estudiar y prepárate para lograrlo" },
+  "nav": { "dashboard": "Inicio", "library": "Biblioteca", "prep": "Prep", "profile": "Perfil" },
+  "common": {
+    "continue": "Continuar", "back": "Anterior", "next": "Siguiente", "save": "Guardar",
+    "loading": "Cargando…", "error": "Algo salió mal", "retry": "Reintentar",
+    "start": "Empezar ahora", "viewAll": "Ver todas", "language": "Idioma",
+    "signOut": "Cerrar sesión", "days": "días", "xp": "XP", "match": "compatibilidad"
+  },
+  "language": { "es": "Español", "en": "English", "fr": "Français", "choose": "Elige tu idioma" },
+  "landing": {
+    "title": "Descubre qué estudiar",
+    "subtitle": "Lybanhi te ayuda a encontrar la carrera ideal, las mejores universidades para tu presupuesto y te prepara para los exámenes.",
+    "cta": "Comenzar gratis", "login": "Ya tengo cuenta",
+    "f1Title": "Tu perfil único", "f1Desc": "Cuéntanos tus hobbies, habilidades e intereses.",
+    "f2Title": "Carreras con IA", "f2Desc": "Recomendaciones personalizadas y universidades para ti.",
+    "f3Title": "Prepárate", "f3Desc": "Quizzes de admisión, TOEFL y Cambridge."
+  },
+  "auth": {
+    "loginTitle": "Bienvenido de vuelta", "signupTitle": "Crea tu cuenta",
+    "email": "Correo electrónico", "password": "Contraseña", "fullName": "Nombre completo",
+    "login": "Iniciar sesión", "signup": "Crear cuenta", "google": "Continuar con Google",
+    "noAccount": "¿No tienes cuenta?", "haveAccount": "¿Ya tienes cuenta?",
+    "or": "o", "checkEmail": "Revisa tu correo para confirmar tu cuenta."
+  },
+  "onboarding": {
+    "title": "Descubre tus Fortalezas",
+    "subtitle": "Ayúdanos a conocerte mejor para encontrar tu camino ideal.",
+    "step1": "Habilidades e intereses",
+    "step2": "Materias favoritas",
+    "step3": "Presupuesto y ubicación",
+    "skillsTitle": "Mis Habilidades",
+    "skillsHelp": "Selecciona las que mejor te describen",
+    "interestsTitle": "Mis Intereses",
+    "interestsQ": "¿Qué te gusta hacer en tu tiempo libre?",
+    "interestsPlaceholder": "Cuéntanos sobre tus hobbies, proyectos personales o curiosidades...",
+    "subjectsTitle": "Materias Favoritas",
+    "subjectsHelp": "Califica de 1 a 5 cada materia",
+    "budgetTitle": "Presupuesto mensual (USD)",
+    "countryTitle": "País",
+    "uniTypeTitle": "Tipo de universidad",
+    "uniPublic": "Pública", "uniPrivate": "Privada", "uniOnline": "Online", "uniAny": "Cualquiera",
+    "submit": "Obtener Recomendaciones",
+    "skills": {
+      "problemSolving": "Resolución de problemas", "creativity": "Creatividad", "leadership": "Liderazgo",
+      "dataAnalysis": "Análisis de datos", "communication": "Comunicación", "teamwork": "Trabajo en equipo",
+      "criticalThinking": "Pensamiento crítico", "adaptability": "Adaptabilidad", "empathy": "Empatía",
+      "discipline": "Disciplina"
+    },
+    "subjects": {
+      "math": "Matemáticas", "science": "Ciencias", "literature": "Literatura", "tech": "Tecnología",
+      "art": "Arte", "history": "Historia", "languages": "Idiomas", "biology": "Biología"
+    }
+  },
+  "dashboard": {
+    "hello": "Hola, {{name}}", "ready": "¿Listo para alcanzar tus metas hoy?",
+    "streak": "Racha", "nextChallenge": "Tu próximo desafío",
+    "progress": "Tu Progreso", "viewDetails": "Ver análisis detallado",
+    "recommended": "Carreras Recomendadas", "noRecsYet": "Genera tus primeras recomendaciones",
+    "generateNow": "Generar ahora", "needGuidance": "¿Necesitas orientación?",
+    "guidanceDesc": "Estamos aquí para ayudarte a planificar tu camino universitario."
+  },
+  "recs": {
+    "title": "Tus Recomendaciones", "regen": "Regenerar con IA", "generating": "Generando con IA…",
+    "universities": "Universidades sugeridas", "why": "Por qué encaja contigo",
+    "noResults": "Aún no hay recomendaciones. Completa tu perfil para generarlas."
+  },
+  "prep": {
+    "title": "Preparación", "subtitle": "Quizzes para tu carrera y exámenes de inglés",
+    "career": "Carrera", "english": "Inglés", "toefl": "TOEFL", "cambridge": "Cambridge",
+    "logic": "Lógica", "math": "Matemáticas", "language": "Lenguaje", "modules": "módulos",
+    "startQuiz": "Empezar quiz", "generateQuiz": "Generar quiz con IA"
+  },
+  "quiz": {
+    "questionOf": "PREGUNTA {{n}} DE {{total}}", "progress": "TU PROGRESO",
+    "completed": "{{percent}}% completado", "next": "Siguiente pregunta", "finish": "Terminar",
+    "resultTitle": "¡Quiz completado!", "yourScore": "Tu puntaje", "xpEarned": "XP ganado",
+    "reviewAnswers": "Revisar respuestas", "backToPrep": "Volver a Prep",
+    "correct": "Correcto", "incorrect": "Incorrecto"
+  },
+  "profile": {
+    "title": "Perfil", "language": "Idioma de la app", "streak": "Racha actual",
+    "longestStreak": "Racha más larga", "totalXp": "XP total"
+  },
+  "library": { "title": "Biblioteca", "empty": "Próximamente: recursos guardados y materiales de estudio." }
+}
