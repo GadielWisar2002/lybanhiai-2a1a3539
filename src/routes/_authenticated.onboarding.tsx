@@ -20,6 +20,7 @@ const SUBJECT_KEYS = ["math","science","literature","tech","art","history","lang
 function Onboarding() {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
+  const qc = useQueryClient();
   const save = useServerFn(saveOnboarding);
   const gen = useServerFn(generateRecommendations);
 
