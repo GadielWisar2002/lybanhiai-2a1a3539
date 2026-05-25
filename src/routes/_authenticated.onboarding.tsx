@@ -2,6 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useServerFn } from "@tanstack/react-start";
+import { useQueryClient } from "@tanstack/react-query";
 import { saveOnboarding } from "@/lib/onboarding.functions";
 import { generateRecommendations } from "@/lib/recommendations.functions";
 import { AppHeader } from "@/components/AppHeader";
