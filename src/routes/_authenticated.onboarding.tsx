@@ -45,6 +45,7 @@ function Onboarding() {
         budget_monthly: budget ? Number(budget) : null,
         country: country || undefined, university_type: uniType,
       }});
+      await qc.invalidateQueries({ queryKey: ["onboarding-done"] });
       toast.success(t("recs.generating"));
       await gen({ data: { language: i18n.language.slice(0,2) as "es" | "en" | "fr" } });
       navigate({ to: "/recommendations" });
