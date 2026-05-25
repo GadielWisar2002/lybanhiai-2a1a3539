@@ -10,7 +10,7 @@ function AuthLayout() {
   const { user, loading } = useAuth();
   const location = useLocation();
 
-  const { data: onboardingDone, isLoading: checking } = useQuery({
+  const { data: onboardingDone, isPending } = useQuery({
     enabled: !!user,
     queryKey: ["onboarding-done", user?.id],
     queryFn: async () => {
@@ -21,9 +21,10 @@ function AuthLayout() {
         .maybeSingle();
       return !!data;
     },
+    staleTime: 5 * 60 * 1000,
   });
 
-  if (loading || (user && checking)) {
+  if (loading || (user && (isPending || onboardingDone === undefined))) {
     return <div className="grid min-h-screen place-items-center bg-background text-muted-foreground">…</div>;
   }
   if (!user) return <Navigate to="/login" />;
