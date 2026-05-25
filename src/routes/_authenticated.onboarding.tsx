@@ -2,6 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useServerFn } from "@tanstack/react-start";
+import { useQueryClient } from "@tanstack/react-query";
 import { saveOnboarding } from "@/lib/onboarding.functions";
 import { generateRecommendations } from "@/lib/recommendations.functions";
 import { AppHeader } from "@/components/AppHeader";
@@ -19,6 +20,7 @@ const SUBJECT_KEYS = ["math","science","literature","tech","art","history","lang
 function Onboarding() {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
+  const qc = useQueryClient();
   const save = useServerFn(saveOnboarding);
   const gen = useServerFn(generateRecommendations);
 
@@ -43,6 +45,7 @@ function Onboarding() {
         budget_monthly: budget ? Number(budget) : null,
         country: country || undefined, university_type: uniType,
       }});
+      await qc.invalidateQueries({ queryKey: ["onboarding-done"] });
       toast.success(t("recs.generating"));
       await gen({ data: { language: i18n.language.slice(0,2) as "es" | "en" | "fr" } });
       navigate({ to: "/recommendations" });
