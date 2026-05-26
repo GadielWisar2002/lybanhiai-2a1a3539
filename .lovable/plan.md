@@ -1,38 +1,32 @@
-## Diagnóstico
+## Objetivo
 
-Cuando das clic en un botón de "Generar Quiz":
+Cuando el usuario toque una categoría en **/prep** (Lógica, Matemáticas, TOEFL, etc.), en lugar de generar el quiz inmediatamente, se abrirá un formulario con:
 
-1. La mutación arranca y se muestra el overlay "Generando con IA…".
-2. **Inmediatamente** `useAuth` recibe un evento de `onAuthStateChange` (Supabase dispara `INITIAL_SESSION` al montar y `TOKEN_REFRESHED` periódicamente).
-3. Dentro de ese listener llamamos `router.invalidate()` **y** `qc.invalidateQueries()` (invalida TODAS las queries).
-4. Eso re-renderiza el layout, vuelve a montar la página de Prep, y **aborta el fetch a `generateQuiz` antes de que termine** → el overlay desaparece y no pasa nada.
+- **Nivel escolar** (select): 3º secundaria, 1º preparatoria, 2º preparatoria, 3º preparatoria
+- **Número de preguntas** (select): 3, 5, 8, 10
+- **Tema** (chips, elige uno): lista de temas dependiente de la categoría (p. ej. Matemáticas → Números reales, Polinomios, Factorización, Ecuaciones cuadráticas, Funciones lineales, Razones y proporciones, Trigonometría básica, Probabilidad)
+- Botón **"Generar quiz con IA"**
 
-Pruebas:
-- La network log muestra muchísimas llamadas a `getDashboard` y a `user_profile_data` en pocos segundos (loop de invalidación), y **cero** llamadas a `/_serverFn/...generateQuiz_...`.
-- El runtime error "Maximum update depth exceeded" viene del mismo loop (`onAuthStateChange` → `router.invalidate` → render → estado → otra invalidación).
+Al confirmar, se llama a `generateQuiz` con los datos elegidos y se navega al quiz.
 
 ## Cambios
 
-### 1. `src/hooks/use-auth.tsx` (raíz del problema)
+### 1. `src/lib/quiz.functions.ts`
+- Extender `GenSchema` con dos campos opcionales:
+  - `level` (string, máx 60) — para inyectarlo al prompt
+  - `count` (int 3–10, default 8) — sustituye el "8" hardcodeado en el system prompt
+- El handler usa `data.count` y `data.level` al construir `sys`/`userMsg`. El resto (tool-calling, inserción a `quizzes`) queda igual. No se requiere migración de DB.
 
-- Solo invalidar cuando realmente cambia la sesión (`SIGNED_IN`, `SIGNED_OUT`, `USER_UPDATED`). Ignorar `INITIAL_SESSION` y `TOKEN_REFRESHED`.
-- Quitar `qc.invalidateQueries()` global (es agresivo y mata cualquier mutation/fetch en curso). El guard del onboarding ya invalida su propia query cuando hace falta.
-- Mantener `router.invalidate()` solo en sign-in/sign-out reales.
-- Comparar el `access_token` previo con el nuevo para no reaccionar a refrescos que mantienen el mismo usuario.
+### 2. `src/routes/_authenticated.prep.tsx`
+- Mantener la grid de 6 categorías, pero al hacer click ya no se llama a la mutación: se abre un **Dialog/sheet** (componente `Dialog` de shadcn ya disponible) con el formulario.
+- Estado local: `openCat` con la categoría seleccionada; `level`, `count`, `topic`.
+- Mapa local `TOPICS_BY_CATEGORY` con los temas por categoría (en es/en/fr vía i18n).
+- Botón "Generar quiz con IA" dispara la mutación existente con `{ category, topic, language, level, count }`. El overlay de carga y navegación al quiz se conservan.
 
-### 2. `src/routes/_authenticated.prep.tsx` (mejora menor)
+### 3. `src/i18n/locales/{es,en,fr}.json`
+- Añadir bloque `prep.form` con: `level`, `questions`, `topic`, `generate`, opciones de nivel (`gr9`, `prep1`, `prep2`, `prep3`), y listas de temas por categoría.
 
-- Si la mutación falla, el toast ya se muestra; añadir `console.error` para diagnóstico futuro.
-- Sin más cambios estructurales — al desaparecer el loop, los botones funcionan.
-
-## Lo que NO se toca
-
-- `src/lib/quiz.functions.ts` — el server function está correcto (Lovable AI Gateway con `google/gemini-2.5-flash` + tool-calling + fallback a JSON).
-- La UI del onboarding ni del dashboard.
-
-## Verificación
-
-1. Recargar `/prep`, dar clic a "Lógica" (o cualquier categoría).
-2. Network debe mostrar **una** llamada POST a `/_serverFn/...generateQuiz...` que dura unos segundos.
-3. Al terminar, navega a `/prep/quiz/<id>` y se ve el quiz.
-4. El error "Maximum update depth exceeded" desaparece de la consola.
+## Fuera de alcance
+- No cambia DB ni RLS.
+- No cambia el componente del quiz en sí (`_authenticated.prep.quiz.$quizId.tsx`).
+- No cambia el flujo de onboarding ni autenticación.

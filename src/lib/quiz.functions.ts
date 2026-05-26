@@ -6,6 +6,8 @@ const GenSchema = z.object({
   category: z.enum(["career", "toefl", "cambridge", "logic", "math", "language"]),
   topic: z.string().max(120),
   language: z.enum(["es", "en", "fr"]).default("es"),
+  level: z.string().max(60).optional(),
+  count: z.number().int().min(3).max(10).default(8),
 });
 
 export const generateQuiz = createServerFn({ method: "POST" })
@@ -17,7 +19,8 @@ export const generateQuiz = createServerFn({ method: "POST" })
     if (!apiKey) throw new Error("AI gateway not configured");
 
     const langLabel = data.language === "es" ? "Spanish" : data.language === "fr" ? "French" : "English";
-    const sys = `Generate an 8-question multiple-choice quiz in ${langLabel}. Each question has 4 options, exactly one correct.`;
+    const levelClause = data.level ? ` Target school level: ${data.level}.` : "";
+    const sys = `Generate a ${data.count}-question multiple-choice quiz in ${langLabel}.${levelClause} Each question has 4 options, exactly one correct.`;
     const userMsg = `Category: ${data.category}. Topic: ${data.topic}. Make it educational and appropriate for teenagers preparing for university.`;
 
     const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
