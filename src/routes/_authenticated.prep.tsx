@@ -135,11 +135,11 @@ function Prep() {
 
       {openCat && (
         <div
-          className="fixed inset-0 z-50 bg-background/70 backdrop-blur-sm"
+          className="fixed inset-0 z-50 flex items-end justify-center bg-background/70 backdrop-blur-sm sm:items-center sm:p-6"
           onClick={() => !mut.isPending && setOpenCat(null)}
         >
           <div
-            className="absolute inset-x-0 bottom-0 mx-auto flex max-h-[90vh] max-w-md flex-col overflow-y-auto rounded-t-3xl border border-border bg-card p-5 pb-8 shadow-[var(--shadow-card)]"
+            className="flex max-h-[90vh] w-full max-w-md flex-col overflow-y-auto rounded-t-3xl border border-border bg-card p-5 pb-8 shadow-[var(--shadow-card)] sm:rounded-3xl"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-start justify-between gap-3">
