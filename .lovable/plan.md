@@ -1,28 +1,21 @@
 ## Diagnóstico
 
-1. **"No se genera"**: en realidad sí se genera (estás ahora en `/prep/quiz/616c...`), pero el botón "Generar quiz con IA" aparece muy abajo en la pantalla y obliga a hacer scroll, así que parece que no responde.
-2. **"Muy abajo"**: el modal está anclado al borde inferior (`bottom-0`), pensado para móvil. En desktop (1021px) eso lo empuja muy abajo.
-3. **"Historial de quizzes"**: la página `Biblioteca` está vacía, no muestra los quizzes generados.
+El archivo `src/routes/_authenticated.prep.tsx` es el **layout padre** de `src/routes/_authenticated.prep.quiz.$quizId.tsx` (por la convención de nombres con puntos de TanStack Router: `prep.quiz.$quizId` = hijo de `prep`).
 
-## Cambios
+`prep.tsx` **no renderiza `<Outlet />`**, así que cuando navegas a `/prep/quiz/<id>` desde la biblioteca, la ruta hija sí matchea pero no tiene dónde renderizar — solo se ve la página de Prep otra vez, lo que parece "me regresa".
 
-### 1. `src/routes/_authenticated.prep.tsx` — Centrar el modal
-- Cambiar el contenedor del sheet: en lugar de `absolute inset-x-0 bottom-0 ... rounded-t-3xl`, usar centrado vertical en pantallas medianas (`md:` centered dialog) y mantener el bottom sheet en móvil.
-- Resultado: en desktop aparece como un diálogo centrado con el botón "Generar quiz con IA" siempre visible; en móvil sigue siendo un bottom sheet.
+## Cambio
 
-### 2. `src/lib/quiz.functions.ts` — Nuevo server fn `listMyQuizzes`
-- Server fn protegido con `requireSupabaseAuth` que devuelve `{ id, category, topic, language, created_at, questions_count }` del usuario, ordenado por `created_at desc`, límite 50.
+Renombrar el archivo del quiz para que **no** sea hijo de `prep` (usando el sufijo `_` que rompe el anidamiento en TanStack):
 
-### 3. `src/routes/_authenticated.library.tsx` — Historial de quizzes
-- Usar `useQuery` con `listMyQuizzes` para mostrar la lista.
-- Cada item: icono de categoría, título (tema), categoría + idioma + nº preguntas + fecha relativa, y al hacer click navega a `/prep/quiz/$quizId` para volver a hacerlo.
-- Estado vacío: mensaje actual.
-- Loading: spinner.
+- `src/routes/_authenticated.prep.quiz.$quizId.tsx` → `src/routes/_authenticated.prep_.quiz.$quizId.tsx`
 
-### 4. `src/i18n/locales/{es,en,fr}.json`
-- Añadir claves: `library.recentQuizzes`, `library.questions`, `library.retake`.
+El `prep_` (con guion bajo al final) le dice a TanStack: "la URL sigue siendo `/prep/quiz/$quizId` pero NO uses `prep.tsx` como layout padre". Así la página del quiz toma toda la pantalla como ya lo hace en su JSX.
+
+No se requieren cambios en el código del componente, ni en `library.tsx`, ni en `quiz.functions.ts`. El `Link` desde la biblioteca seguirá apuntando a `/prep/quiz/$quizId` (la URL no cambia, solo la jerarquía de layouts).
 
 ## Detalles técnicos
 
-- No se requieren cambios de esquema: la tabla `quizzes` ya guarda `user_id`, `category`, `topic`, `language`, `questions`, `created_at` (RLS ya filtra por usuario en el server fn autenticado).
-- El conteo de preguntas se calcula en el server con `jsonb_array_length(questions)` vía `select` raw, o más simple: traer `questions` y devolver `length` desde el handler (datos pequeños).
+- TanStack regenerará `src/routeTree.gen.ts` automáticamente.
+- El botón X dentro del quiz (`navigate({ to: "/prep" })`) sigue funcionando igual.
+- No toca base de datos ni server functions.
