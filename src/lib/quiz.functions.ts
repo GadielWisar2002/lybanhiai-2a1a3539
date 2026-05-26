@@ -100,6 +100,27 @@ export const getQuiz = createServerFn({ method: "GET" })
     return quiz;
   });
 
+export const listMyQuizzes = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabase, userId } = context;
+    const { data, error } = await supabase
+      .from("quizzes")
+      .select("id, category, topic, language, questions, created_at")
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false })
+      .limit(50);
+    if (error) throw new Error(error.message);
+    return (data ?? []).map((q) => ({
+      id: q.id as string,
+      category: q.category as string,
+      topic: q.topic as string,
+      language: q.language as string,
+      created_at: q.created_at as string,
+      questions_count: Array.isArray(q.questions) ? (q.questions as unknown[]).length : 0,
+    }));
+  });
+
 const SubmitSchema = z.object({
   quiz_id: z.string().uuid(),
   answers: z.array(z.number().int().min(0).max(3)).max(50),
