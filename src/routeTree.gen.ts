@@ -19,7 +19,7 @@ import { Route as AuthenticatedPrepRouteImport } from './routes/_authenticated.p
 import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authenticated.onboarding'
 import { Route as AuthenticatedLibraryRouteImport } from './routes/_authenticated.library'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated.dashboard'
-import { Route as AuthenticatedPrepQuizQuizIdRouteImport } from './routes/_authenticated.prep.quiz.$quizId'
+import { Route as AuthenticatedPrepQuizQuizIdRouteImport } from './routes/_authenticated.prep_.quiz.$quizId'
 
 const SignupRoute = SignupRouteImport.update({
   id: '/signup',
@@ -73,9 +73,9 @@ const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
 } as any)
 const AuthenticatedPrepQuizQuizIdRoute =
   AuthenticatedPrepQuizQuizIdRouteImport.update({
-    id: '/quiz/$quizId',
-    path: '/quiz/$quizId',
-    getParentRoute: () => AuthenticatedPrepRoute,
+    id: '/prep_/quiz/$quizId',
+    path: '/prep/quiz/$quizId',
+    getParentRoute: () => AuthenticatedRoute,
   } as any)
 
 export interface FileRoutesByFullPath {
@@ -85,7 +85,7 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/library': typeof AuthenticatedLibraryRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
-  '/prep': typeof AuthenticatedPrepRouteWithChildren
+  '/prep': typeof AuthenticatedPrepRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/recommendations': typeof AuthenticatedRecommendationsRoute
   '/prep/quiz/$quizId': typeof AuthenticatedPrepQuizQuizIdRoute
@@ -97,7 +97,7 @@ export interface FileRoutesByTo {
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/library': typeof AuthenticatedLibraryRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
-  '/prep': typeof AuthenticatedPrepRouteWithChildren
+  '/prep': typeof AuthenticatedPrepRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/recommendations': typeof AuthenticatedRecommendationsRoute
   '/prep/quiz/$quizId': typeof AuthenticatedPrepQuizQuizIdRoute
@@ -111,10 +111,10 @@ export interface FileRoutesById {
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/library': typeof AuthenticatedLibraryRoute
   '/_authenticated/onboarding': typeof AuthenticatedOnboardingRoute
-  '/_authenticated/prep': typeof AuthenticatedPrepRouteWithChildren
+  '/_authenticated/prep': typeof AuthenticatedPrepRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/_authenticated/recommendations': typeof AuthenticatedRecommendationsRoute
-  '/_authenticated/prep/quiz/$quizId': typeof AuthenticatedPrepQuizQuizIdRoute
+  '/_authenticated/prep_/quiz/$quizId': typeof AuthenticatedPrepQuizQuizIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -153,7 +153,7 @@ export interface FileRouteTypes {
     | '/_authenticated/prep'
     | '/_authenticated/profile'
     | '/_authenticated/recommendations'
-    | '/_authenticated/prep/quiz/$quizId'
+    | '/_authenticated/prep_/quiz/$quizId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -235,43 +235,34 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
-    '/_authenticated/prep/quiz/$quizId': {
-      id: '/_authenticated/prep/quiz/$quizId'
-      path: '/quiz/$quizId'
+    '/_authenticated/prep_/quiz/$quizId': {
+      id: '/_authenticated/prep_/quiz/$quizId'
+      path: '/prep/quiz/$quizId'
       fullPath: '/prep/quiz/$quizId'
       preLoaderRoute: typeof AuthenticatedPrepQuizQuizIdRouteImport
-      parentRoute: typeof AuthenticatedPrepRoute
+      parentRoute: typeof AuthenticatedRoute
     }
   }
 }
-
-interface AuthenticatedPrepRouteChildren {
-  AuthenticatedPrepQuizQuizIdRoute: typeof AuthenticatedPrepQuizQuizIdRoute
-}
-
-const AuthenticatedPrepRouteChildren: AuthenticatedPrepRouteChildren = {
-  AuthenticatedPrepQuizQuizIdRoute: AuthenticatedPrepQuizQuizIdRoute,
-}
-
-const AuthenticatedPrepRouteWithChildren =
-  AuthenticatedPrepRoute._addFileChildren(AuthenticatedPrepRouteChildren)
 
 interface AuthenticatedRouteChildren {
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedLibraryRoute: typeof AuthenticatedLibraryRoute
   AuthenticatedOnboardingRoute: typeof AuthenticatedOnboardingRoute
-  AuthenticatedPrepRoute: typeof AuthenticatedPrepRouteWithChildren
+  AuthenticatedPrepRoute: typeof AuthenticatedPrepRoute
   AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
   AuthenticatedRecommendationsRoute: typeof AuthenticatedRecommendationsRoute
+  AuthenticatedPrepQuizQuizIdRoute: typeof AuthenticatedPrepQuizQuizIdRoute
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedLibraryRoute: AuthenticatedLibraryRoute,
   AuthenticatedOnboardingRoute: AuthenticatedOnboardingRoute,
-  AuthenticatedPrepRoute: AuthenticatedPrepRouteWithChildren,
+  AuthenticatedPrepRoute: AuthenticatedPrepRoute,
   AuthenticatedProfileRoute: AuthenticatedProfileRoute,
   AuthenticatedRecommendationsRoute: AuthenticatedRecommendationsRoute,
+  AuthenticatedPrepQuizQuizIdRoute: AuthenticatedPrepQuizQuizIdRoute,
 }
 
 const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
@@ -287,3 +278,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}

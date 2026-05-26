@@ -8,7 +8,7 @@ import { X, ArrowLeft, ArrowRight, Check, Trophy } from "lucide-react";
 import { toast } from "sonner";
 import streakCap from "@/assets/streak-cap.png";
 
-export const Route = createFileRoute("/_authenticated/prep/quiz/$quizId")({
+export const Route = createFileRoute("/_authenticated/prep_/quiz/$quizId")({
   head: () => ({ meta: [{ title: "Quiz — Lybanhi" }] }),
   component: QuizPage,
 });
