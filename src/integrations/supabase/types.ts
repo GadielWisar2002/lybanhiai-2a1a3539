@@ -117,6 +117,7 @@ export type Database = {
           career_name: string
           created_at: string
           id: string
+          language: string
           match_score: number
           reasoning: string
           tags: string[]
@@ -127,6 +128,7 @@ export type Database = {
           career_name: string
           created_at?: string
           id?: string
+          language?: string
           match_score: number
           reasoning: string
           tags?: string[]
@@ -137,6 +139,7 @@ export type Database = {
           career_name?: string
           created_at?: string
           id?: string
+          language?: string
           match_score?: number
           reasoning?: string
           tags?: string[]
