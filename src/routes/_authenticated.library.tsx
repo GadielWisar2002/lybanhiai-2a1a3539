@@ -29,6 +29,16 @@ function timeAgo(iso: string, lang: string) {
   return rtf.format(-Math.round(diff / 86400), "day");
 }
 
+function localizeTopic(topic: string, lang: string): string {
+  // Strip any stacked review prefixes (Repaso:, Review:, Révision :) and re-apply in current lang
+  const prefixRe = /^\s*(Repaso\s*:\s*|Review\s*:\s*|Révision\s*:\s*)+/i;
+  const base = topic.replace(prefixRe, "");
+  const hadPrefix = base !== topic;
+  if (!hadPrefix) return topic;
+  const prefix = lang === "fr" ? "Révision : " : lang === "en" ? "Review: " : "Repaso: ";
+  return prefix + base;
+}
+
 function Library() {
   const { t, i18n } = useTranslation();
   const list = useServerFn(listMyQuizzes);
