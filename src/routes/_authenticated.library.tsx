@@ -40,7 +40,7 @@ function Library() {
       <div className="mx-auto max-w-md px-5 pt-4 pb-24">
         <h1 className="font-display text-2xl font-bold">{t("library.title")}</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          {t("library.recentQuizzes", { defaultValue: "Tus quizzes recientes" })}
+          {t("library.recentQuizzes")}
         </p>
 
         {isLoading ? (
@@ -69,7 +69,7 @@ function Library() {
                     <div className="min-w-0 flex-1">
                       <p className="truncate font-display text-sm font-semibold">{q.topic}</p>
                       <p className="truncate text-xs text-muted-foreground">
-                        {q.category} · {q.questions_count} {t("library.questions", { defaultValue: "preguntas" })} · {timeAgo(q.created_at, i18n.language)}
+                        {t(`prep.${q.category}`, { defaultValue: q.category })} · {q.questions_count} {t("library.questions")} · {timeAgo(q.created_at, i18n.language)}
                       </p>
                     </div>
                     <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
