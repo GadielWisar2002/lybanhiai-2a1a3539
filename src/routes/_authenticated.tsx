@@ -44,7 +44,7 @@ function AuthLayout() {
   });
 
   useEffect(() => {
-    if (profile?.language) {
+    if (profile?.language && onboardingDone !== undefined) {
       if (onboardingDone === false) {
         const clientLang = i18n.language.slice(0, 2);
         if (profile.language !== clientLang) {
