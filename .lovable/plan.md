@@ -1,21 +1,31 @@
-## Diagnóstico
+# Mejorar pantalla de resultados del quiz
 
-El archivo `src/routes/_authenticated.prep.tsx` es el **layout padre** de `src/routes/_authenticated.prep.quiz.$quizId.tsx` (por la convención de nombres con puntos de TanStack Router: `prep.quiz.$quizId` = hijo de `prep`).
+Cuando termines un quiz, además del puntaje verás:
+1. **Botón "Ver respuestas"** que muestra cada pregunta con tu respuesta, marcando ✅ correcta o ❌ incorrecta, y en las incorrectas resalta cuál era la respuesta correcta + la explicación.
+2. **Botón "Repasar las falladas"** que genera un nuevo quiz con la IA usando los mismos temas/conceptos de las preguntas que fallaste, pero con números/palabras/ejemplos diferentes (mismo nivel de dificultad).
+3. Se mantiene el botón actual de "Volver" a /prep.
 
-`prep.tsx` **no renderiza `<Outlet />`**, así que cuando navegas a `/prep/quiz/<id>` desde la biblioteca, la ruta hija sí matchea pero no tiene dónde renderizar — solo se ve la página de Prep otra vez, lo que parece "me regresa".
+## Cambios técnicos
 
-## Cambio
+**`src/lib/quiz.functions.ts`**
+- Nueva server fn `regenerateFromWrong({ quizId, wrongIndexes })`:
+  - Carga el quiz original (categoría, tema, idioma, preguntas falladas).
+  - Llama al AI gateway con un prompt que pide N preguntas nuevas equivalentes a las falladas (mismos conceptos, distintos números/palabras/contexto, misma dificultad, 4 opciones, 1 correcta).
+  - Inserta un nuevo registro en `quizzes` con `topic` = `"Repaso: <topic original>"` y devuelve `{ quizId }`.
+  - Reutiliza el mismo esquema de tool-calling que `generateQuiz`.
 
-Renombrar el archivo del quiz para que **no** sea hijo de `prep` (usando el sufijo `_` que rompe el anidamiento en TanStack):
+**`src/routes/_authenticated.prep_.quiz.$quizId.tsx`**
+- En el estado `done`, añadir:
+  - Vista colapsable "Ver respuestas": lista de preguntas con badge correcta/incorrecta, opciones (resaltando la elegida y la correcta), y `explanation` debajo.
+  - Botón "Repasar las falladas" (solo si hay al menos 1 fallada): llama `regenerateFromWrong` y navega al nuevo `quizId` cuando responde; muestra spinner mientras carga.
+  - Botón "Volver" se mantiene.
+- Guardar `answers` en el estado `done` para poder mostrar la revisión.
 
-- `src/routes/_authenticated.prep.quiz.$quizId.tsx` → `src/routes/_authenticated.prep_.quiz.$quizId.tsx`
+**i18n (`es.json`, `en.json`, `fr.json`)**
+- Nuevas claves: `quiz.viewAnswers`, `quiz.hideAnswers`, `quiz.retryWrong`, `quiz.correctAnswer`, `quiz.yourAnswer`, `quiz.explanation`, `quiz.allCorrect`, `quiz.generatingRetry`.
 
-El `prep_` (con guion bajo al final) le dice a TanStack: "la URL sigue siendo `/prep/quiz/$quizId` pero NO uses `prep.tsx` como layout padre". Así la página del quiz toma toda la pantalla como ya lo hace en su JSX.
+## No requiere
 
-No se requieren cambios en el código del componente, ni en `library.tsx`, ni en `quiz.functions.ts`. El `Link` desde la biblioteca seguirá apuntando a `/prep/quiz/$quizId` (la URL no cambia, solo la jerarquía de layouts).
-
-## Detalles técnicos
-
-- TanStack regenerará `src/routeTree.gen.ts` automáticamente.
-- El botón X dentro del quiz (`navigate({ to: "/prep" })`) sigue funcionando igual.
-- No toca base de datos ni server functions.
+- Cambios de base de datos (se reutiliza la tabla `quizzes`).
+- Cambios de auth/RLS.
+- Cambios en la biblioteca (el quiz de repaso aparecerá automáticamente en el historial).
