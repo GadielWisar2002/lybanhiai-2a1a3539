@@ -77,7 +77,7 @@ function Library() {
                       <Icon className="size-5" />
                     </div>
                     <div className="min-w-0 flex-1">
-                      <p className="truncate font-display text-sm font-semibold">{q.topic}</p>
+                      <p className="truncate font-display text-sm font-semibold">{localizeTopic(q.topic, i18n.language)}</p>
                       <p className="truncate text-xs text-muted-foreground">
                         {t(`prep.${q.category}`, { defaultValue: q.category })} · {q.questions_count} {t("library.questions")} · {timeAgo(q.created_at, i18n.language)}
                       </p>
