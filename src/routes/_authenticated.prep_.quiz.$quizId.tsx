@@ -2,7 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useTranslation } from "react-i18next";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { getQuiz, submitQuizAttempt, regenerateFromWrong } from "@/lib/quiz.functions";
 import { X, ArrowLeft, ArrowRight, Check, Trophy, Loader2, CheckCircle2, XCircle } from "lucide-react";
 import { toast } from "sonner";
@@ -29,6 +29,15 @@ function QuizPage() {
   const [done, setDone] = useState<{ score: number; xp: number; answers: number[] } | null>(null);
   const [showReview, setShowReview] = useState(false);
   const [retrying, setRetrying] = useState(false);
+
+  useEffect(() => {
+    setI(0);
+    setAnswers([]);
+    setDone(null);
+    setShowReview(false);
+    setRetrying(false);
+  }, [quizId]);
+
 
   if (isLoading || !quiz) return <div className="grid min-h-screen place-items-center text-muted-foreground">…</div>;
   const questions = quiz.questions as unknown as Q[];
