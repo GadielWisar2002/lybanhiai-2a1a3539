@@ -69,7 +69,11 @@
     "completed": "{{percent}}% complété", "next": "Question suivante", "finish": "Terminer",
     "resultTitle": "Quiz terminé !", "yourScore": "Ton score", "xpEarned": "XP gagné",
     "reviewAnswers": "Revoir les réponses", "backToPrep": "Retour à Prep",
-    "correct": "Correct", "incorrect": "Incorrect"
+    "correct": "Correct", "incorrect": "Incorrect",
+    "viewAnswers": "Voir les réponses", "hideAnswers": "Masquer les réponses",
+    "retryWrong": "Réviser les {{count}} ratées avec un nouvel exercice",
+    "correctAnswer": "Correcte", "yourAnswer": "Ta réponse",
+    "explanation": "Explication", "generatingRetry": "Génération de la révision…"
   },
   "profile": {
     "title": "Profil", "language": "Langue de l'app", "streak": "Série actuelle",

@@ -90,6 +90,92 @@ export const generateQuiz = createServerFn({ method: "POST" })
     return { quizId: row.id };
   });
 
+const RegenSchema = z.object({
+  quizId: z.string().uuid(),
+  wrongIndexes: z.array(z.number().int().min(0).max(49)).min(1).max(50),
+});
+
+export const regenerateFromWrong = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => RegenSchema.parse(input))
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    const apiKey = process.env.LOVABLE_API_KEY;
+    if (!apiKey) throw new Error("AI gateway not configured");
+
+    const { data: orig, error: oe } = await supabase
+      .from("quizzes")
+      .select("category, topic, language, questions")
+      .eq("id", data.quizId)
+      .single();
+    if (oe || !orig) throw new Error(oe?.message ?? "Quiz no encontrado");
+
+    const allQs = orig.questions as unknown as { q: string; options: string[]; correctIndex: number; explanation: string }[];
+    const wrong = data.wrongIndexes.map((i) => allQs[i]).filter(Boolean);
+    if (!wrong.length) throw new Error("No hay preguntas para repasar");
+
+    const lang = orig.language as string;
+    const langLabel = lang === "es" ? "Spanish" : lang === "fr" ? "French" : "English";
+    const sys = `Generate ${wrong.length} multiple-choice review questions in ${langLabel}. For each provided original question, create a NEW equivalent question testing the SAME concept and same difficulty but with DIFFERENT numbers, names, words, or context so the student can't just memorize. 4 options, exactly one correct. Keep the same order as input.`;
+    const userMsg = `Category: ${orig.category}. Topic: ${orig.topic}.\nOriginal questions to re-create (same concept, different surface):\n${wrong
+      .map((w, i) => `${i + 1}. ${w.q}\n   Correct: ${w.options[w.correctIndex]}`)
+      .join("\n")}`;
+
+    const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: "google/gemini-2.5-flash",
+        messages: [{ role: "system", content: sys }, { role: "user", content: userMsg }],
+        tools: [{
+          type: "function",
+          function: {
+            name: "submit_quiz",
+            parameters: {
+              type: "object",
+              properties: {
+                questions: {
+                  type: "array",
+                  items: {
+                    type: "object",
+                    properties: {
+                      q: { type: "string" },
+                      options: { type: "array", items: { type: "string" }, minItems: 4, maxItems: 4 },
+                      correctIndex: { type: "integer", minimum: 0, maximum: 3 },
+                      explanation: { type: "string" },
+                    },
+                    required: ["q", "options", "correctIndex", "explanation"],
+                  },
+                },
+              },
+              required: ["questions"],
+            },
+          },
+        }],
+        tool_choice: { type: "function", function: { name: "submit_quiz" } },
+      }),
+    });
+
+    if (res.status === 429) throw new Error("Demasiadas solicitudes. Intenta de nuevo en un momento.");
+    if (res.status === 402) throw new Error("Créditos de IA agotados.");
+    if (!res.ok) throw new Error(`Error de IA (${res.status})`);
+
+    const json = await res.json();
+    const msg = json.choices?.[0]?.message;
+    let parsed: { questions: unknown[] } | null = null;
+    const args = msg?.tool_calls?.[0]?.function?.arguments;
+    if (args) { try { parsed = JSON.parse(args); } catch { /* ignore */ } }
+    if (!parsed?.questions?.length) throw new Error("La IA no devolvió un quiz válido. Intenta de nuevo.");
+
+    const reviewTopic = lang === "fr" ? `Révision : ${orig.topic}` : lang === "en" ? `Review: ${orig.topic}` : `Repaso: ${orig.topic}`;
+    const { data: row, error } = await supabase.from("quizzes").insert({
+      user_id: userId, category: orig.category, topic: reviewTopic,
+      language: lang, questions: parsed.questions as never,
+    }).select("id").single();
+    if (error) throw new Error(error.message);
+    return { quizId: row.id as string };
+  });
+
 export const getQuiz = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) => z.object({ id: z.string().uuid() }).parse(input))
