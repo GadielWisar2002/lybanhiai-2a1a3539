@@ -64,7 +64,13 @@
     "title": "Préparation", "subtitle": "Quiz pour ta carrière et examens d'anglais",
     "career": "Carrière", "english": "Anglais", "toefl": "TOEFL", "cambridge": "Cambridge",
     "logic": "Logique", "math": "Maths", "language": "Langue", "modules": "modules",
-    "startQuiz": "Commencer le quiz", "generateQuiz": "Générer un quiz par IA"
+    "startQuiz": "Commencer le quiz", "generateQuiz": "Générer un quiz par IA",
+    "formTitle": "Générateur de quiz",
+    "formSubtitle": "Personnalisez votre quiz · Propulsé par l'IA",
+    "level": "Niveau scolaire",
+    "count": "Nombre de questions",
+    "questionsWord": "questions",
+    "topicPick": "Sujet (choisissez-en un)"
   },
   "quiz": {
     "questionOf": "QUESTION {{n}} SUR {{total}}", "progress": "TON PROGRÈS",

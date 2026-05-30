@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useTranslation } from "react-i18next";
 import { getDashboard } from "@/lib/quiz.functions";
@@ -17,11 +17,20 @@ export const Route = createFileRoute("/_authenticated/profile")({
 function Profile() {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
+  const qc = useQueryClient();
   const fn = useServerFn(getDashboard);
   const updLang = useServerFn(updateLanguage);
   const { data } = useQuery({ queryKey: ["dashboard"], queryFn: () => fn() });
 
-  const setLang = (l: "es"|"en"|"fr") => { i18n.changeLanguage(l); updLang({ data: { language: l } }).catch(() => {}); };
+  const setLang = (l: "es"|"en"|"fr") => {
+    i18n.changeLanguage(l);
+    updLang({ data: { language: l } })
+      .then(() => {
+        qc.invalidateQueries({ queryKey: ["profile-lang"] });
+        qc.invalidateQueries({ queryKey: ["dashboard"] });
+      })
+      .catch(() => {});
+  };
   const signOut = async () => { await supabase.auth.signOut(); navigate({ to: "/" }); };
 
   return (

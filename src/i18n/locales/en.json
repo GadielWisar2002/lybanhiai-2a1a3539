@@ -64,7 +64,13 @@
     "title": "Preparation", "subtitle": "Quizzes for your career and English exams",
     "career": "Career", "english": "English", "toefl": "TOEFL", "cambridge": "Cambridge",
     "logic": "Logic", "math": "Math", "language": "Language", "modules": "modules",
-    "startQuiz": "Start quiz", "generateQuiz": "Generate quiz with AI"
+    "startQuiz": "Start quiz", "generateQuiz": "Generate quiz with AI",
+    "formTitle": "Quiz Generator",
+    "formSubtitle": "Customize your quiz · Powered by AI",
+    "level": "School level",
+    "count": "Number of questions",
+    "questionsWord": "questions",
+    "topicPick": "Topic (choose one)"
   },
   "quiz": {
     "questionOf": "QUESTION {{n}} OF {{total}}", "progress": "YOUR PROGRESS",

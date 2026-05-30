@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useMutation } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useTranslation } from "react-i18next";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { generateQuiz } from "@/lib/quiz.functions";
 import { AppHeader } from "@/components/AppHeader";
 import { Brain, Calculator, Languages, GraduationCap, BookOpen, Sparkles, X, ArrowUpRight } from "lucide-react";
@@ -82,6 +82,13 @@ function Prep() {
   const [level, setLevel] = useState(LEVELS[lang][1].value);
   const [count, setCount] = useState<number>(5);
   const [topic, setTopic] = useState<string>("");
+
+  useEffect(() => {
+    setLevel(LEVELS[lang][1].value);
+    if (openCat) {
+      setTopic(TOPICS[openCat][lang][0]);
+    }
+  }, [lang, openCat]);
 
   const mut = useMutation({
     mutationFn: (vars: { category: Cat; topic: string; level: string; count: number }) =>
