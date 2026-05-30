@@ -56,7 +56,9 @@
   "recs": {
     "title": "Tes Recommandations", "regen": "Régénérer avec l'IA", "generating": "Génération par IA…",
     "universities": "Universités suggérées", "why": "Pourquoi ça te correspond",
-    "noResults": "Pas encore de recommandations. Complète ton profil pour les générer."
+    "noResults": "Pas encore de recommandations. Complète ton profil pour les générer.",
+    "langMismatch": "Ces recommandations sont dans une autre langue.",
+    "regenInLang": "Régénérer en français"
   },
   "prep": {
     "title": "Préparation", "subtitle": "Quiz pour ta carrière et examens d'anglais",
@@ -79,5 +81,5 @@
     "title": "Profil", "language": "Langue de l'app", "streak": "Série actuelle",
     "longestStreak": "Plus longue série", "totalXp": "XP total"
   },
-  "library": { "title": "Bibliothèque", "empty": "Bientôt : ressources sauvegardées et matériels d'étude." }
+  "library": { "title": "Bibliothèque", "empty": "Bientôt : ressources sauvegardées et matériels d'étude.", "recentQuizzes": "Tes quiz récents", "questions": "questions" }
 }

@@ -56,7 +56,9 @@
   "recs": {
     "title": "Your Recommendations", "regen": "Regenerate with AI", "generating": "Generating with AI…",
     "universities": "Suggested universities", "why": "Why it fits you",
-    "noResults": "No recommendations yet. Complete your profile to generate them."
+    "noResults": "No recommendations yet. Complete your profile to generate them.",
+    "langMismatch": "These recommendations are in another language.",
+    "regenInLang": "Regenerate in English"
   },
   "prep": {
     "title": "Preparation", "subtitle": "Quizzes for your career and English exams",
@@ -79,5 +81,5 @@
     "title": "Profile", "language": "App language", "streak": "Current streak",
     "longestStreak": "Longest streak", "totalXp": "Total XP"
   },
-  "library": { "title": "Library", "empty": "Coming soon: saved resources and study materials." }
+  "library": { "title": "Library", "empty": "Coming soon: saved resources and study materials.", "recentQuizzes": "Your recent quizzes", "questions": "questions" }
 }

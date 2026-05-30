@@ -94,6 +94,7 @@ export const generateRecommendations = createServerFn({ method: "POST" })
     const rows = parsed.recommendations.map((r) => ({
       user_id: userId, career_name: r.career_name, match_score: r.match_score,
       reasoning: r.reasoning, tags: r.tags, universities: r.universities,
+      language: lang,
     }));
     const { error } = await supabase.from("recommendations").insert(rows);
     if (error) throw new Error(error.message);

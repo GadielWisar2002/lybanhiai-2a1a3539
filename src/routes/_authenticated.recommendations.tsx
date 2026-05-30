@@ -20,11 +20,27 @@ function Recs() {
   const list = useServerFn(listRecommendations);
   const gen = useServerFn(generateRecommendations);
   const { data, isLoading } = useQuery({ queryKey: ["recs"], queryFn: () => list() });
+  const currentLang = i18n.language.slice(0, 2) as "es" | "en" | "fr";
   const regen = useMutation({
-    mutationFn: () => gen({ data: { language: i18n.language.slice(0,2) as "es"|"en"|"fr" } }),
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ["recs"] }); toast.success("✓"); },
+    mutationFn: () => gen({ data: { language: currentLang } }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["recs"] });
+      qc.invalidateQueries({ queryKey: ["dashboard"] });
+      toast.success("✓");
+    },
     onError: (e) => toast.error(e instanceof Error ? e.message : "Error"),
   });
+
+  const uniTypeLabel = (raw: string) => {
+    const k = (raw || "").toLowerCase();
+    if (/(public|públic|publique)/.test(k)) return t("onboarding.uniPublic");
+    if (/(private|privad|privée)/.test(k)) return t("onboarding.uniPrivate");
+    if (/(online|línea|ligne)/.test(k)) return t("onboarding.uniOnline");
+    return raw;
+  };
+
+  const storedLang = (data?.[0] as { language?: string } | undefined)?.language;
+  const langMismatch = !!storedLang && storedLang !== currentLang;
 
   return (
     <>
@@ -37,6 +53,16 @@ function Recs() {
             <Sparkles className="size-3.5" /> {regen.isPending ? t("recs.generating") : t("recs.regen")}
           </button>
         </div>
+
+        {langMismatch && (
+          <div className="mt-4 flex items-center justify-between gap-3 rounded-2xl border border-primary/20 bg-primary/5 p-3">
+            <p className="text-xs text-muted-foreground">{t("recs.langMismatch")}</p>
+            <button onClick={() => regen.mutate()} disabled={regen.isPending}
+              className="shrink-0 rounded-full bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground disabled:opacity-60">
+              {regen.isPending ? t("recs.generating") : t("recs.regenInLang")}
+            </button>
+          </div>
+        )}
 
         {isLoading && <div className="mt-6 h-40 animate-pulse rounded-2xl bg-muted" />}
         {!isLoading && data && data.length === 0 && (
@@ -65,7 +91,7 @@ function Recs() {
                         <p className="font-semibold text-sm">{u.name}</p>
                         <span className="text-[11px] font-semibold text-gold-foreground">${Math.round(u.estimated_cost_usd).toLocaleString()}/yr</span>
                       </div>
-                      <p className="text-xs text-muted-foreground">{u.country} · {u.type}</p>
+                      <p className="text-xs text-muted-foreground">{u.country} · {uniTypeLabel(u.type)}</p>
                       {u.notes && <p className="mt-1 text-xs text-muted-foreground">{u.notes}</p>}
                     </li>
                   ))}
