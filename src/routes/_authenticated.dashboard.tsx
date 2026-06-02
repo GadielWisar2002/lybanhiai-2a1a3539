@@ -1,11 +1,13 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useTranslation } from "react-i18next";
 import { getDashboard } from "@/lib/quiz.functions";
+import { generateRecommendations } from "@/lib/recommendations.functions";
 import { AppHeader } from "@/components/AppHeader";
 import { StreakBadge } from "@/components/StreakBadge";
 import { ArrowRight, Sparkles } from "lucide-react";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({ meta: [{ title: "Home — Lybanhi" }] }),
@@ -13,9 +15,25 @@ export const Route = createFileRoute("/_authenticated/dashboard")({
 });
 
 function Dashboard() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const qc = useQueryClient();
   const fn = useServerFn(getDashboard);
+  const gen = useServerFn(generateRecommendations);
   const { data, isLoading } = useQuery({ queryKey: ["dashboard"], queryFn: () => fn() });
+
+  const currentLang = i18n.language.slice(0, 2) as "es" | "en" | "fr";
+  const storedLang = (data?.recommendations?.[0] as { language?: string } | undefined)?.language;
+  const langMismatch = !!storedLang && storedLang !== currentLang;
+
+  const regen = useMutation({
+    mutationFn: () => gen({ data: { language: currentLang } }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["recs"] });
+      qc.invalidateQueries({ queryKey: ["dashboard"] });
+      toast.success("✓");
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Error"),
+  });
 
   const name = data?.profile?.full_name?.split(" ")[0] ?? "";
 
@@ -40,6 +58,17 @@ function Dashboard() {
             <h2 className="font-display text-lg font-semibold">{t("dashboard.recommended")}</h2>
             <Link to="/recommendations" className="text-sm font-semibold text-primary">{t("common.viewAll")}</Link>
           </div>
+
+          {langMismatch && (
+            <div className="mb-4 flex items-center justify-between gap-3 rounded-2xl border border-primary/20 bg-primary/5 p-3">
+              <p className="text-xs text-muted-foreground">{t("recs.langMismatch")}</p>
+              <button onClick={() => regen.mutate()} disabled={regen.isPending}
+                className="shrink-0 rounded-full bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground disabled:opacity-60">
+                {regen.isPending ? t("recs.generating") : t("recs.regenInLang")}
+              </button>
+            </div>
+          )}
+
           {isLoading && <div className="h-24 animate-pulse rounded-2xl bg-muted" />}
           {!isLoading && data && data.recommendations.length === 0 && (
             <Link to="/recommendations" className="flex items-center justify-between rounded-2xl border border-dashed border-border bg-card p-4">

@@ -28,6 +28,7 @@ function Profile() {
       .then(() => {
         qc.invalidateQueries({ queryKey: ["profile-lang"] });
         qc.invalidateQueries({ queryKey: ["dashboard"] });
+        qc.invalidateQueries({ queryKey: ["recs"] });
       })
       .catch(() => {});
   };
