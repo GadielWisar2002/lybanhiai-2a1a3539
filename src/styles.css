@@ -1,9 +1,10 @@
+@import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700;900&family=Exo+2:wght@400;500;600;700;900&display=swap');
 @import "tailwindcss" source(none);
 @source "../src";
 @import "tw-animate-css";
 
 
-@custom-variant dark (&:is(.dark *));
+@variant dark (&:is(.dark *));
 
 /*
  * Lybanhi design system — white, royal blue and gold.

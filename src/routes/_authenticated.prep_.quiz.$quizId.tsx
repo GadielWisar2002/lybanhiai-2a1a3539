@@ -72,10 +72,6 @@ function QuizPage() {
             <Trophy className="size-4" />
             <span className="font-semibold">+{done.xp} XP</span>
           </div>
-          <div className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 border border-primary/20 px-3 py-1.5 text-primary">
-            <img src={streakCap} alt="" className="size-4 shrink-0 select-none" />
-            <span className="font-semibold">+{done.score} {done.score === 1 ? t("games.coin", { defaultValue: "Sombrerito" }) : t("games.coins", { defaultValue: "Sombreritos" })}</span>
-          </div>
         </div>
 
         <div className="mt-6 flex flex-col gap-3">
