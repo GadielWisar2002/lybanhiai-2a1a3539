@@ -80,6 +80,16 @@ function GamesHub() {
     },
   });
 
+  const equipMutation = useMutation({
+    mutationFn: (blookId: string | null) => equipAvatar({ data: { blookId } }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["unlockedBlooks"] });
+      qc.invalidateQueries({ queryKey: ["dashboard"] });
+      toast.success(t("games.activeBlook", "Active Blook") + "!");
+    },
+    onError: () => toast.error(t("common.error")),
+  });
+
   if (dashLoading) {
     return (
       <>
@@ -103,16 +113,6 @@ function GamesHub() {
       </>
     );
   }
-
-  const equipMutation = useMutation({
-    mutationFn: (blookId: string | null) => equipAvatar({ data: { blookId } }),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["unlockedBlooks"] });
-      qc.invalidateQueries({ queryKey: ["dashboard"] });
-      toast.success(t("games.activeBlook", "Active Blook") + "!");
-    },
-    onError: () => toast.error(t("common.error")),
-  });
 
   if (activeTab === "avatar") {
     return (
