@@ -170,7 +170,7 @@ export function AvatarCustomizer({ onClose, inline = false }: AvatarCustomizerPr
   // Save changes to database
   const handleSave = async () => {
     try {
-      await saveAvatar({ config: previewConfig });
+      await saveAvatar({ data: { config: previewConfig } });
       setSavedConfig(previewConfig);
       qc.invalidateQueries({ queryKey: ["dashboard"] });
       toast.success(t("avatar.saveSuccess", "¡Avatar guardado y equipado con éxito!"));
