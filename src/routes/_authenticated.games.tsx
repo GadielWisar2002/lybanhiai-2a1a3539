@@ -444,6 +444,7 @@ function GamesHub() {
           </div>
         </div>
       )}
+      </div>
     </>
   );
 }
