@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useTranslation } from "react-i18next";
@@ -54,34 +54,36 @@ function Profile() {
       <div className="mx-auto max-w-md px-5 pt-4">
         <h1 className="font-display text-2xl font-bold">{t("profile.title")}</h1>
         
-        <div className="mt-4 flex items-center gap-3.5 rounded-2xl border border-border bg-card p-4 shadow-[var(--shadow-card)]">
-          {activeBlook ? (
-            <div className="grid size-14 shrink-0 place-items-center rounded-2xl bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/20 text-3xl select-none">
-              {activeBlook.emoji}
+        <Link to="/games" search={{ tab: "locker" }} className="block mt-4 transition hover:opacity-90 active:scale-[0.99]">
+          <div className="flex items-center gap-3.5 rounded-2xl border border-border bg-card p-4 shadow-[var(--shadow-card)] cursor-pointer">
+            {activeBlook ? (
+              <div className="grid size-14 shrink-0 place-items-center rounded-2xl bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/20 text-3xl select-none">
+                {activeBlook.emoji}
+              </div>
+            ) : (
+              <div className="grid size-14 shrink-0 place-items-center rounded-2xl bg-muted border border-border text-xl font-bold text-muted-foreground select-none">
+                {data?.profile?.full_name?.charAt(0).toUpperCase()}
+              </div>
+            )}
+            <div>
+              <p className="font-display font-bold text-lg leading-tight">{data?.profile?.full_name}</p>
+              <p className="mt-1 text-xs text-muted-foreground flex items-center gap-1.5">
+                {activeBlook ? (
+                  <>
+                    <span className={`inline-block size-2 rounded-full ${
+                      activeBlook.rarity === "legendary" ? "bg-amber-500" :
+                      activeBlook.rarity === "epic" ? "bg-purple-500" :
+                      activeBlook.rarity === "rare" ? "bg-blue-500" : "bg-emerald-500"
+                    }`} />
+                    <span className="capitalize">{t(`games.shopSection.rarity.${activeBlook.rarity}`, { defaultValue: activeBlook.rarity })} • {t(`games.blookName.${activeBlook.id}`, { defaultValue: activeBlook.name })}</span>
+                  </>
+                ) : (
+                  <span>{t("profile.noBlook", "No Blook equipped")}</span>
+                )}
+              </p>
             </div>
-          ) : (
-            <div className="grid size-14 shrink-0 place-items-center rounded-2xl bg-muted border border-border text-xl font-bold text-muted-foreground select-none">
-              {data?.profile?.full_name?.charAt(0).toUpperCase()}
-            </div>
-          )}
-          <div>
-            <p className="font-display font-bold text-lg leading-tight">{data?.profile?.full_name}</p>
-            <p className="mt-1 text-xs text-muted-foreground flex items-center gap-1.5">
-              {activeBlook ? (
-                <>
-                  <span className={`inline-block size-2 rounded-full ${
-                    activeBlook.rarity === "legendary" ? "bg-amber-500" :
-                    activeBlook.rarity === "epic" ? "bg-purple-500" :
-                    activeBlook.rarity === "rare" ? "bg-blue-500" : "bg-emerald-500"
-                  }`} />
-                  <span className="capitalize">{t(`games.shopSection.rarity.${activeBlook.rarity}`, { defaultValue: activeBlook.rarity })} • {t(`games.blookName.${activeBlook.id}`, { defaultValue: activeBlook.name })}</span>
-                </>
-              ) : (
-                <span>{t("profile.noBlook", "No Blook equipped")}</span>
-              )}
-            </p>
           </div>
-        </div>
+        </Link>
 
         <section className="mt-6 grid grid-cols-2 gap-3">
           <div className="rounded-2xl border border-border bg-card p-4">

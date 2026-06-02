@@ -2,7 +2,8 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useTranslation } from "react-i18next";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { z } from "zod";
 import { getDashboard } from "@/lib/quiz.functions";
 import { listUnlockedBlooks, buyBlookPack, equipBlook, BLOOKS, PACK_COSTS, type PackType, type Blook } from "@/lib/games.functions";
 import { AppHeader } from "@/components/AppHeader";
@@ -10,9 +11,13 @@ import { Gamepad2, Lock, ShoppingBag, Sparkles, Trophy } from "lucide-react";
 import { toast } from "sonner";
 import streakCap from "@/assets/streak-cap.png";
 
+const GamesSearchSchema = z.object({
+  tab: z.enum(["play", "locker", "shop"]).optional(),
+});
 
 export const Route = createFileRoute("/_authenticated/games")({
   head: () => ({ meta: [{ title: "Games — Lybanhi" }] }),
+  validateSearch: (search) => GamesSearchSchema.parse(search),
   component: GamesHub,
 });
 
@@ -20,6 +25,7 @@ function GamesHub() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const qc = useQueryClient();
+  const { tab } = Route.useSearch();
 
   const getDash = useServerFn(getDashboard);
   const listBlooks = useServerFn(listUnlockedBlooks);
@@ -29,9 +35,15 @@ function GamesHub() {
   const { data: dash } = useQuery({ queryKey: ["dashboard"], queryFn: () => getDash() });
   const { data: locker, isLoading: lockerLoading } = useQuery({ queryKey: ["unlockedBlooks"], queryFn: () => listBlooks() });
 
-  const [activeTab, setActiveTab] = useState<"play" | "locker" | "shop">("play");
+  const [activeTab, setActiveTab] = useState<"play" | "locker" | "shop">(tab ?? "play");
   const [revealedBlook, setRevealedBlook] = useState<Blook | null>(null);
   const [openingPack, setOpeningPack] = useState(false);
+
+  useEffect(() => {
+    if (tab) {
+      setActiveTab(tab);
+    }
+  }, [tab]);
 
   const coins = dash?.streak.coins ?? 0;
 
