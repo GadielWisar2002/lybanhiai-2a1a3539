@@ -7,7 +7,7 @@ import { z } from "zod";
 import { getDashboard } from "@/lib/quiz.functions";
 import { listUnlockedBlooks, buyBlookPack, equipBlook, BLOOKS, PACK_COSTS, convertXpToCoins, unlockGame, type PackType, type Blook } from "@/lib/games.functions";
 import { AppHeader } from "@/components/AppHeader";
-import { Gamepad2, Lock, ShoppingBag, Sparkles, Trophy } from "lucide-react";
+import { Gamepad2, Lock, ShoppingBag, Sparkles, Trophy, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 import streakCap from "@/assets/streak-cap.png";
 
@@ -42,6 +42,7 @@ function GamesHub() {
   const [openingPack, setOpeningPack] = useState(false);
   const [amountToConvert, setAmountToConvert] = useState(1);
   const [showConfirmBankModal, setShowConfirmBankModal] = useState(false);
+  const [selectedShopPack, setSelectedShopPack] = useState<PackType | null>(null);
 
   useEffect(() => {
     if (tab) {
@@ -335,7 +336,8 @@ function GamesHub() {
               return (
                 <div
                   key={pack}
-                  className="rounded-3xl border border-border bg-card p-4 shadow-[var(--shadow-card)] flex items-center justify-between gap-4 animate-in fade-in slide-in-from-bottom-2 duration-300"
+                  onClick={() => setSelectedShopPack(pack)}
+                  className="rounded-3xl border border-border bg-card p-4 shadow-[var(--shadow-card)] flex items-center justify-between gap-4 animate-in fade-in slide-in-from-bottom-2 duration-300 cursor-pointer hover:border-primary/55 transition active:scale-[0.99] select-none"
                 >
                   <div className="flex items-center gap-3">
                     <div className="grid size-12 place-items-center rounded-2xl bg-primary/10 text-primary">
@@ -355,9 +357,11 @@ function GamesHub() {
                     </div>
                   </div>
                   <button
-                    disabled={!isAffordable || buyMutation.isPending}
-                    onClick={() => buyMutation.mutate(pack)}
-                    className="shrink-0 inline-flex h-10 items-center justify-center gap-1.5 rounded-xl bg-gold px-4 font-semibold text-gold-foreground transition active:scale-95 disabled:opacity-60 disabled:scale-100 cursor-pointer disabled:cursor-not-allowed"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setSelectedShopPack(pack);
+                    }}
+                    className="shrink-0 inline-flex h-10 items-center justify-center gap-1.5 rounded-xl bg-gold px-4 font-semibold text-gold-foreground transition active:scale-95 cursor-pointer"
                   >
                     <img src={streakCap} alt="" className="size-4 shrink-0 select-none" />
                     <span>{cost}</span>
@@ -590,6 +594,152 @@ function GamesHub() {
                 {convertMutation.isPending ? "..." : t("common.continue", { defaultValue: "Confirmar" })}
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Blook Pack Details & Preview Modal */}
+      {selectedShopPack && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm px-6 animate-in fade-in">
+          <div className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-3xl p-5 shadow-2xl relative animate-in zoom-in-95">
+            
+            <div className="flex items-center justify-between border-b border-slate-800 pb-3 mb-4">
+              <h3 className="font-display font-black text-lg text-white capitalize">
+                {t("games.packTitle", { name: t(`games.shopSection.packName.${selectedShopPack}`, { defaultValue: selectedShopPack }), defaultValue: `${selectedShopPack} Pack` })}
+              </h3>
+              <button
+                onClick={() => setSelectedShopPack(null)}
+                className="text-slate-400 hover:text-slate-200 text-sm font-bold bg-slate-950 border border-slate-800 rounded-xl size-8 flex items-center justify-center cursor-pointer active:scale-95"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Description */}
+            <p className="text-xs text-slate-400 leading-relaxed bg-slate-950/50 p-3 rounded-2xl border border-slate-850 mb-4">
+              {selectedShopPack === "medieval" && "🛡️ Explora los misterios del reino medieval. ¡Desde valientes caballeros comunes hasta reyes legendarios protectores del castillo!"}
+              {selectedShopPack === "space" && "🌌 Viaja a los confines del espacio exterior. ¡Contiene astronautas, misteriosos alienígenas, cohetes veloces y ovnis legendarios!"}
+              {selectedShopPack === "cyber" && "🤖 Adéntrate en el futuro cibernético. ¡Colecciona robots autónomos, hackers astutos, cíborgs equipados y super inteligencias artificiales!"}
+              {selectedShopPack === "academic" && "🎓 El paquete académico definitivo. ¡Contiene lápices, cuadernos, libros, plumas de escribir, mochilas, microscopios, diplomas y el Birrete Legendario!"}
+              {selectedShopPack === "exclusive" && "👑 Personaliza tu avatar al máximo nivel. ¡Consigue peinados raros, togas doradas épicas, zapatillas ciber, gafas VR arcanas y al increíble fénix de fuego legendario!"}
+            </p>
+
+            {/* Blooks list preview */}
+            <div className="space-y-2 mb-5">
+              <h4 className="text-[10px] font-black tracking-widest text-slate-500 uppercase">
+                Blooks que puedes obtener:
+              </h4>
+              <div className="grid grid-cols-2 gap-2.5 max-h-[220px] overflow-y-auto pr-1">
+                {Object.values(BLOOKS)
+                  .filter((b) => b.pack === selectedShopPack)
+                  .map((blook) => {
+                    let rarityLabel = "Común";
+                    let rarityColor = "bg-slate-900 border-slate-800 text-slate-400";
+                    let dropChance = "50%";
+                    
+                    if (blook.rarity === "legendary") {
+                      rarityLabel = "Leyenda";
+                      rarityColor = "bg-amber-500/10 border-amber-500/20 text-amber-400 font-black animate-pulse";
+                      dropChance = "5%";
+                    } else if (blook.rarity === "epic") {
+                      rarityLabel = "Épico";
+                      rarityColor = "bg-purple-500/10 border-purple-500/20 text-purple-400 font-extrabold";
+                      dropChance = "15%";
+                    } else if (blook.rarity === "rare") {
+                      rarityLabel = "Raro";
+                      rarityColor = "bg-blue-500/10 border-blue-500/20 text-blue-400 font-bold";
+                      dropChance = "30%";
+                    }
+
+                    return (
+                      <div
+                        key={blook.id}
+                        className="rounded-xl border border-slate-850 bg-slate-950/70 p-2 flex items-center gap-2"
+                      >
+                        <span className="text-2xl select-none shrink-0">{blook.emoji}</span>
+                        <div className="min-w-0">
+                          <p className="text-[11px] font-bold text-white truncate leading-tight">
+                            {t(`games.blookName.${blook.id}`, { defaultValue: blook.name })}
+                          </p>
+                          <div className="flex gap-1 items-center mt-0.5">
+                            <span className={`text-[7px] uppercase tracking-wider px-1 rounded border leading-none ${rarityColor}`}>
+                              {rarityLabel}
+                            </span>
+                            <span className="text-[8px] font-mono text-slate-500">
+                              {dropChance}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+              </div>
+            </div>
+
+            {/* Purchase Checkout section */}
+            <div className="border-t border-slate-850 pt-4 flex flex-col gap-3">
+              <div className="flex items-center justify-between text-xs font-semibold">
+                <span className="text-slate-400">Costo del paquete:</span>
+                <div className="flex items-center gap-1 text-blue-400 font-black font-mono">
+                  <span>🎓</span>
+                  <span>{PACK_COSTS[selectedShopPack]} Sombreritos</span>
+                </div>
+              </div>
+
+              {/* Balance indicators & deficits */}
+              {coins >= PACK_COSTS[selectedShopPack] ? (
+                <div className="w-full bg-blue-950/30 border border-blue-500/20 text-blue-400 rounded-xl p-3 text-[11px] font-medium flex items-center gap-1.5 shadow-sm">
+                  <Sparkles className="size-4 text-blue-400" /> ¡Tienes saldo suficiente! Tu saldo actual: {coins} Sombreritos.
+                </div>
+              ) : (
+                <div className="w-full bg-red-950/30 border border-red-500/20 text-red-400 rounded-xl p-3 text-[11px] font-medium flex gap-2 items-start text-left shadow-sm">
+                  <AlertTriangle className="size-4 shrink-0 text-red-500 mt-0.5" />
+                  <div>
+                    <p className="font-bold text-red-300">Sombreritos insuficientes</p>
+                    <p className="text-[10px] text-red-400/90 mt-0.5 leading-snug">
+                      Te faltan {PACK_COSTS[selectedShopPack] - coins} Sombreritos para comprar este paquete.
+                    </p>
+                    <p className="text-[9px] text-red-500/70 mt-1">
+                      Puedes convertir tu XP acumulada en la pestaña **Convertir XP** de este mismo panel de Juegos.
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* Purchase confirmation button */}
+              <div className="flex gap-2 mt-1">
+                <button
+                  onClick={() => setSelectedShopPack(null)}
+                  className="flex-1 py-2.5 rounded-2xl bg-slate-950 text-slate-400 border border-slate-850 hover:bg-slate-800 text-xs font-bold transition active:scale-95 cursor-pointer"
+                >
+                  Cerrar
+                </button>
+                <button
+                  disabled={coins < PACK_COSTS[selectedShopPack] || buyMutation.isPending}
+                  onClick={() => {
+                    const pack = selectedShopPack;
+                    setSelectedShopPack(null); // close preview
+                    buyMutation.mutate(pack); // buy
+                  }}
+                  className={`flex-1 py-2.5 rounded-2xl font-black text-xs shadow-lg transition active:scale-95 flex items-center justify-center gap-1 ${
+                    coins >= PACK_COSTS[selectedShopPack]
+                      ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:opacity-90 shadow-blue-500/10 cursor-pointer"
+                      : "bg-slate-800 text-slate-500 border border-slate-850 opacity-60 cursor-not-allowed"
+                  }`}
+                >
+                  {buyMutation.isPending ? (
+                    <div className="size-4 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+                  ) : (
+                    <>
+                      <span>🎓</span>
+                      Comprar Paquete
+                    </>
+                  )}
+                </button>
+              </div>
+
+            </div>
+
           </div>
         </div>
       )}
