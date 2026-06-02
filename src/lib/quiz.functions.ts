@@ -240,13 +240,15 @@ export const submitQuizAttempt = createServerFn({ method: "POST" })
     }
     longest = Math.max(longest, current);
     const totalXp = (s?.total_xp ?? 0) + xp;
+    const coinsEarned = data.score;
+    const newCoins = (s?.coins ?? 0) + coinsEarned;
 
     await supabase.from("streaks").upsert({
       user_id: userId, current_streak: current, longest_streak: longest,
-      last_active_date: today, total_xp: totalXp, updated_at: new Date().toISOString(),
+      last_active_date: today, total_xp: totalXp, coins: newCoins, updated_at: new Date().toISOString(),
     });
 
-    return { xp, current_streak: current, total_xp: totalXp };
+    return { xp, current_streak: current, total_xp: totalXp, coins: newCoins };
   });
 
 export const getDashboard = createServerFn({ method: "GET" })
@@ -254,7 +256,7 @@ export const getDashboard = createServerFn({ method: "GET" })
   .handler(async ({ context }) => {
     const { supabase, userId } = context;
     const [profileRes, streakRes, recsRes] = await Promise.all([
-      supabase.from("profiles").select("full_name, language").eq("id", userId).maybeSingle(),
+      supabase.from("profiles").select("full_name, language, active_blook_id").eq("id", userId).maybeSingle(),
       supabase.from("streaks").select("*").eq("user_id", userId).maybeSingle(),
       supabase.from("recommendations").select("id, career_name, match_score, tags, language").eq("user_id", userId).order("match_score", { ascending: false }).limit(3),
     ]);
@@ -286,6 +288,7 @@ export const getDashboard = createServerFn({ method: "GET" })
         current_streak: current,
         longest_streak: s?.longest_streak ?? 0,
         total_xp: s?.total_xp ?? 0,
+        coins: s?.coins ?? 0,
         last_active_date: s?.last_active_date ?? null,
         is_active_today: isActiveToday,
       },

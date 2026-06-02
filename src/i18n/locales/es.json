@@ -1,6 +1,6 @@
 {
   "app": { "name": "Lybanhi", "tagline": "Descubre qué estudiar y prepárate para lograrlo" },
-  "nav": { "dashboard": "Inicio", "library": "Biblioteca", "prep": "Prep", "profile": "Perfil" },
+  "nav": { "dashboard": "Inicio", "library": "Biblioteca", "prep": "Prep", "games": "Juegos", "profile": "Perfil" },
   "common": {
     "continue": "Continuar", "back": "Anterior", "next": "Siguiente", "save": "Guardar",
     "loading": "Cargando…", "error": "Algo salió mal", "retry": "Reintentar",
@@ -90,7 +90,7 @@
   },
   "profile": {
     "title": "Perfil", "language": "Idioma de la app", "streak": "Racha actual",
-    "longestStreak": "Racha más larga", "totalXp": "XP total"
+    "longestStreak": "Racha más larga", "totalXp": "XP total", "noBlook": "Sin Blook equipado"
   },
   "library": { "title": "Biblioteca", "empty": "Próximamente: recursos guardados y materiales de estudio.", "recentQuizzes": "Tus quizzes recientes", "questions": "preguntas" }
 }

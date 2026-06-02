@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { Home, BookOpen, NotebookPen, User } from "lucide-react";
+import { Home, BookOpen, NotebookPen, Gamepad2, User } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 export function BottomNav() {
@@ -8,6 +8,7 @@ export function BottomNav() {
     { to: "/dashboard", icon: Home, label: t("nav.dashboard") },
     { to: "/library", icon: BookOpen, label: t("nav.library") },
     { to: "/prep", icon: NotebookPen, label: t("nav.prep") },
+    { to: "/games", icon: Gamepad2, label: t("nav.games") },
     { to: "/profile", icon: User, label: t("nav.profile") },
   ] as const;
 

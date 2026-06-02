@@ -10,6 +10,8 @@ import { StreakBadge } from "@/components/StreakBadge";
 import { ArrowRight, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 
+import { BLOOKS } from "@/lib/games.functions";
+
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({ meta: [{ title: "Home — Lybanhi" }] }),
   component: Dashboard,
@@ -42,12 +44,16 @@ function Dashboard() {
   }, [langMismatch, regen]);
 
   const name = data?.profile?.full_name?.split(" ")[0] ?? "";
+  const activeBlook = data?.profile?.active_blook_id ? BLOOKS[data.profile.active_blook_id] : null;
 
   return (
     <>
       <AppHeader right={data ? <StreakBadge days={data.streak.current_streak} active={data.streak.is_active_today} /> : null} />
       <div className="mx-auto max-w-md px-5 pt-4">
-        <h1 className="font-display text-3xl font-bold leading-tight">{t("dashboard.hello", { name })}</h1>
+        <h1 className="font-display text-3xl font-bold leading-tight flex items-center gap-2">
+          {activeBlook && <span className="text-3xl select-none">{activeBlook.emoji}</span>}
+          <span>{t("dashboard.hello", { name })}</span>
+        </h1>
         <p className="mt-1 text-sm text-muted-foreground">{t("dashboard.ready")}</p>
 
         <section className="mt-5 overflow-hidden rounded-3xl bg-[linear-gradient(135deg,_var(--primary),_var(--primary-glow))] p-5 text-primary-foreground shadow-[var(--shadow-elegant)]">
