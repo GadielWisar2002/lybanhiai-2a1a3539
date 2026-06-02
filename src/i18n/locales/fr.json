@@ -87,6 +87,8 @@
   },
   "library": { "title": "Bibliothèque", "empty": "Bientôt : ressources sauvegardées et matériels d'étude.", "recentQuizzes": "Tes quiz récents", "questions": "questions" },
   "games": {
+    "coin": "Diplôme",
+    "coins": "Diplômes",
     "title": "Jeux",
     "subtitle": "Dépense des diplômes pour jouer et collectionner des avatars !",
     "play": "Jouer",

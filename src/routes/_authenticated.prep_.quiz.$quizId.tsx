@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useTranslation } from "react-i18next";
 import { useState, useEffect } from "react";
@@ -16,6 +16,7 @@ export const Route = createFileRoute("/_authenticated/prep_/quiz/$quizId")({
 type Q = { q: string; options: string[]; correctIndex: number; explanation: string };
 
 function QuizPage() {
+  const qc = useQueryClient();
   const { quizId } = Route.useParams();
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -66,8 +67,15 @@ function QuizPage() {
         <h1 className="mt-4 font-display text-3xl font-bold">{t("quiz.resultTitle")}</h1>
         <p className="mt-2 text-muted-foreground">{t("quiz.yourScore")}</p>
         <p className="mt-1 font-display text-5xl font-bold text-primary">{done.score}/{total}</p>
-        <div className="mt-4 inline-flex items-center gap-2 rounded-full bg-gold/20 px-3 py-1.5">
-          <Trophy className="size-4 text-gold-foreground" /><span className="font-semibold">+{done.xp} XP</span>
+        <div className="mt-4 flex flex-wrap justify-center gap-2.5">
+          <div className="inline-flex items-center gap-1.5 rounded-full bg-gold/20 px-3 py-1.5 text-gold-foreground">
+            <Trophy className="size-4" />
+            <span className="font-semibold">+{done.xp} XP</span>
+          </div>
+          <div className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 border border-primary/20 px-3 py-1.5 text-primary">
+            <img src={streakCap} alt="" className="size-4 shrink-0 select-none" />
+            <span className="font-semibold">+{done.score} {done.score === 1 ? t("games.coin", { defaultValue: "Sombrerito" }) : t("games.coins", { defaultValue: "Sombreritos" })}</span>
+          </div>
         </div>
 
         <div className="mt-6 flex flex-col gap-3">
@@ -162,6 +170,7 @@ function QuizPage() {
     try {
       const r = await submit({ data: { quiz_id: quizId, answers, score, total } });
       setDone({ score, xp: r.xp, answers });
+      await qc.invalidateQueries({ queryKey: ["dashboard"] });
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Error");
     }

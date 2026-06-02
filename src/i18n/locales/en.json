@@ -87,6 +87,8 @@
   },
   "library": { "title": "Library", "empty": "Coming soon: saved resources and study materials.", "recentQuizzes": "Your recent quizzes", "questions": "questions" },
   "games": {
+    "coin": "Graduation Cap",
+    "coins": "Graduation Caps",
     "title": "Games",
     "subtitle": "Spend coins to play & collect avatars!",
     "play": "Play",

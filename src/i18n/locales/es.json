@@ -94,6 +94,8 @@
   },
   "library": { "title": "Biblioteca", "empty": "Próximamente: recursos guardados y materiales de estudio.", "recentQuizzes": "Tus quizzes recientes", "questions": "preguntas" },
   "games": {
+    "coin": "Sombrerito",
+    "coins": "Sombreritos",
     "title": "Juegos",
     "subtitle": "¡Usa tus sombreritos para jugar y coleccionar avatares!",
     "play": "Jugar",
