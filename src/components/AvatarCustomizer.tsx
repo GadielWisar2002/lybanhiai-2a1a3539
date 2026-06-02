@@ -349,7 +349,7 @@ export function AvatarCustomizer({ onClose, inline = false }: AvatarCustomizerPr
   const canBuy = selectedItem && !owned && missingBalance <= 0;
 
   return (
-    <div className="min-h-screen bg-[#070913] text-slate-100 relative overflow-x-hidden font-sans">
+    <div className="min-h-screen bg-[#070913] text-slate-100 relative overflow-x-hidden font-sans pb-24 lg:pb-0">
       {/* Absolute glow overlays for vibrant mockup feel */}
       <div className="absolute top-0 left-1/4 w-[600px] h-[600px] bg-purple-500/10 rounded-full blur-[160px] pointer-events-none z-0" />
       <div className="absolute bottom-10 right-1/4 w-[500px] h-[500px] bg-indigo-500/10 rounded-full blur-[140px] pointer-events-none z-0" />
@@ -389,21 +389,85 @@ export function AvatarCustomizer({ onClose, inline = false }: AvatarCustomizerPr
         </div>
       </header>
 
-      {/* MAIN 4-COLUMN DASHBOARD LAYOUT */}
-      <main className="max-w-[1400px] mx-auto px-6 py-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-5 relative z-10">
+      {/* MAIN 4-COLUMN RESPONSIVE LAYOUT (ADAPTIVE FOR MOBILE VIEWPORTS) */}
+      <main className="max-w-[1400px] mx-auto px-6 py-6 flex flex-col lg:grid lg:grid-cols-12 gap-5 relative z-10">
         
         {/* ==========================================
-            COLUMN 1: GENDER SELECTOR & VERTICAL SECTIONS (Col-span 2.5)
+            COLUMN 3: VISUAL 360 PREVIEW & FLOATING TOOLS (Col-span 3)
+            ALWAYS RENDER FIRST ON MOBILE FOR INSTANT VISIBILITY
             ========================================== */}
-        <div className="lg:col-span-3 flex flex-col gap-4">
-          <div className="bg-[#0B0F1B]/95 backdrop-blur-md border border-slate-800/80 rounded-3xl p-5 shadow-2xl flex-1 flex flex-col justify-between min-h-[500px]">
+        <div className="lg:col-span-3 flex flex-col gap-4 order-1 lg:order-3">
+          <div className="bg-[#0B0F1B]/95 backdrop-blur-md border border-slate-800/80 rounded-3xl p-5 shadow-2xl flex flex-col justify-between min-h-0 lg:min-h-[500px]">
+            <div>
+              <div className="text-center mb-1">
+                <span className="text-[10px] font-black uppercase tracking-widest text-purple-400 block">VISTA PREVIA 360°</span>
+                <span className="text-[9px] text-slate-500 font-medium">Arrastra para rotar</span>
+              </div>
+
+              {/* Main character preview panel */}
+              <div className="w-full aspect-[4/5] max-h-[300px] lg:max-h-none bg-gradient-to-b from-[#0F1426]/50 to-[#0A0D17]/80 border border-slate-800/50 rounded-3xl relative shadow-[inset_0_2px_20px_rgba(0,0,0,0.6)] flex items-center justify-center overflow-hidden my-4">
+                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_20%,#090d16_90%),linear-gradient(to_right,#1e293b_1px,transparent_1px),linear-gradient(to_bottom,#1e293b_1px,transparent_1px)] bg-[size:100%_100%,32px_32px] opacity-15 pointer-events-none" />
+
+                {/* Illustrated Renderer */}
+                <RobloxAvatarRenderer config={previewConfig} scale={zoom} autoRotate={false} />
+
+                {/* Floating vertical sidebar camera control list */}
+                <div className="absolute top-4 left-4 flex flex-col gap-2 bg-[#070913]/85 border border-slate-800/80 p-1.5 rounded-2xl shadow-lg z-20">
+                  <button
+                    onClick={() => setZoom((z) => Math.min(2.0, z + 0.15))}
+                    className="size-8.5 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-slate-800 flex items-center justify-center text-slate-300 font-bold transition duration-150 cursor-pointer shadow active:scale-90"
+                    title="Acercar"
+                  >
+                    <ZoomIn className="size-4.5" />
+                  </button>
+                  <button
+                    onClick={() => setZoom((z) => Math.max(0.6, z - 0.15))}
+                    className="size-8.5 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-slate-800 flex items-center justify-center text-slate-300 font-bold transition duration-150 cursor-pointer shadow active:scale-90"
+                    title="Alejar"
+                  >
+                    <ZoomOut className="size-4.5" />
+                  </button>
+                  <button
+                    onClick={() => setZoom(1.1)}
+                    className="size-8.5 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-slate-800 flex items-center justify-center text-slate-300 font-bold transition duration-150 cursor-pointer shadow active:scale-90"
+                    title="Resetear"
+                  >
+                    <RotateCcw className="size-4" />
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Bottom: Probar Todo toggle card */}
+            <div className="bg-slate-900/60 border border-slate-850 p-4 rounded-2xl flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <span className="text-xl">🧥</span>
+                <div>
+                  <h4 className="text-xs font-extrabold text-white leading-tight">Probar todo</h4>
+                  <p className="text-[9px] text-slate-400 font-medium">Vista previa de conjunto completo</p>
+                </div>
+              </div>
+              <label className="relative inline-flex items-center cursor-pointer">
+                <input type="checkbox" defaultChecked className="sr-only peer" />
+                <div className="w-9 h-5 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-600"></div>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        {/* ==========================================
+            COLUMN 1: GENDER SELECTOR & ADAPTIVE SECTIONS (Col-span 3)
+            renders vertically on desktop, horizontally scrollable on mobile
+            ========================================== */}
+        <div className="lg:col-span-3 flex flex-col gap-4 order-2 lg:order-1">
+          <div className="bg-[#0B0F1B]/95 backdrop-blur-md border border-slate-800/80 rounded-3xl p-5 shadow-2xl flex flex-col justify-between min-h-0 lg:min-h-[500px]">
             <div>
               {/* Gender panel */}
               <div className="mb-4">
                 <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 block mb-2">GÉNERO</span>
                 <div className="grid grid-cols-2 gap-2">
                   <button
-                    onClick={() => setPreviewConfig(prev => ({ ...prev, gender: "boy" }))}
+                    onClick={() => setPreviewConfig(prev => ({ ...prev, gender: "boy", pants: "pants-basic-jeans" }))}
                     className={`flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-xs font-bold transition duration-200 cursor-pointer border ${
                       previewConfig.gender === "boy"
                         ? "bg-[#1E40AF]/20 border-blue-500/50 text-blue-400 shadow-md"
@@ -414,7 +478,7 @@ export function AvatarCustomizer({ onClose, inline = false }: AvatarCustomizerPr
                     <span>Masculino</span>
                   </button>
                   <button
-                    onClick={() => setPreviewConfig(prev => ({ ...prev, gender: "girl" }))}
+                    onClick={() => setPreviewConfig(prev => ({ ...prev, gender: "girl", pants: "pants-basic-skirt" }))}
                     className={`flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-xs font-bold transition duration-200 cursor-pointer border ${
                       previewConfig.gender === "girl"
                         ? "bg-[#EC4899]/15 border-pink-500/50 text-pink-400 shadow-md"
@@ -427,25 +491,30 @@ export function AvatarCustomizer({ onClose, inline = false }: AvatarCustomizerPr
                 </div>
               </div>
 
-              {/* Scrollable vertical options tabs */}
-              <div className="space-y-1 max-h-[440px] overflow-y-auto pr-1 scrollbar-thin">
-                {categoriesList.map((cat) => (
-                  <button
-                    key={cat.id}
-                    onClick={() => setActiveCategory(cat.id)}
-                    className={`w-full flex items-center justify-between px-3.5 py-3 rounded-xl text-xs font-semibold tracking-wide transition duration-150 cursor-pointer text-left border ${
-                      activeCategory === cat.id
-                        ? "bg-blue-600/10 border-blue-500/35 text-white shadow-inner font-bold"
-                        : "bg-transparent border-transparent text-slate-400 hover:text-slate-200 hover:bg-slate-900/40"
-                    }`}
-                  >
-                    <div className="flex items-center gap-2.5">
-                      <span className="text-sm">{cat.icon}</span>
-                      <span>{cat.label}</span>
-                    </div>
-                    {activeCategory === cat.id && <ChevronRight className="size-3.5 text-blue-400" />}
-                  </button>
-                ))}
+              {/* Scrollable vertical options tabs on desktop, horizontally scrollable on mobile */}
+              <div>
+                <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 block mb-2 lg:hidden">CATEGORÍAS</span>
+                <div className="flex flex-row lg:flex-col gap-2 overflow-x-auto lg:overflow-y-auto pr-1 pb-3 lg:pb-0 scrollbar-none max-h-[140px] lg:max-h-[440px]">
+                  {categoriesList.map((cat) => (
+                    <button
+                      key={cat.id}
+                      onClick={() => setActiveCategory(cat.id)}
+                      className={`flex-shrink-0 flex items-center justify-between px-4 py-2.5 lg:px-3.5 lg:py-3 rounded-xl text-xs font-bold tracking-wide transition duration-150 cursor-pointer text-left border ${
+                        activeCategory === cat.id
+                          ? "bg-blue-600/10 border-blue-500/35 text-white shadow-inner font-black"
+                          : "bg-slate-900/40 border-slate-800 text-slate-400 hover:text-slate-200 hover:bg-slate-900/60"
+                      }`}
+                    >
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm">{cat.icon}</span>
+                        <span>{cat.label}</span>
+                      </div>
+                      <span className="hidden lg:inline">
+                        {activeCategory === cat.id && <ChevronRight className="size-3.5 text-blue-400" />}
+                      </span>
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
 
@@ -470,8 +539,8 @@ export function AvatarCustomizer({ onClose, inline = false }: AvatarCustomizerPr
         {/* ==========================================
             COLUMN 2: DETAILED OPTIONS SELECTION PANEL (Col-span 3)
             ========================================== */}
-        <div className="lg:col-span-3 flex flex-col gap-4">
-          <div className="bg-[#0B0F1B]/95 backdrop-blur-md border border-slate-800/80 rounded-3xl p-5 shadow-2xl flex-1 flex flex-col justify-between min-h-[500px]">
+        <div className="lg:col-span-3 flex flex-col gap-4 order-3 lg:order-2">
+          <div className="bg-[#0B0F1B]/95 backdrop-blur-md border border-slate-800/80 rounded-3xl p-5 shadow-2xl flex flex-col justify-between min-h-0 lg:min-h-[500px]">
             <div>
               {/* Inner Subtabs: Cortes & Colores */}
               <div className="flex items-center gap-1.5 bg-slate-900/60 p-1.5 border border-slate-800/70 rounded-xl mb-4">
@@ -494,7 +563,7 @@ export function AvatarCustomizer({ onClose, inline = false }: AvatarCustomizerPr
               </div>
 
               {/* Items grid for active category */}
-              <div className="max-h-[380px] overflow-y-auto pr-1 scrollbar-thin mb-4">
+              <div className="max-h-[260px] lg:max-h-[380px] overflow-y-auto pr-1 scrollbar-thin mb-4">
                 <div className="grid grid-cols-3 gap-2">
                   {gridItems.map((item) => {
                     const owned = isItemOwned(item);
@@ -636,78 +705,9 @@ export function AvatarCustomizer({ onClose, inline = false }: AvatarCustomizerPr
         </div>
 
         {/* ==========================================
-            COLUMN 3: VISUAL 360 PREVIEW & FLOATING TOOLS (Col-span 3)
-            ========================================== */}
-        <div className="lg:col-span-3 flex flex-col gap-4">
-          <div className="bg-[#0B0F1B]/95 backdrop-blur-md border border-slate-800/80 rounded-3xl p-5 shadow-2xl flex-1 flex flex-col justify-between min-h-[500px]">
-            <div>
-              <div className="text-center mb-1">
-                <span className="text-[10px] font-black uppercase tracking-widest text-purple-400 block">VISTA PREVIA 360°</span>
-                <span className="text-[9px] text-slate-500 font-medium">Arrastra para rotar</span>
-              </div>
-
-              {/* Main character preview panel */}
-              <div className="w-full aspect-[4/5] bg-gradient-to-b from-[#0F1426]/50 to-[#0A0D17]/80 border border-slate-800/50 rounded-3xl relative shadow-[inset_0_2px_20px_rgba(0,0,0,0.6)] flex items-center justify-center overflow-hidden my-4">
-                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_20%,#090d16_90%),linear-gradient(to_right,#1e293b_1px,transparent_1px),linear-gradient(to_bottom,#1e293b_1px,transparent_1px)] bg-[size:100%_100%,32px_32px] opacity-15 pointer-events-none" />
-
-                {/* Illustrated Renderer */}
-                <RobloxAvatarRenderer config={previewConfig} scale={zoom} autoRotate={false} />
-
-                {/* Floating vertical sidebar camera control list */}
-                <div className="absolute top-4 left-4 flex flex-col gap-2.5 bg-[#070913]/85 border border-slate-800/80 p-1.5 rounded-2xl shadow-lg z-20">
-                  <button
-                    onClick={() => setZoom((z) => Math.min(2.0, z + 0.15))}
-                    className="size-8.5 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-slate-800 flex items-center justify-center text-slate-300 font-bold transition duration-150 cursor-pointer shadow active:scale-95"
-                    title="Acercar cámara"
-                  >
-                    <ZoomIn className="size-4.5" />
-                  </button>
-                  <button
-                    onClick={() => setZoom((z) => Math.max(0.6, z - 0.15))}
-                    className="size-8.5 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-slate-800 flex items-center justify-center text-slate-300 font-bold transition duration-150 cursor-pointer shadow active:scale-95"
-                    title="Alejar cámara"
-                  >
-                    <ZoomOut className="size-4.5" />
-                  </button>
-                  <button
-                    onClick={() => setZoom(1.1)}
-                    className="size-8.5 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-slate-800 flex items-center justify-center text-xs font-black text-slate-400 transition duration-150 cursor-pointer shadow active:scale-95"
-                    title="Restablecer zoom"
-                  >
-                    <RotateCcw className="size-4" />
-                  </button>
-                  <button
-                    onClick={() => setFullScreenPreview(!fullScreenPreview)}
-                    className="size-8.5 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-slate-800 flex items-center justify-center text-slate-300 font-bold transition duration-150 cursor-pointer shadow active:scale-95"
-                    title="Pantalla Completa"
-                  >
-                    <Camera className="size-4.5" />
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            {/* Bottom: Probar Todo toggle card */}
-            <div className="bg-slate-900/60 border border-slate-850 p-4.5 rounded-2xl flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <span className="text-2xl">🧥</span>
-                <div>
-                  <h4 className="text-xs font-extrabold text-white leading-tight">Probar todo</h4>
-                  <p className="text-[10px] text-slate-400 font-medium">Vista previa de conjunto completo</p>
-                </div>
-              </div>
-              <label className="relative inline-flex items-center cursor-pointer">
-                <input type="checkbox" defaultChecked className="sr-only peer" />
-                <div className="w-9 h-5 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-600"></div>
-              </label>
-            </div>
-          </div>
-        </div>
-
-        {/* ==========================================
             COLUMN 4: EQUIPPED, PORTFOLIO & STATISTICS SUMMARY (Col-span 3)
             ========================================== */}
-        <div className="lg:col-span-3 flex flex-col gap-4">
+        <div className="lg:col-span-3 flex flex-col gap-4 order-4 lg:order-4">
           
           {/* Section: EQUIPADO */}
           <div className="bg-[#0B0F1B]/95 backdrop-blur-md border border-slate-800/80 rounded-3xl p-5 shadow-2xl">
