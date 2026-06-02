@@ -18,7 +18,11 @@ import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedPrepRouteImport } from './routes/_authenticated.prep'
 import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authenticated.onboarding'
 import { Route as AuthenticatedLibraryRouteImport } from './routes/_authenticated.library'
+import { Route as AuthenticatedGamesRouteImport } from './routes/_authenticated.games'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated.dashboard'
+import { Route as AuthenticatedProfileAvatarRouteImport } from './routes/_authenticated.profile_.avatar'
+import { Route as AuthenticatedGamesSpaceRushRouteImport } from './routes/_authenticated.games.space-rush'
+import { Route as AuthenticatedGamesGoldQuestRouteImport } from './routes/_authenticated.games.gold-quest'
 import { Route as AuthenticatedPrepQuizQuizIdRouteImport } from './routes/_authenticated.prep_.quiz.$quizId'
 
 const SignupRoute = SignupRouteImport.update({
@@ -66,11 +70,34 @@ const AuthenticatedLibraryRoute = AuthenticatedLibraryRouteImport.update({
   path: '/library',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedGamesRoute = AuthenticatedGamesRouteImport.update({
+  id: '/games',
+  path: '/games',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedProfileAvatarRoute =
+  AuthenticatedProfileAvatarRouteImport.update({
+    id: '/profile_/avatar',
+    path: '/profile/avatar',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedGamesSpaceRushRoute =
+  AuthenticatedGamesSpaceRushRouteImport.update({
+    id: '/space-rush',
+    path: '/space-rush',
+    getParentRoute: () => AuthenticatedGamesRoute,
+  } as any)
+const AuthenticatedGamesGoldQuestRoute =
+  AuthenticatedGamesGoldQuestRouteImport.update({
+    id: '/gold-quest',
+    path: '/gold-quest',
+    getParentRoute: () => AuthenticatedGamesRoute,
+  } as any)
 const AuthenticatedPrepQuizQuizIdRoute =
   AuthenticatedPrepQuizQuizIdRouteImport.update({
     id: '/prep_/quiz/$quizId',
@@ -83,11 +110,15 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/signup': typeof SignupRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/games': typeof AuthenticatedGamesRouteWithChildren
   '/library': typeof AuthenticatedLibraryRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/prep': typeof AuthenticatedPrepRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/recommendations': typeof AuthenticatedRecommendationsRoute
+  '/games/gold-quest': typeof AuthenticatedGamesGoldQuestRoute
+  '/games/space-rush': typeof AuthenticatedGamesSpaceRushRoute
+  '/profile/avatar': typeof AuthenticatedProfileAvatarRoute
   '/prep/quiz/$quizId': typeof AuthenticatedPrepQuizQuizIdRoute
 }
 export interface FileRoutesByTo {
@@ -95,11 +126,15 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/signup': typeof SignupRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/games': typeof AuthenticatedGamesRouteWithChildren
   '/library': typeof AuthenticatedLibraryRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/prep': typeof AuthenticatedPrepRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/recommendations': typeof AuthenticatedRecommendationsRoute
+  '/games/gold-quest': typeof AuthenticatedGamesGoldQuestRoute
+  '/games/space-rush': typeof AuthenticatedGamesSpaceRushRoute
+  '/profile/avatar': typeof AuthenticatedProfileAvatarRoute
   '/prep/quiz/$quizId': typeof AuthenticatedPrepQuizQuizIdRoute
 }
 export interface FileRoutesById {
@@ -109,11 +144,15 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/signup': typeof SignupRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
+  '/_authenticated/games': typeof AuthenticatedGamesRouteWithChildren
   '/_authenticated/library': typeof AuthenticatedLibraryRoute
   '/_authenticated/onboarding': typeof AuthenticatedOnboardingRoute
   '/_authenticated/prep': typeof AuthenticatedPrepRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/_authenticated/recommendations': typeof AuthenticatedRecommendationsRoute
+  '/_authenticated/games/gold-quest': typeof AuthenticatedGamesGoldQuestRoute
+  '/_authenticated/games/space-rush': typeof AuthenticatedGamesSpaceRushRoute
+  '/_authenticated/profile_/avatar': typeof AuthenticatedProfileAvatarRoute
   '/_authenticated/prep_/quiz/$quizId': typeof AuthenticatedPrepQuizQuizIdRoute
 }
 export interface FileRouteTypes {
@@ -123,11 +162,15 @@ export interface FileRouteTypes {
     | '/login'
     | '/signup'
     | '/dashboard'
+    | '/games'
     | '/library'
     | '/onboarding'
     | '/prep'
     | '/profile'
     | '/recommendations'
+    | '/games/gold-quest'
+    | '/games/space-rush'
+    | '/profile/avatar'
     | '/prep/quiz/$quizId'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -135,11 +178,15 @@ export interface FileRouteTypes {
     | '/login'
     | '/signup'
     | '/dashboard'
+    | '/games'
     | '/library'
     | '/onboarding'
     | '/prep'
     | '/profile'
     | '/recommendations'
+    | '/games/gold-quest'
+    | '/games/space-rush'
+    | '/profile/avatar'
     | '/prep/quiz/$quizId'
   id:
     | '__root__'
@@ -148,11 +195,15 @@ export interface FileRouteTypes {
     | '/login'
     | '/signup'
     | '/_authenticated/dashboard'
+    | '/_authenticated/games'
     | '/_authenticated/library'
     | '/_authenticated/onboarding'
     | '/_authenticated/prep'
     | '/_authenticated/profile'
     | '/_authenticated/recommendations'
+    | '/_authenticated/games/gold-quest'
+    | '/_authenticated/games/space-rush'
+    | '/_authenticated/profile_/avatar'
     | '/_authenticated/prep_/quiz/$quizId'
   fileRoutesById: FileRoutesById
 }
@@ -228,12 +279,40 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedLibraryRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/games': {
+      id: '/_authenticated/games'
+      path: '/games'
+      fullPath: '/games'
+      preLoaderRoute: typeof AuthenticatedGamesRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/dashboard': {
       id: '/_authenticated/dashboard'
       path: '/dashboard'
       fullPath: '/dashboard'
       preLoaderRoute: typeof AuthenticatedDashboardRouteImport
       parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/profile_/avatar': {
+      id: '/_authenticated/profile_/avatar'
+      path: '/profile/avatar'
+      fullPath: '/profile/avatar'
+      preLoaderRoute: typeof AuthenticatedProfileAvatarRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/games/space-rush': {
+      id: '/_authenticated/games/space-rush'
+      path: '/space-rush'
+      fullPath: '/games/space-rush'
+      preLoaderRoute: typeof AuthenticatedGamesSpaceRushRouteImport
+      parentRoute: typeof AuthenticatedGamesRoute
+    }
+    '/_authenticated/games/gold-quest': {
+      id: '/_authenticated/games/gold-quest'
+      path: '/gold-quest'
+      fullPath: '/games/gold-quest'
+      preLoaderRoute: typeof AuthenticatedGamesGoldQuestRouteImport
+      parentRoute: typeof AuthenticatedGamesRoute
     }
     '/_authenticated/prep_/quiz/$quizId': {
       id: '/_authenticated/prep_/quiz/$quizId'
@@ -245,23 +324,40 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface AuthenticatedGamesRouteChildren {
+  AuthenticatedGamesGoldQuestRoute: typeof AuthenticatedGamesGoldQuestRoute
+  AuthenticatedGamesSpaceRushRoute: typeof AuthenticatedGamesSpaceRushRoute
+}
+
+const AuthenticatedGamesRouteChildren: AuthenticatedGamesRouteChildren = {
+  AuthenticatedGamesGoldQuestRoute: AuthenticatedGamesGoldQuestRoute,
+  AuthenticatedGamesSpaceRushRoute: AuthenticatedGamesSpaceRushRoute,
+}
+
+const AuthenticatedGamesRouteWithChildren =
+  AuthenticatedGamesRoute._addFileChildren(AuthenticatedGamesRouteChildren)
+
 interface AuthenticatedRouteChildren {
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
+  AuthenticatedGamesRoute: typeof AuthenticatedGamesRouteWithChildren
   AuthenticatedLibraryRoute: typeof AuthenticatedLibraryRoute
   AuthenticatedOnboardingRoute: typeof AuthenticatedOnboardingRoute
   AuthenticatedPrepRoute: typeof AuthenticatedPrepRoute
   AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
   AuthenticatedRecommendationsRoute: typeof AuthenticatedRecommendationsRoute
+  AuthenticatedProfileAvatarRoute: typeof AuthenticatedProfileAvatarRoute
   AuthenticatedPrepQuizQuizIdRoute: typeof AuthenticatedPrepQuizQuizIdRoute
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
+  AuthenticatedGamesRoute: AuthenticatedGamesRouteWithChildren,
   AuthenticatedLibraryRoute: AuthenticatedLibraryRoute,
   AuthenticatedOnboardingRoute: AuthenticatedOnboardingRoute,
   AuthenticatedPrepRoute: AuthenticatedPrepRoute,
   AuthenticatedProfileRoute: AuthenticatedProfileRoute,
   AuthenticatedRecommendationsRoute: AuthenticatedRecommendationsRoute,
+  AuthenticatedProfileAvatarRoute: AuthenticatedProfileAvatarRoute,
   AuthenticatedPrepQuizQuizIdRoute: AuthenticatedPrepQuizQuizIdRoute,
 }
 
@@ -278,13 +374,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
