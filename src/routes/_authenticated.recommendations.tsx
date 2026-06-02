@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useTranslation } from "react-i18next";
-import { listRecommendations, generateRecommendations } from "@/lib/recommendations.functions";
+import { listRecommendations, generateRecommendations, translateRecommendations } from "@/lib/recommendations.functions";
 import { AppHeader } from "@/components/AppHeader";
 import { Sparkles, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
@@ -19,10 +19,22 @@ function Recs() {
   const qc = useQueryClient();
   const list = useServerFn(listRecommendations);
   const gen = useServerFn(generateRecommendations);
+  const trans = useServerFn(translateRecommendations);
   const { data, isLoading } = useQuery({ queryKey: ["recs"], queryFn: () => list() });
   const currentLang = i18n.language.slice(0, 2) as "es" | "en" | "fr";
+
   const regen = useMutation({
     mutationFn: () => gen({ data: { language: currentLang } }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["recs"] });
+      qc.invalidateQueries({ queryKey: ["dashboard"] });
+      toast.success("✓");
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Error"),
+  });
+
+  const translateMut = useMutation({
+    mutationFn: () => trans({ data: { language: currentLang } }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["recs"] });
       qc.invalidateQueries({ queryKey: ["dashboard"] });
@@ -57,9 +69,9 @@ function Recs() {
         {langMismatch && (
           <div className="mt-4 flex items-center justify-between gap-3 rounded-2xl border border-primary/20 bg-primary/5 p-3">
             <p className="text-xs text-muted-foreground">{t("recs.langMismatch")}</p>
-            <button onClick={() => regen.mutate()} disabled={regen.isPending}
+            <button onClick={() => translateMut.mutate()} disabled={translateMut.isPending}
               className="shrink-0 rounded-full bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground disabled:opacity-60">
-              {regen.isPending ? t("recs.generating") : t("recs.regenInLang")}
+              {translateMut.isPending ? t("recs.generating") : t("recs.regenInLang")}
             </button>
           </div>
         )}

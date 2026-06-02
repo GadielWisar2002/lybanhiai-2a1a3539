@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useTranslation } from "react-i18next";
 import { getDashboard } from "@/lib/quiz.functions";
-import { generateRecommendations } from "@/lib/recommendations.functions";
+import { translateRecommendations } from "@/lib/recommendations.functions";
 import { AppHeader } from "@/components/AppHeader";
 import { StreakBadge } from "@/components/StreakBadge";
 import { ArrowRight, Sparkles } from "lucide-react";
@@ -18,7 +18,7 @@ function Dashboard() {
   const { t, i18n } = useTranslation();
   const qc = useQueryClient();
   const fn = useServerFn(getDashboard);
-  const gen = useServerFn(generateRecommendations);
+  const trans = useServerFn(translateRecommendations);
   const { data, isLoading } = useQuery({ queryKey: ["dashboard"], queryFn: () => fn() });
 
   const currentLang = i18n.language.slice(0, 2) as "es" | "en" | "fr";
@@ -26,7 +26,7 @@ function Dashboard() {
   const langMismatch = !!storedLang && storedLang !== currentLang;
 
   const regen = useMutation({
-    mutationFn: () => gen({ data: { language: currentLang } }),
+    mutationFn: () => trans({ data: { language: currentLang } }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["recs"] });
       qc.invalidateQueries({ queryKey: ["dashboard"] });

@@ -109,3 +109,97 @@ export const listRecommendations = createServerFn({ method: "GET" })
     if (error) throw new Error(error.message);
     return data ?? [];
   });
+
+export const translateRecommendations = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => RecInput.parse(input))
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    const { data: recs, error: fetchErr } = await supabase.from("recommendations").select("*").eq("user_id", userId);
+    if (fetchErr || !recs || recs.length === 0) return { count: 0 };
+
+    const apiKey = process.env.LOVABLE_API_KEY;
+    if (!apiKey) throw new Error("AI gateway not configured");
+
+    const lang = data.language;
+    const langLabel = lang === "es" ? "Spanish" : lang === "fr" ? "French" : "English";
+
+    const sys = `You are a translation assistant. Translate the provided career recommendations to ${langLabel}.
+Keep the exact same match scores, number of items, and structural mappings.
+Translate all text fields including career_name, reasoning, tags, and university names, countries, types, and notes to ${langLabel}.
+Do NOT change the matching scores or the recommended careers themselves; only translate their descriptions, names, tags, and university information to ${langLabel}.`;
+
+    const userMsg = JSON.stringify(recs.map(r => ({
+      career_name: r.career_name,
+      match_score: r.match_score,
+      reasoning: r.reasoning,
+      tags: r.tags,
+      universities: r.universities
+    })));
+
+    const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: "google/gemini-2.5-flash",
+        messages: [{ role: "system", content: sys }, { role: "user", content: userMsg }],
+        tools: [{
+          type: "function",
+          function: {
+            name: "submit_recommendations",
+            description: "Return translated career recommendations",
+            parameters: {
+              type: "object",
+              properties: {
+                recommendations: {
+                  type: "array",
+                  items: {
+                    type: "object",
+                    properties: {
+                      career_name: { type: "string" },
+                      match_score: { type: "integer", minimum: 0, maximum: 100 },
+                      reasoning: { type: "string" },
+                      tags: { type: "array", items: { type: "string" } },
+                      universities: {
+                        type: "array",
+                        items: {
+                          type: "object",
+                          properties: {
+                            name: { type: "string" }, country: { type: "string" },
+                            estimated_cost_usd: { type: "number" }, type: { type: "string" }, notes: { type: "string" },
+                          },
+                          required: ["name", "country", "estimated_cost_usd", "type", "notes"],
+                        },
+                      },
+                    },
+                    required: ["career_name", "match_score", "reasoning", "tags", "universities"],
+                  },
+                },
+              },
+              required: ["recommendations"],
+            },
+          },
+        }],
+        tool_choice: { type: "function", function: { name: "submit_recommendations" } },
+      }),
+    });
+
+    if (res.status === 429) throw new Error("Rate limit. Try again soon.");
+    if (res.status === 402) throw new Error("AI credits exhausted.");
+    if (!res.ok) throw new Error(`AI error ${res.status}`);
+
+    const json = await res.json();
+    const args = json.choices?.[0]?.message?.tool_calls?.[0]?.function?.arguments;
+    if (!args) throw new Error("AI returned no translations");
+    const parsed: { recommendations: Recommendation[] } = JSON.parse(args);
+
+    await supabase.from("recommendations").delete().eq("user_id", userId);
+    const rows = parsed.recommendations.map((r) => ({
+      user_id: userId, career_name: r.career_name, match_score: r.match_score,
+      reasoning: r.reasoning, tags: r.tags, universities: r.universities,
+      language: lang,
+    }));
+    const { error } = await supabase.from("recommendations").insert(rows);
+    if (error) throw new Error(error.message);
+    return { count: rows.length };
+  });
