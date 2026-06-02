@@ -170,7 +170,7 @@ export function AvatarCustomizer({ onClose, inline = false }: AvatarCustomizerPr
   // Save changes to database
   const handleSave = async () => {
     try {
-      await saveAvatar({ config: previewConfig });
+      await saveAvatar({ data: { config: previewConfig } });
       setSavedConfig(previewConfig);
       qc.invalidateQueries({ queryKey: ["dashboard"] });
       toast.success(t("avatar.saveSuccess", "¡Avatar guardado y equipado con éxito!"));
@@ -194,9 +194,11 @@ export function AvatarCustomizer({ onClose, inline = false }: AvatarCustomizerPr
     try {
       const currency = selectedItem.currency === "xp" ? "xp" : "sombreritos";
       await unlockItem({
-        itemId: selectedItem.id,
-        currency,
-        cost: selectedItem.cost,
+        data: {
+          itemId: selectedItem.id,
+          currency,
+          cost: selectedItem.cost,
+        },
       });
 
       // Update local query state

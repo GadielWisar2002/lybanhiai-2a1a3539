@@ -52,10 +52,12 @@ function AuthLayout() {
             .from("profiles")
             .update({ language: clientLang })
             .eq("id", user!.id)
-            .then(() => {
-              qc.invalidateQueries({ queryKey: ["profile-lang", user!.id] });
-            })
-            .catch(() => {});
+            .then(
+              () => {
+                qc.invalidateQueries({ queryKey: ["profile-lang", user!.id] });
+              },
+              () => {},
+            );
         }
       } else {
         if (i18n.language !== profile.language) {
