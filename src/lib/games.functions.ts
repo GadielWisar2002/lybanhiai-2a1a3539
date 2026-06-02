@@ -3,7 +3,7 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 export type Rarity = "common" | "rare" | "epic" | "legendary";
-export type PackType = "medieval" | "space" | "cyber";
+export type PackType = "medieval" | "space" | "cyber" | "academic";
 
 export interface Blook {
   id: string;
@@ -31,11 +31,22 @@ export const BLOOKS: Record<string, Blook> = {
   hacker: { id: "hacker", name: "Hacker", emoji: "💻", rarity: "rare", pack: "cyber" },
   cyborg: { id: "cyborg", name: "Cyborg", emoji: "🦾", rarity: "epic", pack: "cyber" },
   ai: { id: "ai", name: "Super AI", emoji: "🧠", rarity: "legendary", pack: "cyber" },
+
+  // Academic Pack
+  pencil: { id: "pencil", name: "Pencil", emoji: "✏️", rarity: "common", pack: "academic" },
+  notebook: { id: "notebook", name: "Notebook", emoji: "📓", rarity: "common", pack: "academic" },
+  book: { id: "book", name: "Book", emoji: "📖", rarity: "common", pack: "academic" },
+  feather: { id: "feather", name: "Quill", emoji: "✒️", rarity: "rare", pack: "academic" },
+  backpack: { id: "backpack", name: "Backpack", emoji: "🎒", rarity: "rare", pack: "academic" },
+  diploma: { id: "diploma", name: "Diploma", emoji: "📜", rarity: "epic", pack: "academic" },
+  microscope: { id: "microscope", name: "Microscope", emoji: "🔬", rarity: "epic", pack: "academic" },
+  mortarboard: { id: "mortarboard", name: "Graduation Cap", emoji: "🎓", rarity: "legendary", pack: "academic" },
 };
 
 export const PACK_COSTS: Record<PackType, number> = {
   medieval: 5,
   space: 10,
+  academic: 12,
   cyber: 20,
 };
 
@@ -54,7 +65,7 @@ export const listUnlockedBlooks = createServerFn({ method: "GET" })
 
 export const buyBlookPack = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) => z.object({ pack: z.enum(["medieval", "space", "cyber"]) }).parse(input))
+  .inputValidator((input: unknown) => z.object({ pack: z.enum(["medieval", "space", "cyber", "academic"]) }).parse(input))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     const cost = PACK_COSTS[data.pack];

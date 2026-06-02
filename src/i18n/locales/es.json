@@ -106,6 +106,7 @@
     "packTitle": "Paquete {{name}}",
     "packMedievalDesc": "🛡️ Blooks Comunes a Legendarios",
     "packSpaceDesc": "🌌 Probabilidad de Raros y Épicos",
+    "packAcademicDesc": "🎓 Colección de birretes, plumas, libros y diplomas",
     "packCyberDesc": "⚡ Insignias Cyber de Alto Nivel",
     "goldQuest": {
       "title": "Búsqueda de Oro",
@@ -162,7 +163,35 @@
         "rare": "Raro",
         "epic": "Épico",
         "legendary": "Legendario"
+      },
+      "packName": {
+        "medieval": "Medieval",
+        "space": "Espacial",
+        "academic": "Académico",
+        "cyber": "Cyber"
       }
+    },
+    "blookName": {
+      "knight": "Caballero",
+      "mage": "Mago",
+      "dragon": "Dragón",
+      "king": "Rey",
+      "astronaut": "Astronauta",
+      "alien": "Alienígena",
+      "rocket": "Cohete",
+      "ufo": "OVNI",
+      "robot": "Robot",
+      "hacker": "Hacker",
+      "cyborg": "Cíborg",
+      "ai": "Súper IA",
+      "pencil": "Lápiz",
+      "notebook": "Libreta",
+      "book": "Libro",
+      "feather": "Pluma Tintero",
+      "backpack": "Mochila",
+      "diploma": "Título",
+      "microscope": "Microscopio",
+      "mortarboard": "Birrete de Graduado"
     }
   }
 }

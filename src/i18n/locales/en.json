@@ -99,6 +99,7 @@
     "packTitle": "{{name}} Pack",
     "packMedievalDesc": "🛡️ Common to Legendary Blooks",
     "packSpaceDesc": "🌌 Rare & Epic Boosted",
+    "packAcademicDesc": "🎓 Academics & Graduation Badges",
     "packCyberDesc": "⚡ Top-tier Cyber Badges",
     "goldQuest": {
       "title": "Gold Quest",
@@ -155,7 +156,35 @@
         "rare": "Rare",
         "epic": "Epic",
         "legendary": "Legendary"
+      },
+      "packName": {
+        "medieval": "Medieval",
+        "space": "Space",
+        "academic": "Academic",
+        "cyber": "Cyber"
       }
+    },
+    "blookName": {
+      "knight": "Knight",
+      "mage": "Mage",
+      "dragon": "Dragon",
+      "king": "King",
+      "astronaut": "Astronaut",
+      "alien": "Alien",
+      "rocket": "Rocket",
+      "ufo": "UFO",
+      "robot": "Robot",
+      "hacker": "Hacker",
+      "cyborg": "Cyborg",
+      "ai": "Super AI",
+      "pencil": "Pencil",
+      "notebook": "Notebook",
+      "book": "Book",
+      "feather": "Quill",
+      "backpack": "Backpack",
+      "diploma": "Diploma",
+      "microscope": "Microscope",
+      "mortarboard": "Graduation Cap"
     }
   }
 }

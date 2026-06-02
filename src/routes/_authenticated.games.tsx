@@ -203,7 +203,7 @@ function GamesHub() {
                       >
                         <div className="text-3xl select-none">{isUnlocked ? b.emoji : "❓"}</div>
                         <span className="truncate w-full text-[9px] font-bold text-center leading-tight">
-                          {isUnlocked ? b.name : t("games.locked", { defaultValue: "Locked" })}
+                          {isUnlocked ? t(`games.blookName.${b.id}`, { defaultValue: b.name }) : t("games.locked", { defaultValue: "Locked" })}
                         </span>
                         {isUnlocked && (
                           <span className={`text-[7px] px-1 rounded-full font-bold uppercase ${
@@ -227,7 +227,7 @@ function GamesHub() {
         {/* Shop Tab */}
         {activeTab === "shop" && (
           <section className="mt-5 space-y-4">
-            {(["medieval", "space", "cyber"] as const).map((pack) => {
+            {(["medieval", "space", "academic", "cyber"] as const).map((pack) => {
               const cost = PACK_COSTS[pack];
               const isAffordable = coins >= cost;
 
@@ -242,11 +242,12 @@ function GamesHub() {
                     </div>
                     <div>
                       <h3 className="font-display font-bold capitalize leading-none">
-                        {t("games.packTitle", { name: pack, defaultValue: `${pack} Pack` })}
+                        {t("games.packTitle", { name: t(`games.shopSection.packName.${pack}`, { defaultValue: pack }), defaultValue: `${pack} Pack` })}
                       </h3>
                       <p className="mt-1 text-[10px] text-muted-foreground uppercase tracking-wider font-bold">
                         {pack === "medieval" ? t("games.packMedievalDesc", "🛡️ Common to Legendary Blooks") :
                          pack === "space" ? t("games.packSpaceDesc", "🌌 Rare & Epic Boosted") :
+                         pack === "academic" ? t("games.packAcademicDesc", "🎓 Academics & Graduation Badges") :
                          t("games.packCyberDesc", "⚡ Top-tier Cyber Badges")}
                       </p>
                     </div>
@@ -280,7 +281,7 @@ function GamesHub() {
                   </span>
                 </div>
                 <h2 className="mt-6 font-display text-2xl font-black text-foreground">
-                  {t("games.shopSection.unlockedText", { name: revealedBlook.name, defaultValue: `You Unlocked: ${revealedBlook.name}!` })}
+                  {t("games.shopSection.unlockedText", { name: t(`games.blookName.${revealedBlook.id}`, { defaultValue: revealedBlook.name }), defaultValue: `You Unlocked: ${revealedBlook.name}!` })}
                 </h2>
                 <p className="mt-2 text-xs text-muted-foreground uppercase tracking-wider font-bold">
                   {revealedBlook.rarity === "legendary"

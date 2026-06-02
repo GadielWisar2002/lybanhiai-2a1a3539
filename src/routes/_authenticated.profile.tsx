@@ -74,7 +74,7 @@ function Profile() {
                     activeBlook.rarity === "epic" ? "bg-purple-500" :
                     activeBlook.rarity === "rare" ? "bg-blue-500" : "bg-emerald-500"
                   }`} />
-                  <span className="capitalize">{activeBlook.rarity} • {activeBlook.name}</span>
+                  <span className="capitalize">{t(`games.shopSection.rarity.${activeBlook.rarity}`, { defaultValue: activeBlook.rarity })} • {t(`games.blookName.${activeBlook.id}`, { defaultValue: activeBlook.name })}</span>
                 </>
               ) : (
                 <span>{t("profile.noBlook", "No Blook equipped")}</span>
