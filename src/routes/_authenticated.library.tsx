@@ -11,6 +11,8 @@ export const Route = createFileRoute("/_authenticated/library")({
   component: Library,
 });
 
+import { TOPICS, type Cat, type Lang } from "@/lib/topics";
+
 const ICONS = {
   logic: Brain,
   math: Calculator,
@@ -29,14 +31,31 @@ function timeAgo(iso: string, lang: string) {
   return rtf.format(-Math.round(diff / 86400), "day");
 }
 
-function localizeTopic(topic: string, lang: string): string {
-  // Strip any stacked review prefixes (Repaso:, Review:, Révision :) and re-apply in current lang
+function localizeTopic(topic: string, targetLang: string): string {
   const prefixRe = /^\s*(Repaso\s*:\s*|Review\s*:\s*|Révision\s*:\s*)+/i;
-  const base = topic.replace(prefixRe, "");
-  const hadPrefix = base !== topic;
-  if (!hadPrefix) return topic;
-  const prefix = lang === "fr" ? "Révision : " : lang === "en" ? "Review: " : "Repaso: ";
-  return prefix + base;
+  const base = topic.replace(prefixRe, "").trim();
+  const hadPrefix = base !== topic.trim();
+  
+  const langKey = (targetLang.slice(0, 2).toLowerCase() as Lang) || "es";
+  let translatedBase = base;
+
+  outerLoop:
+  for (const cat of Object.keys(TOPICS) as Cat[]) {
+    const translations = TOPICS[cat];
+    for (const l of ["es", "en", "fr"] as Lang[]) {
+      const idx = translations[l].findIndex(
+        t => t.toLowerCase() === base.toLowerCase()
+      );
+      if (idx !== -1) {
+        translatedBase = translations[langKey][idx];
+        break outerLoop;
+      }
+    }
+  }
+
+  if (!hadPrefix) return translatedBase;
+  const prefix = langKey === "fr" ? "Révision : " : langKey === "en" ? "Review: " : "Repaso: ";
+  return prefix + translatedBase;
 }
 
 function Library() {
