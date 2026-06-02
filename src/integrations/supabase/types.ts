@@ -16,36 +16,27 @@ export type Database = {
     Tables: {
       profiles: {
         Row: {
-          active_blook_id: string | null
-          avatar_config: Json
           avatar_url: string | null
           created_at: string
           full_name: string | null
           id: string
           language: string
-          unlocked_avatar_items: string[]
           updated_at: string
         }
         Insert: {
-          active_blook_id?: string | null
-          avatar_config?: Json
           avatar_url?: string | null
           created_at?: string
           full_name?: string | null
           id: string
           language?: string
-          unlocked_avatar_items?: string[]
           updated_at?: string
         }
         Update: {
-          active_blook_id?: string | null
-          avatar_config?: Json
           avatar_url?: string | null
           created_at?: string
           full_name?: string | null
           id?: string
           language?: string
-          unlocked_avatar_items?: string[]
           updated_at?: string
         }
         Relationships: []
@@ -159,32 +150,26 @@ export type Database = {
       }
       streaks: {
         Row: {
-          coins: number
           current_streak: number
           last_active_date: string | null
           longest_streak: number
           total_xp: number
-          unlocked_games: string[]
           updated_at: string
           user_id: string
         }
         Insert: {
-          coins?: number
           current_streak?: number
           last_active_date?: string | null
           longest_streak?: number
           total_xp?: number
-          unlocked_games?: string[]
           updated_at?: string
           user_id: string
         }
         Update: {
-          coins?: number
           current_streak?: number
           last_active_date?: string | null
           longest_streak?: number
           total_xp?: number
-          unlocked_games?: string[]
           updated_at?: string
           user_id?: string
         }
