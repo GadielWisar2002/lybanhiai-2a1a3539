@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { AvatarCustomizer } from "@/components/AvatarCustomizer";
 
-export const Route = createFileRoute("/_authenticated/profile/avatar")({
+export const Route = createFileRoute("/_authenticated/profile_/avatar")({
   component: AvatarCustomizerPage,
 });
 
