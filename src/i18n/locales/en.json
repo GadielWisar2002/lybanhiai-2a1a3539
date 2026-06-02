@@ -56,9 +56,7 @@
   "recs": {
     "title": "Your Recommendations", "regen": "Regenerate with AI", "generating": "Generating with AI…",
     "universities": "Suggested universities", "why": "Why it fits you",
-    "noResults": "No recommendations yet. Complete your profile to generate them.",
-    "langMismatch": "These recommendations are in another language.",
-    "regenInLang": "Translate to English"
+    "noResults": "No recommendations yet. Complete your profile to generate them."
   },
   "prep": {
     "title": "Preparation", "subtitle": "Quizzes for your career and English exams",

@@ -56,9 +56,7 @@
   "recs": {
     "title": "Tes Recommandations", "regen": "Régénérer avec l'IA", "generating": "Génération par IA…",
     "universities": "Universités suggérées", "why": "Pourquoi ça te correspond",
-    "noResults": "Pas encore de recommandations. Complète ton profil pour les générer.",
-    "langMismatch": "Ces recommandations sont dans une autre langue.",
-    "regenInLang": "Traduire en français"
+    "noResults": "Pas encore de recommandations. Complète ton profil pour les générer."
   },
   "prep": {
     "title": "Préparation", "subtitle": "Quiz pour ta carrière et examens d'anglais",

@@ -63,9 +63,7 @@
   "recs": {
     "title": "Tus Recomendaciones", "regen": "Regenerar con IA", "generating": "Generando con IA…",
     "universities": "Universidades sugeridas", "why": "Por qué encaja contigo",
-    "noResults": "Aún no hay recomendaciones. Completa tu perfil para generarlas.",
-    "langMismatch": "Estas recomendaciones están en otro idioma.",
-    "regenInLang": "Traducir al español"
+    "noResults": "Aún no hay recomendaciones. Completa tu perfil para generarlas."
   },
   "prep": {
     "title": "Preparación", "subtitle": "Quizzes para tu carrera y exámenes de inglés",
