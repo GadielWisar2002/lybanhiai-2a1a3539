@@ -11,7 +11,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { StreakBadge } from "@/components/StreakBadge";
 import { LogOut, Globe, Trophy } from "lucide-react";
 import { BLOOKS } from "@/lib/games.functions";
-
+import { RobloxAvatarRenderer } from "@/components/RobloxAvatarRenderer";
+import { getPrestigeTitle, getPrestigeBadge } from "@/lib/avatar.functions";
 
 export const Route = createFileRoute("/_authenticated/profile")({
   head: () => ({ meta: [{ title: "Profile — Lybanhi" }] }),
@@ -80,31 +81,20 @@ function Profile() {
       <div className="mx-auto max-w-md px-5 pt-4">
         <h1 className="font-display text-2xl font-bold">{t("profile.title")}</h1>
         
-        <Link to="/games" search={{ tab: "locker" }} className="block mt-4 transition hover:opacity-90 active:scale-[0.99]">
+        <Link to="/profile/avatar" className="block mt-4 transition hover:opacity-90 active:scale-[0.99]">
           <div className="flex items-center gap-3.5 rounded-2xl border border-border bg-card p-4 shadow-[var(--shadow-card)] cursor-pointer">
-            {activeBlook ? (
-              <div className="grid size-14 shrink-0 place-items-center rounded-2xl bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/20 text-3xl select-none">
-                {activeBlook.emoji}
+            <div className="size-14 shrink-0 rounded-2xl bg-slate-900 border border-slate-800/80 shadow-[var(--shadow-card)] overflow-hidden flex items-center justify-center relative">
+              <div className="scale-[0.32] absolute origin-center flex items-center justify-center">
+                <RobloxAvatarRenderer config={data?.profile?.avatar_config as any} autoRotate={true} />
               </div>
-            ) : (
-              <div className="grid size-14 shrink-0 place-items-center rounded-2xl bg-muted border border-border text-xl font-bold text-muted-foreground select-none">
-                {data?.profile?.full_name?.charAt(0).toUpperCase()}
-              </div>
-            )}
+            </div>
             <div>
               <p className="font-display font-bold text-lg leading-tight">{data?.profile?.full_name}</p>
               <p className="mt-1 text-xs text-muted-foreground flex items-center gap-1.5">
-                {activeBlook ? (
-                  <>
-                    <span className={`inline-block size-2 rounded-full ${
-                      activeBlook.rarity === "legendary" ? "bg-amber-500" :
-                      activeBlook.rarity === "epic" ? "bg-purple-500" :
-                      activeBlook.rarity === "rare" ? "bg-blue-500" : "bg-emerald-500"
-                    }`} />
-                    <span className="capitalize">{t(`games.shopSection.rarity.${activeBlook.rarity}`, { defaultValue: activeBlook.rarity })} • {t(`games.blookName.${activeBlook.id}`, { defaultValue: activeBlook.name })}</span>
-                  </>
-                ) : (
-                  <span>{t("profile.noBlook", "No Blook equipped")}</span>
+                <span className="text-sm leading-none">{getPrestigeBadge(getPrestigeTitle(data?.streak.total_xp ?? 0))}</span>
+                <span className="font-bold text-primary">{getPrestigeTitle(data?.streak.total_xp ?? 0)}</span>
+                {activeBlook && (
+                  <span className="text-muted-foreground opacity-80">• {activeBlook.emoji} {t(`games.blookName.${activeBlook.id}`, { defaultValue: activeBlook.name })}</span>
                 )}
               </p>
             </div>
