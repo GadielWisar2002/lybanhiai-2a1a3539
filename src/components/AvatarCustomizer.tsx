@@ -31,7 +31,8 @@ import {
 import { RobloxAvatarRenderer } from "./RobloxAvatarRenderer";
 
 interface AvatarCustomizerProps {
-  onClose: () => void;
+  onClose?: () => void;
+  inline?: boolean;
 }
 
 const PRESTIGE_LEVELS = [
@@ -44,7 +45,7 @@ const PRESTIGE_LEVELS = [
   { xp: 30000, title: "Rector Supremo", badge: "👑", color: "from-yellow-400/20 to-amber-600/20 text-amber-300 border-amber-400/40 animate-pulse" },
 ];
 
-export function AvatarCustomizer({ onClose }: AvatarCustomizerProps) {
+export function AvatarCustomizer({ onClose, inline = false }: AvatarCustomizerProps) {
   const { t } = useTranslation();
   const qc = useQueryClient();
 
@@ -79,6 +80,7 @@ export function AvatarCustomizer({ onClose }: AvatarCustomizerProps) {
     pet: "",
     aura: "",
     outfit: "",
+    gender: "boy",
   });
 
   // Saved active equipped configuration
@@ -112,6 +114,7 @@ export function AvatarCustomizer({ onClose }: AvatarCustomizerProps) {
         pet: config.pet || "",
         aura: config.aura || "",
         outfit: config.outfit || "",
+        gender: config.gender || "boy",
       };
       setPreviewConfig(loadedConfig);
       setSavedConfig(loadedConfig);
@@ -278,44 +281,46 @@ export function AvatarCustomizer({ onClose }: AvatarCustomizerProps) {
   const canBuy = selectedItem && !owned && missingBalance <= 0;
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 pb-28 relative">
+    <div className={inline ? "rounded-3xl border border-slate-800/75 bg-slate-950 text-slate-100 p-4 pb-12 relative overflow-hidden" : "min-h-screen bg-slate-950 text-slate-100 pb-28 relative"}>
       {/* Background radial gradient decoration */}
       <div className="absolute inset-0 bg-radial-at-t from-slate-900 via-slate-950 to-slate-950 z-0 pointer-events-none opacity-80" />
 
       {/* Sticky top balance bar */}
-      <header className="sticky top-0 z-30 bg-slate-950/90 backdrop-blur-md border-b border-slate-800/80 px-4 py-3.5 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <button
-            onClick={onClose}
-            className="size-9 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-center hover:bg-slate-800 transition active:scale-95 cursor-pointer text-slate-300"
-          >
-            <ArrowLeft className="size-5" />
-          </button>
-          <div>
-            <h1 className="font-display font-black text-base tracking-tight text-white flex items-center gap-1.5">
-              <span>Personalizar Avatar</span>
-              <span className="text-xs bg-primary/20 text-primary border border-primary/30 px-1.5 py-0.5 rounded-md font-mono">3D</span>
-            </h1>
-            <p className="text-[10px] text-slate-400 leading-none mt-0.5">Explora, pruébate artículos y edita tu identidad</p>
-          </div>
-        </div>
-
-        {/* Currency balances floating pills */}
-        <div className="flex items-center gap-2">
-          {/* XP */}
-          <div className="flex items-center gap-1 bg-slate-900 border border-slate-800 px-2.5 py-1 rounded-xl shadow-inner">
-            <Trophy className="size-3.5 text-yellow-400" />
-            <span className="font-mono font-black text-xs text-yellow-400">{totalXp}</span>
-            <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest pl-0.5">XP</span>
+      {!inline && (
+        <header className="sticky top-0 z-30 bg-slate-950/90 backdrop-blur-md border-b border-slate-800/80 px-4 py-3.5 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <button
+              onClick={onClose}
+              className="size-9 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-center hover:bg-slate-800 transition active:scale-95 cursor-pointer text-slate-300"
+            >
+              <ArrowLeft className="size-5" />
+            </button>
+            <div>
+              <h1 className="font-display font-black text-base tracking-tight text-white flex items-center gap-1.5">
+                <span>Personalizar Avatar</span>
+                <span className="text-xs bg-primary/20 text-primary border border-primary/30 px-1.5 py-0.5 rounded-md font-mono">3D</span>
+              </h1>
+              <p className="text-[10px] text-slate-400 leading-none mt-0.5">Explora, pruébate artículos y edita tu identidad</p>
+            </div>
           </div>
 
-          {/* Sombreritos */}
-          <div className="flex items-center gap-1 bg-slate-900 border border-slate-800 px-2.5 py-1 rounded-xl shadow-inner">
-            <span className="text-sm">🎓</span>
-            <span className="font-mono font-black text-xs text-blue-400">{sombreritos}</span>
+          {/* Currency balances floating pills */}
+          <div className="flex items-center gap-2">
+            {/* XP */}
+            <div className="flex items-center gap-1 bg-slate-900 border border-slate-800 px-2.5 py-1 rounded-xl shadow-inner">
+              <Trophy className="size-3.5 text-yellow-400" />
+              <span className="font-mono font-black text-xs text-yellow-400">{totalXp}</span>
+              <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest pl-0.5">XP</span>
+            </div>
+
+            {/* Sombreritos */}
+            <div className="flex items-center gap-1 bg-slate-900 border border-slate-800 px-2.5 py-1 rounded-xl shadow-inner">
+              <span className="text-sm">🎓</span>
+              <span className="font-mono font-black text-xs text-blue-400">{sombreritos}</span>
+            </div>
           </div>
-        </div>
-      </header>
+        </header>
+      )}
 
       <main className="max-w-6xl mx-auto px-4 pt-4 grid grid-cols-1 lg:grid-cols-12 gap-6 relative z-10">
         
@@ -553,7 +558,49 @@ export function AvatarCustomizer({ onClose }: AvatarCustomizerProps) {
           </div>
 
           {/* Items selection Grid (ALL ITEMS VISIBLE & TESTABLE REGARDLESS OF CURRENCY) */}
-          <div className="bg-slate-900/60 border border-slate-800/60 rounded-3xl p-4 flex-1 min-h-[300px] max-h-[480px] overflow-y-auto shadow-2xl relative">
+          <div className="bg-slate-900/60 border border-slate-800/60 rounded-3xl p-4 flex-1 min-h-[300px] max-h-[480px] overflow-y-auto shadow-2xl relative animate-in fade-in duration-300">
+            {activeTab === "head" && (
+              <div className="mb-4 bg-slate-950/80 p-3 rounded-2xl border border-slate-800/80">
+                <p className="text-[10px] font-black uppercase tracking-wider text-slate-400 mb-2 flex items-center gap-1">
+                  <span>👤 Modelo Base</span>
+                  <span className="text-[8px] bg-primary/20 text-primary border border-primary/30 px-1 py-0.2 rounded font-mono">Cuerpo</span>
+                </p>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    onClick={() => {
+                      setPreviewConfig((prev) => ({ ...prev, gender: "boy" }));
+                      if (selectedItem?.id === "skin-light-2" || !selectedItem) {
+                        setSelectedItem(AVATAR_ITEMS["skin-light-2"]);
+                      }
+                    }}
+                    className={`flex items-center justify-center gap-2 py-2 rounded-xl text-xs font-black transition cursor-pointer select-none border ${
+                      previewConfig.gender === "boy"
+                        ? "bg-primary border-primary text-white shadow-lg shadow-primary/20"
+                        : "bg-slate-900 border-slate-800 text-slate-400 hover:border-slate-700 hover:text-slate-200"
+                    }`}
+                  >
+                    <span className="text-sm">👦</span>
+                    <span>Modelo Masculino</span>
+                  </button>
+                  <button
+                    onClick={() => {
+                      setPreviewConfig((prev) => ({ ...prev, gender: "girl" }));
+                      if (selectedItem?.id === "skin-light-2" || !selectedItem) {
+                        setSelectedItem(AVATAR_ITEMS["skin-light-2"]);
+                      }
+                    }}
+                    className={`flex items-center justify-center gap-2 py-2 rounded-xl text-xs font-black transition cursor-pointer select-none border ${
+                      previewConfig.gender === "girl"
+                        ? "bg-primary border-primary text-white shadow-lg shadow-primary/20"
+                        : "bg-slate-900 border-slate-800 text-slate-400 hover:border-slate-700 hover:text-slate-200"
+                    }`}
+                  >
+                    <span className="text-sm">👧</span>
+                    <span>Modelo Femenino</span>
+                  </button>
+                </div>
+              </div>
+            )}
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
               {tabItems.map((item) => {
                 const owned = isItemOwned(item);

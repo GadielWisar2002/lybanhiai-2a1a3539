@@ -155,6 +155,7 @@ interface AvatarConfig {
   pet: string;
   aura: string;
   outfit: string;
+  gender?: string;
 }
 
 interface RobloxAvatarRendererProps {
@@ -186,7 +187,31 @@ export function RobloxAvatarRenderer({
     pet: config?.pet || "",
     aura: config?.aura || "",
     outfit: config?.outfit || "",
+    gender: config?.gender || "boy",
   };
+
+  const isGirl = c.gender === "girl";
+  
+  // Dimensions
+  const torsoW = isGirl ? 48 : 58;
+  const torsoH = isGirl ? 70 : 74;
+  const torsoD = isGirl ? 24 : 28;
+  
+  const armW = isGirl ? 14 : 18;
+  const armH = isGirl ? 68 : 72;
+  const armD = isGirl ? 14 : 18;
+  const armX = isGirl ? 32 : 39; // shoulder position offset
+  
+  const legW = isGirl ? 18 : 22;
+  const legH = isGirl ? 68 : 72;
+  const legD = isGirl ? 18 : 22;
+  const legX = isGirl ? 11 : 14;
+
+  const headY = isGirl ? -58 : -60;
+  const legY = isGirl ? 67 : 72;
+  const skirtY = isGirl ? 41 : 43;
+  const backpackZ = isGirl ? -22 : -24;
+  const handY = isGirl ? 13 : 15;
 
   useEffect(() => {
     setIsRotating(autoRotate);
@@ -344,12 +369,12 @@ export function RobloxAvatarRenderer({
     // cape block behind character
     capeDecal = (
       <Box3D
-        width={58}
-        height={85}
+        width={isGirl ? 48 : 58}
+        height={isGirl ? 80 : 85}
         depth={4}
         x={0}
-        y={8}
-        z={-17}
+        y={isGirl ? 7 : 8}
+        z={isGirl ? -15 : -17}
         color="#1d4ed8" // deep royal blue cape
       />
     );
@@ -529,7 +554,7 @@ export function RobloxAvatarRenderer({
           height={3}
           depth={65}
           x={0}
-          y={-85}
+          y={headY - 25}
           z={0}
           color="#1e2937"
           // Tassel printed on face
@@ -541,7 +566,7 @@ export function RobloxAvatarRenderer({
           height={10}
           depth={35}
           x={0}
-          y={-80}
+          y={headY - 20}
           z={0}
           color="#0f172a"
         />
@@ -555,7 +580,7 @@ export function RobloxAvatarRenderer({
         height={12}
         depth={49}
         x={0}
-        y={-84}
+        y={headY - 24}
         z={0}
         color="#fbbf24"
         frontDecal={
@@ -579,7 +604,7 @@ export function RobloxAvatarRenderer({
         height={15}
         depth={2}
         x={0}
-        y={-58}
+        y={headY + 2}
         z={24}
         color="#1f2937"
         frontDecal={
@@ -597,7 +622,7 @@ export function RobloxAvatarRenderer({
         height={18}
         depth={8}
         x={0}
-        y={-58}
+        y={headY + 2}
         z={24}
         color="#374151"
         frontDecal={
@@ -614,11 +639,11 @@ export function RobloxAvatarRenderer({
     renderHeadphones = (
       <div style={{ transformStyle: "preserve-3d" }}>
         {/* Left ear cup */}
-        <Box3D width={8} height={25} depth={20} x={-25} y={-60} z={0} color="#8b5cf6" />
+        <Box3D width={8} height={25} depth={20} x={-25} y={headY} z={0} color="#8b5cf6" />
         {/* Right ear cup */}
-        <Box3D width={8} height={25} depth={20} x={25} y={-60} z={0} color="#8b5cf6" />
+        <Box3D width={8} height={25} depth={20} x={25} y={headY} z={0} color="#8b5cf6" />
         {/* Headband bridge */}
-        <Box3D width={46} height={4} depth={6} x={0} y={-83} z={0} color="#7c3aed" />
+        <Box3D width={46} height={4} depth={6} x={0} y={headY - 23} z={0} color="#7c3aed" />
       </div>
     );
   }
@@ -632,7 +657,7 @@ export function RobloxAvatarRenderer({
         depth={16}
         x={0}
         y={5}
-        z={-24}
+        z={backpackZ}
         color="#dc2626" // red school backpack
         backDecal={
           <div className="w-full h-full p-2 flex flex-col justify-between items-center bg-red-700">
@@ -652,7 +677,7 @@ export function RobloxAvatarRenderer({
           depth={24}
           x={0}
           y={5}
-          z={-23}
+          z={backpackZ + 1}
           color="#06b6d4"
           backDecal={
             <div className="w-full h-full bg-emerald-400/90 shadow-[0_0_12px_#34d399] flex flex-col justify-around items-center">
@@ -665,21 +690,21 @@ export function RobloxAvatarRenderer({
           }
         />
         {/* Copper straps */}
-        <Box3D width={34} height={4} depth={30} x={0} y={-10} z={-10} color="#b45309" />
-        <Box3D width={34} height={4} depth={30} x={0} y={15} z={-10} color="#b45309" />
+        <Box3D width={torsoW + 4} height={4} depth={torsoD + 2} x={0} y={isGirl ? -9 : -10} z={isGirl ? -8 : -10} color="#b45309" />
+        <Box3D width={torsoW + 4} height={4} depth={torsoD + 2} x={0} y={isGirl ? 13 : 15} z={isGirl ? -8 : -10} color="#b45309" />
       </div>
     );
   } else if (activeAccessory === "acc-college-backpack") {
     renderBackpack = (
       <div style={{ transformStyle: "preserve-3d" }}>
         {/* Red book */}
-        <Box3D width={38} height={12} depth={32} x={0} y={-5} z={-22} color="#dc2626"
+        <Box3D width={38} height={12} depth={32} x={0} y={isGirl ? -4 : -5} z={backpackZ + 2} color="#dc2626"
           backDecal={<div className="w-full h-full flex justify-end pr-1 text-[8px] font-bold text-white bg-red-900 select-none">MATH</div>} />
         {/* Green book */}
-        <Box3D width={36} height={12} depth={30} x={0} y={5} z={-22} color="#16a34a"
+        <Box3D width={36} height={12} depth={30} x={0} y={isGirl ? 4 : 5} z={backpackZ + 2} color="#16a34a"
           backDecal={<div className="w-full h-full flex justify-end pr-1 text-[8px] font-bold text-white bg-green-900 select-none">SCI</div>} />
         {/* Blue book */}
-        <Box3D width={40} height={12} depth={34} x={0} y={15} z={-22} color="#2563eb"
+        <Box3D width={40} height={12} depth={34} x={0} y={isGirl ? 13 : 15} z={backpackZ + 2} color="#2563eb"
           backDecal={<div className="w-full h-full flex justify-end pr-1 text-[8px] font-bold text-white bg-blue-900 select-none">HIST</div>} />
       </div>
     );
@@ -995,7 +1020,7 @@ export function RobloxAvatarRenderer({
             height={44}
             depth={44}
             x={0}
-            y={-60}
+            y={headY}
             z={0}
             color={activeSkinHex}
             frontDecal={renderFaceDecal()}
@@ -1015,9 +1040,9 @@ export function RobloxAvatarRenderer({
 
           {/* TORSO */}
           <Box3D
-            width={58}
-            height={74}
-            depth={28}
+            width={torsoW}
+            height={torsoH}
+            depth={torsoD}
             x={0}
             y={-1}
             z={0}
@@ -1033,10 +1058,10 @@ export function RobloxAvatarRenderer({
 
           {/* LEFT ARM (Character Left is screen Right = positive X) */}
           <Box3D
-            width={18}
-            height={72}
-            depth={18}
-            x={39}
+            width={armW}
+            height={armH}
+            depth={armD}
+            x={armX}
             y={0}
             z={0}
             color={hasLongSleeves ? armColor : activeSkinHex}
@@ -1045,7 +1070,7 @@ export function RobloxAvatarRenderer({
               !hasLongSleeves ? (
                 <div className="w-full h-full flex flex-col">
                   {/* Short sleeve segment */}
-                  <div className="h-[24px] w-full" style={{ backgroundColor: armColor }} />
+                  <div className="w-full" style={{ height: `${Math.round(armH * 0.33)}px`, backgroundColor: armColor }} />
                   <div className="flex-1 w-full" />
                 </div>
               ) : undefined
@@ -1053,7 +1078,7 @@ export function RobloxAvatarRenderer({
             leftDecal={
               !hasLongSleeves ? (
                 <div className="w-full h-full flex flex-col">
-                  <div className="h-[24px] w-full" style={{ backgroundColor: armColor }} />
+                  <div className="w-full" style={{ height: `${Math.round(armH * 0.33)}px`, backgroundColor: armColor }} />
                   <div className="flex-1 w-full" />
                 </div>
               ) : undefined
@@ -1061,7 +1086,7 @@ export function RobloxAvatarRenderer({
             rightDecal={
               !hasLongSleeves ? (
                 <div className="w-full h-full flex flex-col">
-                  <div className="h-[24px] w-full" style={{ backgroundColor: armColor }} />
+                  <div className="w-full" style={{ height: `${Math.round(armH * 0.33)}px`, backgroundColor: armColor }} />
                   <div className="flex-1 w-full" />
                 </div>
               ) : undefined
@@ -1069,7 +1094,7 @@ export function RobloxAvatarRenderer({
             backDecal={
               !hasLongSleeves ? (
                 <div className="w-full h-full flex flex-col">
-                  <div className="h-[24px] w-full" style={{ backgroundColor: armColor }} />
+                  <div className="w-full" style={{ height: `${Math.round(armH * 0.33)}px`, backgroundColor: armColor }} />
                   <div className="flex-1 w-full" />
                 </div>
               ) : undefined
@@ -1078,10 +1103,10 @@ export function RobloxAvatarRenderer({
 
           {/* RIGHT ARM (Character Right is screen Left = negative X) */}
           <Box3D
-            width={18}
-            height={72}
-            depth={18}
-            x={-39}
+            width={armW}
+            height={armH}
+            depth={armD}
+            x={-armX}
             y={0}
             z={0}
             color={hasLongSleeves ? armColor : activeSkinHex}
@@ -1090,7 +1115,7 @@ export function RobloxAvatarRenderer({
               !hasLongSleeves ? (
                 <div className="w-full h-full flex flex-col">
                   {/* Short sleeve segment */}
-                  <div className="h-[24px] w-full" style={{ backgroundColor: armColor }} />
+                  <div className="w-full" style={{ height: `${Math.round(armH * 0.33)}px`, backgroundColor: armColor }} />
                   <div className="flex-1 w-full" />
                 </div>
               ) : undefined
@@ -1098,7 +1123,7 @@ export function RobloxAvatarRenderer({
             leftDecal={
               !hasLongSleeves ? (
                 <div className="w-full h-full flex flex-col">
-                  <div className="h-[24px] w-full" style={{ backgroundColor: armColor }} />
+                  <div className="w-full" style={{ height: `${Math.round(armH * 0.33)}px`, backgroundColor: armColor }} />
                   <div className="flex-1 w-full" />
                 </div>
               ) : undefined
@@ -1106,7 +1131,7 @@ export function RobloxAvatarRenderer({
             rightDecal={
               !hasLongSleeves ? (
                 <div className="w-full h-full flex flex-col">
-                  <div className="h-[24px] w-full" style={{ backgroundColor: armColor }} />
+                  <div className="w-full" style={{ height: `${Math.round(armH * 0.33)}px`, backgroundColor: armColor }} />
                   <div className="flex-1 w-full" />
                 </div>
               ) : undefined
@@ -1114,7 +1139,7 @@ export function RobloxAvatarRenderer({
             backDecal={
               !hasLongSleeves ? (
                 <div className="w-full h-full flex flex-col">
-                  <div className="h-[24px] w-full" style={{ backgroundColor: armColor }} />
+                  <div className="w-full" style={{ height: `${Math.round(armH * 0.33)}px`, backgroundColor: armColor }} />
                   <div className="flex-1 w-full" />
                 </div>
               ) : undefined
@@ -1124,11 +1149,11 @@ export function RobloxAvatarRenderer({
           {/* PLATED SKIRT BLOCK (renders around the upper legs) */}
           {isSkirt && (
             <Box3D
-              width={64}
+              width={isGirl ? 54 : 64}
               height={18}
-              depth={34}
+              depth={isGirl ? 30 : 34}
               x={0}
-              y={43}
+              y={skirtY}
               z={0}
               color={pantsColor}
             />
@@ -1136,64 +1161,64 @@ export function RobloxAvatarRenderer({
 
           {/* LEFT LEG (positive X) */}
           <Box3D
-            width={22}
-            height={72}
-            depth={22}
-            x={14}
-            y={72}
+            width={legW}
+            height={legH}
+            depth={legD}
+            x={legX}
+            y={legY}
             z={0}
             color={pantsColor}
             // Shoe at bottom
             frontDecal={
               <div className="w-full h-full flex flex-col justify-end">
-                <div className="h-[14px] w-full border-t border-white" style={{ backgroundColor: shoesColor }} />
+                <div className="w-full border-t border-white" style={{ height: `${Math.round(legH * 0.19)}px`, backgroundColor: shoesColor }} />
               </div>
             }
             leftDecal={
               <div className="w-full h-full flex flex-col justify-end">
-                <div className="h-[14px] w-full" style={{ backgroundColor: shoesColor }} />
+                <div className="w-full" style={{ height: `${Math.round(legH * 0.19)}px`, backgroundColor: shoesColor }} />
               </div>
             }
             rightDecal={
               <div className="w-full h-full flex flex-col justify-end">
-                <div className="h-[14px] w-full" style={{ backgroundColor: shoesColor }} />
+                <div className="w-full" style={{ height: `${Math.round(legH * 0.19)}px`, backgroundColor: shoesColor }} />
               </div>
             }
             backDecal={
               <div className="w-full h-full flex flex-col justify-end">
-                <div className="h-[14px] w-full" style={{ backgroundColor: shoesColor }} />
+                <div className="w-full" style={{ height: `${Math.round(legH * 0.19)}px`, backgroundColor: shoesColor }} />
               </div>
             }
           />
 
           {/* RIGHT LEG (negative X) */}
           <Box3D
-            width={22}
-            height={72}
-            depth={22}
-            x={-14}
-            y={72}
+            width={legW}
+            height={legH}
+            depth={legD}
+            x={-legX}
+            y={legY}
             z={0}
             color={pantsColor}
             // Shoe at bottom
             frontDecal={
               <div className="w-full h-full flex flex-col justify-end">
-                <div className="h-[14px] w-full border-t border-white" style={{ backgroundColor: shoesColor }} />
+                <div className="w-full border-t border-white" style={{ height: `${Math.round(legH * 0.19)}px`, backgroundColor: shoesColor }} />
               </div>
             }
             leftDecal={
               <div className="w-full h-full flex flex-col justify-end">
-                <div className="h-[14px] w-full" style={{ backgroundColor: shoesColor }} />
+                <div className="w-full" style={{ height: `${Math.round(legH * 0.19)}px`, backgroundColor: shoesColor }} />
               </div>
             }
             rightDecal={
               <div className="w-full h-full flex flex-col justify-end">
-                <div className="h-[14px] w-full" style={{ backgroundColor: shoesColor }} />
+                <div className="w-full" style={{ height: `${Math.round(legH * 0.19)}px`, backgroundColor: shoesColor }} />
               </div>
             }
             backDecal={
               <div className="w-full h-full flex flex-col justify-end">
-                <div className="h-[14px] w-full" style={{ backgroundColor: shoesColor }} />
+                <div className="w-full" style={{ height: `${Math.round(legH * 0.19)}px`, backgroundColor: shoesColor }} />
               </div>
             }
           />

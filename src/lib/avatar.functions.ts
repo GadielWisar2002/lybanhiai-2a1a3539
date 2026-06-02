@@ -130,6 +130,7 @@ export const saveAvatarConfig = createServerFn({ method: "POST" })
       pet: z.string(),
       aura: z.string(),
       outfit: z.string(),
+      gender: z.string().optional(),
     })
   }).parse(input))
   .handler(async ({ data, context }) => {

@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate, Link, useSearch } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { AvatarCustomizer } from "@/components/AvatarCustomizer";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -29,13 +29,6 @@ function Profile() {
   const trans = useServerFn(translateRecommendations);
   const { data, isLoading } = useQuery({ queryKey: ["dashboard"], queryFn: () => fn() });
 
-  const search = useSearch({ strict: false }) as any;
-  const tab = search?.tab;
-
-  if (tab === "avatar") {
-    return <AvatarCustomizer onClose={() => navigate({ to: "/profile" })} />;
-  }
-  
   const [loadingLang, setLoadingLang] = useState(false);
 
   const setLang = async (l: "es"|"en"|"fr") => {
@@ -89,7 +82,7 @@ function Profile() {
       <div className="mx-auto max-w-md px-5 pt-4">
         <h1 className="font-display text-2xl font-bold">{t("profile.title")}</h1>
         
-        <Link to="/profile" search={{ tab: "avatar" }} className="block mt-4 transition hover:opacity-90 active:scale-[0.99]">
+        <Link to="/games" search={{ tab: "avatar" }} className="block mt-4 transition hover:opacity-90 active:scale-[0.99]">
           <div className="flex items-center gap-3.5 rounded-2xl border border-border bg-card p-4 shadow-[var(--shadow-card)] cursor-pointer">
             <div className="size-14 shrink-0 rounded-2xl bg-slate-900 border border-slate-800/80 shadow-[var(--shadow-card)] overflow-hidden flex items-center justify-center relative">
               <div className="scale-[0.32] absolute origin-center flex items-center justify-center">
