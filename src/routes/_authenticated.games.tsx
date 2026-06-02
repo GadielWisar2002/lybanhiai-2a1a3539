@@ -283,7 +283,7 @@ function GamesHub() {
                             b.rarity === "rare" ? "bg-emerald-400/20 text-emerald-600" :
                             "bg-blue-400/20 text-blue-600"
                           }`}>
-                            {getRarityLabel(b.rarity)}
+                            {t(`games.rarity.${b.rarity}`, { defaultValue: b.rarity })}
                           </span>
                         )}
                       </button>
