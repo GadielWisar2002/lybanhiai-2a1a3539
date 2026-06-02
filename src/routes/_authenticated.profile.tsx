@@ -4,6 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { useTranslation } from "react-i18next";
 import { getDashboard } from "@/lib/quiz.functions";
 import { updateLanguage } from "@/lib/profile.functions";
+import { translateRecommendations } from "@/lib/recommendations.functions";
 import { AppHeader } from "@/components/AppHeader";
 import { supabase } from "@/integrations/supabase/client";
 import { StreakBadge } from "@/components/StreakBadge";
@@ -20,12 +21,18 @@ function Profile() {
   const qc = useQueryClient();
   const fn = useServerFn(getDashboard);
   const updLang = useServerFn(updateLanguage);
+  const trans = useServerFn(translateRecommendations);
   const { data } = useQuery({ queryKey: ["dashboard"], queryFn: () => fn() });
 
   const setLang = (l: "es"|"en"|"fr") => {
     i18n.changeLanguage(l);
     updLang({ data: { language: l } })
-      .then(() => {
+      .then(async () => {
+        try {
+          await trans({ data: { language: l } });
+        } catch (err) {
+          console.error("Auto-translation error:", err);
+        }
         qc.invalidateQueries({ queryKey: ["profile-lang"] });
         qc.invalidateQueries({ queryKey: ["dashboard"] });
         qc.invalidateQueries({ queryKey: ["recs"] });

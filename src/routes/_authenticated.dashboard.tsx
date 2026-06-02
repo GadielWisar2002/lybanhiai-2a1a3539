@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useTranslation } from "react-i18next";
+import { useEffect } from "react";
 import { getDashboard } from "@/lib/quiz.functions";
 import { translateRecommendations } from "@/lib/recommendations.functions";
 import { AppHeader } from "@/components/AppHeader";
@@ -30,10 +31,15 @@ function Dashboard() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["recs"] });
       qc.invalidateQueries({ queryKey: ["dashboard"] });
-      toast.success("✓");
     },
     onError: (e) => toast.error(e instanceof Error ? e.message : "Error"),
   });
+
+  useEffect(() => {
+    if (langMismatch && !regen.isPending) {
+      regen.mutate();
+    }
+  }, [langMismatch, regen]);
 
   const name = data?.profile?.full_name?.split(" ")[0] ?? "";
 
@@ -59,18 +65,8 @@ function Dashboard() {
             <Link to="/recommendations" className="text-sm font-semibold text-primary">{t("common.viewAll")}</Link>
           </div>
 
-          {langMismatch && (
-            <div className="mb-4 flex items-center justify-between gap-3 rounded-2xl border border-primary/20 bg-primary/5 p-3">
-              <p className="text-xs text-muted-foreground">{t("recs.langMismatch")}</p>
-              <button onClick={() => regen.mutate()} disabled={regen.isPending}
-                className="shrink-0 rounded-full bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground disabled:opacity-60">
-                {regen.isPending ? t("recs.generating") : t("recs.regenInLang")}
-              </button>
-            </div>
-          )}
-
-          {isLoading && <div className="h-24 animate-pulse rounded-2xl bg-muted" />}
-          {!isLoading && data && data.recommendations.length === 0 && (
+          {(isLoading || regen.isPending) && <div className="h-24 animate-pulse rounded-2xl bg-muted" />}
+          {!isLoading && !regen.isPending && data && data.recommendations.length === 0 && (
             <Link to="/recommendations" className="flex items-center justify-between rounded-2xl border border-dashed border-border bg-card p-4">
               <div className="flex items-center gap-3">
                 <div className="grid size-10 place-items-center rounded-xl bg-gold/20"><Sparkles className="size-5 text-primary" /></div>

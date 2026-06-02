@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useTranslation } from "react-i18next";
+import { useEffect } from "react";
 import { listRecommendations, generateRecommendations, translateRecommendations } from "@/lib/recommendations.functions";
 import { AppHeader } from "@/components/AppHeader";
 import { Sparkles, ChevronRight } from "lucide-react";
@@ -38,10 +39,18 @@ function Recs() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["recs"] });
       qc.invalidateQueries({ queryKey: ["dashboard"] });
-      toast.success("✓");
     },
     onError: (e) => toast.error(e instanceof Error ? e.message : "Error"),
   });
+
+  const storedLang = (data?.[0] as { language?: string } | undefined)?.language;
+  const langMismatch = !!storedLang && storedLang !== currentLang;
+
+  useEffect(() => {
+    if (langMismatch && !translateMut.isPending) {
+      translateMut.mutate();
+    }
+  }, [langMismatch, translateMut]);
 
   const uniTypeLabel = (raw: string) => {
     const k = (raw || "").toLowerCase();
@@ -50,9 +59,6 @@ function Recs() {
     if (/(online|línea|ligne)/.test(k)) return t("onboarding.uniOnline");
     return raw;
   };
-
-  const storedLang = (data?.[0] as { language?: string } | undefined)?.language;
-  const langMismatch = !!storedLang && storedLang !== currentLang;
 
   return (
     <>
@@ -66,18 +72,8 @@ function Recs() {
           </button>
         </div>
 
-        {langMismatch && (
-          <div className="mt-4 flex items-center justify-between gap-3 rounded-2xl border border-primary/20 bg-primary/5 p-3">
-            <p className="text-xs text-muted-foreground">{t("recs.langMismatch")}</p>
-            <button onClick={() => translateMut.mutate()} disabled={translateMut.isPending}
-              className="shrink-0 rounded-full bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground disabled:opacity-60">
-              {translateMut.isPending ? t("recs.generating") : t("recs.regenInLang")}
-            </button>
-          </div>
-        )}
-
-        {isLoading && <div className="mt-6 h-40 animate-pulse rounded-2xl bg-muted" />}
-        {!isLoading && data && data.length === 0 && (
+        {(isLoading || translateMut.isPending) && <div className="mt-6 h-40 animate-pulse rounded-2xl bg-muted" />}
+        {!isLoading && !translateMut.isPending && data && data.length === 0 && (
           <p className="mt-8 rounded-2xl border border-dashed border-border bg-card p-6 text-center text-sm text-muted-foreground">
             {t("recs.noResults")} <Link to="/onboarding" className="font-semibold text-primary">→</Link>
           </p>
