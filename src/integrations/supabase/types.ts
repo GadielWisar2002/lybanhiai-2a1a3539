@@ -190,6 +190,24 @@ export type Database = {
         }
         Relationships: []
       }
+      user_blooks: {
+        Row: {
+          blook_id: string
+          unlocked_at: string
+          user_id: string
+        }
+        Insert: {
+          blook_id: string
+          unlocked_at?: string
+          user_id: string
+        }
+        Update: {
+          blook_id?: string
+          unlocked_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_profile_data: {
         Row: {
           budget_currency: string | null
