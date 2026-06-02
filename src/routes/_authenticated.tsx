@@ -73,13 +73,16 @@ function AuthLayout() {
   if (!user) return <Navigate to="/login" />;
 
   const onOnboarding = location.pathname.startsWith("/onboarding");
+  const searchParams = new URLSearchParams(typeof window !== "undefined" ? window.location.search : "");
+  const isAvatarFullScreen = location.pathname === "/games" && (searchParams.get("tab") === "avatar" || (location.search as any)?.tab === "avatar");
+
   if (!onboardingDone && !onOnboarding) return <Navigate to="/onboarding" />;
   if (onboardingDone && onOnboarding) return <Navigate to="/dashboard" />;
 
   return (
-    <div className="min-h-screen bg-background pb-20">
+    <div className={`min-h-screen bg-background ${isAvatarFullScreen ? "" : "pb-20"}`}>
       <Outlet />
-      {!onOnboarding && <BottomNav />}
+      {!onOnboarding && !isAvatarFullScreen && <BottomNav />}
     </div>
   );
 }

@@ -293,9 +293,10 @@ export function AvatarCustomizer({ onClose, inline = false }: AvatarCustomizerPr
           <div className="flex items-center gap-3">
             <button
               onClick={onClose}
-              className="size-9 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-center hover:bg-slate-800 transition active:scale-95 cursor-pointer text-slate-300"
+              className="h-9 px-3 rounded-xl bg-slate-900 border border-slate-800 flex items-center gap-1.5 hover:bg-slate-800 transition active:scale-95 cursor-pointer text-slate-300 font-bold text-xs"
             >
-              <ArrowLeft className="size-5" />
+              <ArrowLeft className="size-4" />
+              <span>Atrás</span>
             </button>
             <div>
               <h1 className="font-display font-black text-base tracking-tight text-white flex items-center gap-1.5">

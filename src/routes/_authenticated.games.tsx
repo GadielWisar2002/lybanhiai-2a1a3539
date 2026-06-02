@@ -114,6 +114,20 @@ function GamesHub() {
     onError: () => toast.error(t("common.error")),
   });
 
+  if (activeTab === "avatar") {
+    return (
+      <div className="animate-in fade-in duration-300">
+        <AvatarCustomizer
+          inline={false}
+          onClose={() => {
+            setActiveTab("play");
+            navigate({ to: "/games", search: { tab: "play" } });
+          }}
+        />
+      </div>
+    );
+  }
+
   return (
     <>
       <AppHeader />
@@ -292,13 +306,6 @@ function GamesHub() {
                 </div>
               </>
             )}
-          </section>
-        )}
-
-        {/* Avatar Tab */}
-        {activeTab === "avatar" && (
-          <section className="mt-5 select-none animate-in fade-in duration-300">
-            <AvatarCustomizer inline={true} onClose={() => setActiveTab("play")} />
           </section>
         )}
 
