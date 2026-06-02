@@ -2,6 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useTranslation } from "react-i18next";
+import { useState } from "react";
 import { getDashboard } from "@/lib/quiz.functions";
 import { updateLanguage } from "@/lib/profile.functions";
 import { translateRecommendations } from "@/lib/recommendations.functions";
@@ -23,21 +24,23 @@ function Profile() {
   const updLang = useServerFn(updateLanguage);
   const trans = useServerFn(translateRecommendations);
   const { data } = useQuery({ queryKey: ["dashboard"], queryFn: () => fn() });
+  
+  const [loadingLang, setLoadingLang] = useState(false);
 
-  const setLang = (l: "es"|"en"|"fr") => {
+  const setLang = async (l: "es"|"en"|"fr") => {
+    setLoadingLang(true);
     i18n.changeLanguage(l);
-    updLang({ data: { language: l } })
-      .then(async () => {
-        try {
-          await trans({ data: { language: l } });
-        } catch (err) {
-          console.error("Auto-translation error:", err);
-        }
-        qc.invalidateQueries({ queryKey: ["profile-lang"] });
-        qc.invalidateQueries({ queryKey: ["dashboard"] });
-        qc.invalidateQueries({ queryKey: ["recs"] });
-      })
-      .catch(() => {});
+    try {
+      await updLang({ data: { language: l } });
+      await trans({ data: { language: l } });
+      qc.invalidateQueries({ queryKey: ["profile-lang"] });
+      qc.invalidateQueries({ queryKey: ["dashboard"] });
+      qc.invalidateQueries({ queryKey: ["recs"] });
+    } catch (err) {
+      console.error("Auto-translation error:", err);
+    } finally {
+      setLoadingLang(false);
+    }
   };
   const signOut = async () => { await supabase.auth.signOut(); navigate({ to: "/" }); };
 
@@ -75,6 +78,15 @@ function Profile() {
           <LogOut className="size-4" /> {t("common.signOut")}
         </button>
       </div>
+
+      {loadingLang && (
+        <div className="fixed inset-0 z-50 grid place-items-center bg-background/80 backdrop-blur-sm">
+          <div className="flex flex-col items-center gap-3 rounded-2xl border border-border bg-card px-6 py-5 shadow-[var(--shadow-card)]">
+            <div className="size-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+            <p className="text-sm font-medium">{t("common.loading")}</p>
+          </div>
+        </div>
+      )}
     </>
   );
 }
