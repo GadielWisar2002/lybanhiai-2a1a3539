@@ -150,26 +150,32 @@ export type Database = {
       }
       streaks: {
         Row: {
+          coins: number
           current_streak: number
           last_active_date: string | null
           longest_streak: number
           total_xp: number
+          unlocked_games: string[]
           updated_at: string
           user_id: string
         }
         Insert: {
+          coins?: number
           current_streak?: number
           last_active_date?: string | null
           longest_streak?: number
           total_xp?: number
+          unlocked_games?: string[]
           updated_at?: string
           user_id: string
         }
         Update: {
+          coins?: number
           current_streak?: number
           last_active_date?: string | null
           longest_streak?: number
           total_xp?: number
+          unlocked_games?: string[]
           updated_at?: string
           user_id?: string
         }

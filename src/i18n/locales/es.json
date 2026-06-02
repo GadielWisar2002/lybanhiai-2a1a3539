@@ -110,6 +110,26 @@
     "packSpaceDesc": "🌌 Probabilidad de Raros y Épicos",
     "packAcademicDesc": "🎓 Colección de birretes, plumas, libros y diplomas",
     "packCyberDesc": "⚡ Insignias Cyber de Alto Nivel",
+    "packExclusiveDesc": "👑 Avatares especiales, peinados, ropa y mascotas",
+    "bankTitle": "Banco de Sombreritos",
+    "bankSubtitle": "Convierte tus puntos de XP acumulados en Sombreritos premium",
+    "convertButton": "Convertir en Sombreritos",
+    "convertXp": "Convertir XP",
+    "convertSuccess": "¡Has convertido con éxito {{xp}} XP en {{coins}} Sombreritos!",
+    "conversionRate": "Tasa de conversión: 7,000 XP = 1 Sombrerito",
+    "xpRequired": "Faltan {{count}} XP para el siguiente Sombrerito",
+    "progressToNext": "Progreso hacia tu próximo Sombrerito",
+    "chooseAmount": "Elige cuántos Sombreritos deseas obtener:",
+    "confirmConversion": "¿Estás seguro de que deseas convertir {{xp}} XP en {{coins}} Sombreritos?",
+    "lockedGame": "Juego Bloqueado",
+    "lockedGameDesc": "Para acceder a este juego interactivo y educativo debes desbloquearlo usando tus puntos de estudio.",
+    "unlockForXp": "Desbloquear por {{xp}} XP",
+    "unlockSuccess": "¡Juego desbloqueado con éxito!",
+    "mockStoreTitle": "Tienda de Sombreritos",
+    "mockStoreSubtitle": "Adquiere Sombreritos directamente (Próximamente)",
+    "mockStoreBundle": "Paquete de {{count}} Sombreritos",
+    "comingSoon": "Próximamente",
+    "mockStoreBuy": "Comprar por {{price}}",
     "goldQuest": {
       "title": "Búsqueda de Oro",
       "style": "Estilo Blooket",
@@ -170,7 +190,8 @@
         "medieval": "Medieval",
         "space": "Espacial",
         "academic": "Académico",
-        "cyber": "Cyber"
+        "cyber": "Cyber",
+        "exclusive": "Exclusivo"
       }
     },
     "blookName": {
@@ -193,7 +214,13 @@
       "backpack": "Mochila",
       "diploma": "Título",
       "microscope": "Microscopio",
-      "mortarboard": "Birrete de Graduado"
+      "mortarboard": "Birrete de Graduado",
+      "punk_hair": "Corte Punk",
+      "royal_robe": "Toga de Oro",
+      "cyber_sneakers": "Tenis Cyber",
+      "vr_glasses": "Lentes VR",
+      "phoenix_pet": "Fénix de Fuego",
+      "crystal_crown": "Corona de Cristal"
     }
   }
 }

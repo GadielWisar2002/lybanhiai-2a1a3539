@@ -103,6 +103,26 @@
     "packSpaceDesc": "🌌 Rare & Epic Boosted",
     "packAcademicDesc": "🎓 Academics & Graduation Badges",
     "packCyberDesc": "⚡ Top-tier Cyber Badges",
+    "packExclusiveDesc": "👑 Exclusive avatars, hairstyles, clothing & pets",
+    "bankTitle": "Bank of Graduation Caps",
+    "bankSubtitle": "Convert your study XP points into premium Graduation Caps",
+    "convertButton": "Convert to Graduation Caps",
+    "convertXp": "Convert XP",
+    "convertSuccess": "Successfully converted {{xp}} XP into {{coins}} Graduation Caps!",
+    "conversionRate": "Conversion rate: 7,000 XP = 1 Graduation Cap",
+    "xpRequired": "{{count}} XP needed for next Graduation Cap",
+    "progressToNext": "Progress to next Graduation Cap",
+    "chooseAmount": "Choose how many Graduation Caps you want to obtain:",
+    "confirmConversion": "Are you sure you want to convert {{xp}} XP into {{coins}} Graduation Caps?",
+    "lockedGame": "Locked Game",
+    "lockedGameDesc": "To access this interactive educational game, you must unlock it using your study XP.",
+    "unlockForXp": "Unlock for {{xp}} XP",
+    "unlockSuccess": "Game successfully unlocked!",
+    "mockStoreTitle": "Graduation Cap Shop",
+    "mockStoreSubtitle": "Purchase Graduation Caps directly (Coming Soon)",
+    "mockStoreBundle": "{{count}} Graduation Caps Pack",
+    "comingSoon": "Coming Soon",
+    "mockStoreBuy": "Buy for {{price}}",
     "goldQuest": {
       "title": "Gold Quest",
       "style": "Blooket Style",
@@ -163,7 +183,8 @@
         "medieval": "Medieval",
         "space": "Space",
         "academic": "Academic",
-        "cyber": "Cyber"
+        "cyber": "Cyber",
+        "exclusive": "Exclusive"
       }
     },
     "blookName": {
@@ -186,7 +207,13 @@
       "backpack": "Backpack",
       "diploma": "Diploma",
       "microscope": "Microscope",
-      "mortarboard": "Graduation Cap"
+      "mortarboard": "Graduation Cap",
+      "punk_hair": "Punk Hairstyle",
+      "royal_robe": "Golden Robe",
+      "cyber_sneakers": "Cyber Sneakers",
+      "vr_glasses": "VR Goggles",
+      "phoenix_pet": "Fire Phoenix",
+      "crystal_crown": "Crystal Crown"
     }
   }
 }

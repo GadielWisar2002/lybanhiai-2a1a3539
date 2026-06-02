@@ -3,7 +3,7 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 export type Rarity = "common" | "rare" | "epic" | "legendary";
-export type PackType = "medieval" | "space" | "cyber" | "academic";
+export type PackType = "medieval" | "space" | "cyber" | "academic" | "exclusive";
 
 export interface Blook {
   id: string;
@@ -41,6 +41,14 @@ export const BLOOKS: Record<string, Blook> = {
   diploma: { id: "diploma", name: "Diploma", emoji: "📜", rarity: "epic", pack: "academic" },
   microscope: { id: "microscope", name: "Microscope", emoji: "🔬", rarity: "epic", pack: "academic" },
   mortarboard: { id: "mortarboard", name: "Graduation Cap", emoji: "🎓", rarity: "legendary", pack: "academic" },
+
+  // Exclusive Personalization Items Pack
+  punk_hair: { id: "punk_hair", name: "Punk Hairstyle", emoji: "💇‍♂️", rarity: "rare", pack: "exclusive" },
+  royal_robe: { id: "royal_robe", name: "Golden Robe", emoji: "🧥", rarity: "epic", pack: "exclusive" },
+  cyber_sneakers: { id: "cyber_sneakers", name: "Cyber Sneakers", emoji: "👟", rarity: "rare", pack: "exclusive" },
+  vr_glasses: { id: "vr_glasses", name: "VR Goggles", emoji: "🕶️", rarity: "epic", pack: "exclusive" },
+  phoenix_pet: { id: "phoenix_pet", name: "Fire Phoenix", emoji: "🐦", rarity: "legendary", pack: "exclusive" },
+  crystal_crown: { id: "crystal_crown", name: "Crystal Crown", emoji: "👑", rarity: "legendary", pack: "exclusive" },
 };
 
 export const PACK_COSTS: Record<PackType, number> = {
@@ -48,6 +56,7 @@ export const PACK_COSTS: Record<PackType, number> = {
   space: 10,
   academic: 12,
   cyber: 20,
+  exclusive: 30,
 };
 
 export const listUnlockedBlooks = createServerFn({ method: "GET" })
@@ -65,7 +74,7 @@ export const listUnlockedBlooks = createServerFn({ method: "GET" })
 
 export const buyBlookPack = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) => z.object({ pack: z.enum(["medieval", "space", "cyber", "academic"]) }).parse(input))
+  .inputValidator((input: unknown) => z.object({ pack: z.enum(["medieval", "space", "cyber", "academic", "exclusive"]) }).parse(input))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     const cost = PACK_COSTS[data.pack];
@@ -125,4 +134,61 @@ export const rewardGameCoins = createServerFn({ method: "POST" })
     
     await supabase.from("streaks").update({ coins: nextCoins }).eq("user_id", userId);
     return { coins: nextCoins };
+  });
+
+export const convertXpToCoins = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => z.object({ amount: z.number().int().min(1) }).parse(input))
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    const xpRequired = data.amount * 7000;
+
+    const { data: s, error } = await supabase.from("streaks").select("total_xp, coins").eq("user_id", userId).maybeSingle();
+    if (error || !s) throw new Error("No streaks record found");
+    if (s.total_xp < xpRequired) throw new Error("Insufficient XP");
+
+    const newXp = s.total_xp - xpRequired;
+    const newCoins = s.coins + data.amount;
+
+    await supabase.from("streaks").update({
+      total_xp: newXp,
+      coins: newCoins,
+      updated_at: new Date().toISOString(),
+    }).eq("user_id", userId);
+
+    return { totalXp: newXp, coins: newCoins };
+  });
+
+export const unlockGame = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => z.object({ gameId: z.string() }).parse(input))
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    
+    // Unlocking costs
+    const costs: Record<string, number> = {
+      "gold-quest": 500,
+      "space-rush": 1000,
+    };
+    
+    const cost = costs[data.gameId];
+    if (cost === undefined) throw new Error("Invalid game ID");
+
+    const { data: s, error } = await supabase.from("streaks").select("total_xp, coins, unlocked_games").eq("user_id", userId).maybeSingle();
+    if (error || !s) throw new Error("No streaks record found");
+
+    const unlocked = s.unlocked_games ?? [];
+    if (unlocked.includes(data.gameId)) throw new Error("Game is already unlocked");
+    if (s.total_xp < cost) throw new Error(`Insufficient XP. You need ${cost} XP to unlock this game!`);
+
+    const newXp = s.total_xp - cost;
+    const newUnlocked = [...unlocked, data.gameId];
+
+    await supabase.from("streaks").update({
+      total_xp: newXp,
+      unlocked_games: newUnlocked,
+      updated_at: new Date().toISOString(),
+    }).eq("user_id", userId);
+
+    return { totalXp: newXp, unlockedGames: newUnlocked };
   });

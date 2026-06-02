@@ -240,8 +240,7 @@ export const submitQuizAttempt = createServerFn({ method: "POST" })
     }
     longest = Math.max(longest, current);
     const totalXp = (s?.total_xp ?? 0) + xp;
-    const coinsEarned = data.score;
-    const newCoins = (s?.coins ?? 0) + coinsEarned;
+    const newCoins = s?.coins ?? 0;
 
     await supabase.from("streaks").upsert({
       user_id: userId, current_streak: current, longest_streak: longest,
@@ -265,24 +264,14 @@ export const getDashboard = createServerFn({ method: "GET" })
     const { data: attempts } = await supabase.from("quiz_attempts").select("xp_earned").eq("user_id", userId);
     const calculatedXp = (attempts ?? []).reduce((acc, curr) => acc + (curr.xp_earned ?? 0), 0);
 
-    // Fetch user's unlocked blooks to see if they ever bought packs
-    const { data: blooks } = await supabase.from("user_blooks").select("blook_id").eq("user_id", userId);
-    const blooksCount = blooks?.length ?? 0;
-
     let s = streakRes.data;
     let totalXp = s?.total_xp ?? 0;
     let coins = s?.coins ?? 0;
+    let unlockedGames = s?.unlocked_games ?? [];
 
     // If database total_xp is lower than calculated XP from attempts, sync it!
     if (calculatedXp > totalXp) {
       totalXp = calculatedXp;
-    }
-
-    // If user has never unlocked any blooks (never spent coins) and their coins balance is less than totalXp / 10,
-    // automatically convert all their XP to coins!
-    const expectedCoins = Math.floor(totalXp / 10);
-    if (blooksCount === 0 && coins < expectedCoins) {
-      coins = expectedCoins;
     }
 
     const today = new Date().toISOString().slice(0, 10);
@@ -311,6 +300,7 @@ export const getDashboard = createServerFn({ method: "GET" })
         last_active_date: s?.last_active_date ?? today,
         total_xp: totalXp,
         coins: coins,
+        unlocked_games: unlockedGames,
         updated_at: new Date().toISOString(),
       }).select().maybeSingle();
       if (updatedStreak) {
@@ -325,6 +315,7 @@ export const getDashboard = createServerFn({ method: "GET" })
         longest_streak: s?.longest_streak ?? 0,
         total_xp: totalXp,
         coins: coins,
+        unlocked_games: unlockedGames,
         last_active_date: s?.last_active_date ?? null,
         is_active_today: isActiveToday,
       },

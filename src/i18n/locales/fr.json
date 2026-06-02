@@ -103,6 +103,26 @@
     "packSpaceDesc": "🌌 Probabilité de Rares & Epiques",
     "packAcademicDesc": "🎓 Collection de diplômes, plumes, livres et chapeaux",
     "packCyberDesc": "⚡ Insignes Cyber de haut niveau",
+    "packExclusiveDesc": "👑 Avatars exclusifs, coiffures, vêtements & animaux",
+    "bankTitle": "Banque de Diplômes",
+    "bankSubtitle": "Convertissez vos points d'XP d'étude en Diplômes premium",
+    "convertButton": "Convertir en Diplômes",
+    "convertXp": "Convertir l'XP",
+    "convertSuccess": "XP converti avec succès : {{xp}} XP en {{coins}} Diplômes !",
+    "conversionRate": "Taux de conversion : 7 000 XP = 1 Diplôme",
+    "xpRequired": "{{count}} XP requis pour le prochain Diplôme",
+    "progressToNext": "Progression vers votre prochain Diplôme",
+    "chooseAmount": "Choisissez le nombre de Diplômes à obtenir :",
+    "confirmConversion": "Voulez-vous vraiment convertir {{xp}} XP en {{coins}} Diplômes ?",
+    "lockedGame": "Jeu Verrouillé",
+    "lockedGameDesc": "Pour accéder à ce jeu éducatif et interactif, vous devez le déverrouiller avec vos points d'XP d'étude.",
+    "unlockForXp": "Déverrouiller pour {{xp}} XP",
+    "unlockSuccess": "Jeu déverrouillé avec succès !",
+    "mockStoreTitle": "Boutique de Diplômes",
+    "mockStoreSubtitle": "Achetez des Diplômes directement (Bientôt disponible)",
+    "mockStoreBundle": "Pack de {{count}} Diplômes",
+    "comingSoon": "Bientôt disponible",
+    "mockStoreBuy": "Acheter pour {{price}}",
     "goldQuest": {
       "title": "Quête d'Or",
       "style": "Style Blooket",
@@ -163,7 +183,8 @@
         "medieval": "Médiéval",
         "space": "Spatial",
         "academic": "Académique",
-        "cyber": "Cyber"
+        "cyber": "Cyber",
+        "exclusive": "Exclusif"
       }
     },
     "blookName": {
@@ -186,7 +207,13 @@
       "backpack": "Sac à dos",
       "diploma": "Diplôme",
       "microscope": "Microscope",
-      "mortarboard": "Diplôme de Gradué"
+      "mortarboard": "Diplôme de Gradué",
+      "punk_hair": "Coupe Punk",
+      "royal_robe": "Robe Dorée",
+      "cyber_sneakers": "Cyber Sneakers",
+      "vr_glasses": "Lunettes VR",
+      "phoenix_pet": "Phénix de Feu",
+      "crystal_crown": "Couronne de Cristal"
     }
   }
 }
