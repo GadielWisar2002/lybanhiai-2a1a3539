@@ -1,10 +1,10 @@
 import streakCap from "@/assets/streak-cap.png";
 import { useTranslation } from "react-i18next";
 
-export function StreakBadge({ days }: { days: number }) {
+export function StreakBadge({ days, active = true }: { days: number; active?: boolean }) {
   const { t } = useTranslation();
   return (
-    <div className="inline-flex items-center gap-2 rounded-full border border-gold/40 bg-gold/15 px-3 py-1.5">
+    <div className={`inline-flex items-center gap-2 rounded-full border px-3 py-1.5 transition ${active ? "border-gold/40 bg-gold/15" : "border-muted bg-muted/40 grayscale opacity-75"}`}>
       <img src={streakCap} alt="" width={28} height={28} className="size-7" loading="lazy" />
       <div className="flex items-baseline gap-1">
         <span className="font-display text-lg font-bold text-foreground leading-none">{days}</span>

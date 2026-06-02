@@ -54,7 +54,7 @@ function Profile() {
         <section className="mt-6 grid grid-cols-2 gap-3">
           <div className="rounded-2xl border border-border bg-card p-4">
             <p className="text-xs uppercase tracking-wider text-muted-foreground">{t("profile.streak")}</p>
-            <div className="mt-2"><StreakBadge days={data?.streak.current_streak ?? 0} /></div>
+            <div className="mt-2"><StreakBadge days={data?.streak.current_streak ?? 0} active={data?.streak.is_active_today} /></div>
           </div>
           <div className="rounded-2xl border border-border bg-card p-4">
             <p className="text-xs uppercase tracking-wider text-muted-foreground">{t("profile.totalXp")}</p>

@@ -258,9 +258,37 @@ export const getDashboard = createServerFn({ method: "GET" })
       supabase.from("streaks").select("*").eq("user_id", userId).maybeSingle(),
       supabase.from("recommendations").select("id, career_name, match_score, tags, language").eq("user_id", userId).order("match_score", { ascending: false }).limit(3),
     ]);
+
+    const today = new Date().toISOString().slice(0, 10);
+    const s = streakRes.data;
+    let current = s?.current_streak ?? 0;
+    let isActiveToday = false;
+
+    if (s?.last_active_date) {
+      const last = new Date(s.last_active_date);
+      const diff = Math.floor((new Date(today).getTime() - last.getTime()) / 86400000);
+      if (diff === 0) {
+        isActiveToday = true;
+      } else if (diff === 1) {
+        isActiveToday = false;
+      } else {
+        current = 0;
+        isActiveToday = false;
+        if (s.current_streak > 0) {
+          await supabase.from("streaks").update({ current_streak: 0 }).eq("user_id", userId);
+        }
+      }
+    }
+
     return {
       profile: profileRes.data,
-      streak: streakRes.data ?? { current_streak: 0, longest_streak: 0, total_xp: 0, last_active_date: null },
+      streak: {
+        current_streak: current,
+        longest_streak: s?.longest_streak ?? 0,
+        total_xp: s?.total_xp ?? 0,
+        last_active_date: s?.last_active_date ?? null,
+        is_active_today: isActiveToday,
+      },
       recommendations: recsRes.data ?? [],
     };
   });
