@@ -85,5 +85,77 @@
     "title": "Profil", "language": "Langue de l'app", "streak": "Série actuelle",
     "longestStreak": "Plus longue série", "totalXp": "XP total", "noBlook": "Aucun Blook équipé"
   },
-  "library": { "title": "Bibliothèque", "empty": "Bientôt : ressources sauvegardées et matériels d'étude.", "recentQuizzes": "Tes quiz récents", "questions": "questions" }
+  "library": { "title": "Bibliothèque", "empty": "Bientôt : ressources sauvegardées et matériels d'étude.", "recentQuizzes": "Tes quiz récents", "questions": "questions" },
+  "games": {
+    "title": "Jeux",
+    "subtitle": "Dépense des diplômes pour jouer et collectionner des avatars !",
+    "play": "Jouer",
+    "locker": "Casier",
+    "shop": "Boutique",
+    "activeBlook": "Blook Actif",
+    "unequip": "Déséquiper le Blook",
+    "locked": "Verrouillé",
+    "collection": "Collection : {{unlocked}} / {{total}}",
+    "packTitle": "Pack {{name}}",
+    "packMedievalDesc": "🛡️ Blooks Communs à Légendaires",
+    "packSpaceDesc": "🌌 Probabilité de Rares & Epiques",
+    "packCyberDesc": "⚡ Insignes Cyber de haut niveau",
+    "goldQuest": {
+      "title": "Quête d'Or",
+      "style": "Style Blooket",
+      "desc": "Réponds correctement aux questions de quiz pour ouvrir des coffres mystères. Vole ou double ton or contre l'IA !",
+      "free": "Entrée Gratuite",
+      "bonus": "Gagne des diplômes bonus",
+      "start": "Lancer la Quête",
+      "welcome": "Bienvenue dans la Quête d'Or !",
+      "welcomeDesc": "Réponds aux questions le plus vite possible, ouvre des coffres pour multiplier ton or et vole les bots IA pour gagner !",
+      "startGame": "Démarrer (60s)",
+      "goldCount": "{{count}} Or",
+      "timeLeft": "{{count}}s restantes",
+      "liveRankings": "Classement en Direct",
+      "correctChest": "CORRECT ! CHOISIS UN COFFRE :",
+      "stolenSuccess": "Tu as volé 🎓 {{stolen}} diplômes à {{name}} !",
+      "plusGold": "+{{count}} Or !",
+      "doubled": "Or Doublé !",
+      "finished": "Quête Terminée !",
+      "collectedGold": "Tu as collecté 🪙 {{count}} Or !",
+      "finalRanks": "Classement Final",
+      "coinsClaimed": "+ {{count}} Diplômes Réclamés !",
+      "backHub": "Retour aux Jeux"
+    },
+    "spaceRush": {
+      "title": "Course Spatiale",
+      "style": "Style Quizizz",
+      "desc": "Décolle en orbite ! Réponds correctement aux questions pour accélérer ta fusée et battre les concurrents.",
+      "free": "Entrée Gratuite",
+      "bonus": "Gagne des boosts de vitesse",
+      "start": "Décoller",
+      "welcome": "Course Spatiale de Fusées !",
+      "welcomeDesc": "Réponds correctement aux questions d'astronomie pour allumer tes propulseurs et devancer les pilotes IA. Atteins 100 mètres pour gagner !",
+      "startRace": "Démarrer la Course",
+      "track": "Piste de Course (100m)",
+      "streakIndicator": "🔥 Série de {{count}} correctes ! (Super Boost)",
+      "boost": "Boost de Puissance ! +{{count}}m",
+      "stall": "Moteur Calé ! 0m",
+      "finished": "Course Terminée !",
+      "rankDesc": "Tu as terminé au rang #{{rank}} !",
+      "finalStandings": "Classement Final",
+      "coinsClaimed": "+ {{count}} Diplômes Réclamés !",
+      "backHub": "Retour aux Jeux"
+    },
+    "shopSection": {
+      "unlocking": "Ouverture du pack Blook...",
+      "goodLuck": "Bonne chance !",
+      "unlockedText": "Tu as débloqué : {{name}} !",
+      "ultraRare": "👑 INSIGNE ULTRA RARE !",
+      "addedCollection": "⭐ Ajouté à ta collection !",
+      "awesomeButton": "Super !",
+      "rarity": {
+        "common": "Commun",
+        "rare": "Rare",
+        "epic": "Épique",
+        "legendary": "Légendaire"
+      }
+    }
+  }
 }

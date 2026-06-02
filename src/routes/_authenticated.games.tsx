@@ -8,6 +8,8 @@ import { listUnlockedBlooks, buyBlookPack, equipBlook, BLOOKS, PACK_COSTS, type 
 import { AppHeader } from "@/components/AppHeader";
 import { Gamepad2, Lock, ShoppingBag, Sparkles, Trophy } from "lucide-react";
 import { toast } from "sonner";
+import streakCap from "@/assets/streak-cap.png";
+
 
 export const Route = createFileRoute("/_authenticated/games")({
   head: () => ({ meta: [{ title: "Games — Lybanhi" }] }),
@@ -46,7 +48,7 @@ function GamesHub() {
     },
     onError: (e) => {
       setOpeningPack(false);
-      toast.error(e instanceof Error ? e.message : "Error opening pack");
+      toast.error(e instanceof Error ? e.message : t("common.error"));
     },
   });
 
@@ -55,14 +57,14 @@ function GamesHub() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["unlockedBlooks"] });
       qc.invalidateQueries({ queryKey: ["dashboard"] });
-      toast.success("Avatar equipped!");
+      toast.success(t("games.activeBlook", "Active Blook") + "!");
     },
-    onError: () => toast.error("Failed to equip blook"),
+    onError: () => toast.error(t("common.error")),
   });
 
   const getRarityColor = (rarity: string) => {
     switch (rarity) {
-      case "legendary": return "from-amber-400 to-yellow-600 border-amber-400 shadow-amber-400/30 text-amber-950";
+      case "legendary": return "from-amber-400 to-yellow-600 border-amber-400 shadow-amber-400/30 text-amber-955";
       case "epic": return "from-purple-500 to-indigo-700 border-purple-500 shadow-purple-500/30 text-purple-955";
       case "rare": return "from-emerald-400 to-teal-600 border-emerald-400 shadow-emerald-400/30 text-emerald-955";
       default: return "from-blue-400 to-cyan-500 border-blue-400 shadow-blue-400/30 text-blue-955";
@@ -70,12 +72,7 @@ function GamesHub() {
   };
 
   const getRarityLabel = (rarity: string) => {
-    switch (rarity) {
-      case "legendary": return "Legendary";
-      case "epic": return "Epic";
-      case "rare": return "Rare";
-      default: return "Common";
-    }
+    return t(`games.shopSection.rarity.${rarity}`, { defaultValue: rarity });
   };
 
   return (
@@ -85,11 +82,12 @@ function GamesHub() {
         {/* Hub Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="font-display text-2xl font-bold">{t("nav.games", { defaultValue: "Games" })}</h1>
-            <p className="text-xs text-muted-foreground">Spend coins to play & collect avatars!</p>
+            <h1 className="font-display text-2xl font-bold">{t("games.title", { defaultValue: "Games" })}</h1>
+            <p className="text-xs text-muted-foreground">{t("games.subtitle", { defaultValue: "Spend coins to play & collect avatars!" })}</p>
           </div>
           <div className="flex items-center gap-1.5 rounded-full bg-gold/15 border border-gold/30 px-3 py-1.5 font-display text-sm font-bold text-gold-foreground shadow-sm">
-            🪙 <span>{coins}</span>
+            <img src={streakCap} alt="" className="size-4 shrink-0 select-none" />
+            <span>{coins}</span>
           </div>
         </div>
 
@@ -105,7 +103,7 @@ function GamesHub() {
                   : "text-muted-foreground hover:text-foreground"
               }`}
             >
-              {tab === "play" ? "Play" : tab === "locker" ? "Locker" : "Shop"}
+              {t(`games.${tab}`, { defaultValue: tab })}
             </button>
           ))}
         </div>
@@ -113,47 +111,53 @@ function GamesHub() {
         {/* Play Tab */}
         {activeTab === "play" && (
           <section className="mt-5 space-y-4">
-            <div className="rounded-3xl border border-border bg-card p-5 shadow-elegant flex flex-col justify-between">
+            <div className="rounded-3xl border border-border bg-card p-5 shadow-[var(--shadow-card)] flex flex-col justify-between">
               <div>
                 <span className="inline-block rounded-full bg-primary/10 px-2.5 py-0.5 text-[10px] font-bold text-primary uppercase tracking-wider">
-                  Blooket Style
+                  {t("games.goldQuest.style", { defaultValue: "Blooket Style" })}
                 </span>
-                <h3 className="mt-2 font-display text-xl font-bold">Gold Quest</h3>
+                <h3 className="mt-2 font-display text-xl font-bold">{t("games.goldQuest.title", { defaultValue: "Gold Quest" })}</h3>
                 <p className="mt-1 text-xs text-muted-foreground">
-                  Answer fast-paced trivia questions correctly to open mystery chests. Steal or double your gold against AI players!
+                  {t("games.goldQuest.desc", { defaultValue: "Answer fast-paced trivia questions correctly to open mystery chests. Steal or double your gold against AI players!" })}
                 </p>
                 <div className="mt-3 flex items-center gap-4 text-xs font-semibold">
-                  <span className="text-gold-foreground">🪙 Free Entry</span>
-                  <span className="text-success">🏆 Win bonus coins</span>
+                  <span className="text-gold-foreground flex items-center gap-1">
+                    <img src={streakCap} alt="" className="size-3.5 select-none" />
+                    {t("games.goldQuest.free", { defaultValue: "Free Entry" })}
+                  </span>
+                  <span className="text-success">🏆 {t("games.goldQuest.bonus", { defaultValue: "Win bonus coins" })}</span>
                 </div>
               </div>
               <button
                 onClick={() => navigate({ to: "/games/gold-quest" })}
-                className="mt-4 flex h-11 items-center justify-center gap-2 rounded-2xl bg-primary font-semibold text-primary-foreground transition active:scale-95"
+                className="mt-4 flex h-11 items-center justify-center gap-2 rounded-2xl bg-primary font-semibold text-primary-foreground transition active:scale-95 cursor-pointer"
               >
-                <Gamepad2 className="size-4" /> Start Quest
+                <Gamepad2 className="size-4" /> {t("games.goldQuest.start", { defaultValue: "Start Quest" })}
               </button>
             </div>
 
-            <div className="rounded-3xl border border-border bg-card p-5 shadow-elegant flex flex-col justify-between opacity-95">
+            <div className="rounded-3xl border border-border bg-card p-5 shadow-[var(--shadow-card)] flex flex-col justify-between opacity-95">
               <div>
                 <span className="inline-block rounded-full bg-success/15 px-2.5 py-0.5 text-[10px] font-bold text-success uppercase tracking-wider">
-                  Quizizz Style
+                  {t("games.spaceRush.style", { defaultValue: "Quizizz Style" })}
                 </span>
-                <h3 className="mt-2 font-display text-xl font-bold">Space Rush</h3>
+                <h3 className="mt-2 font-display text-xl font-bold">{t("games.spaceRush.title", { defaultValue: "Space Rush" })}</h3>
                 <p className="mt-1 text-xs text-muted-foreground">
-                  Blast off into orbit! Answer questions correctly to accelerate your rocket ship and beat simulated competitors.
+                  {t("games.spaceRush.desc", { defaultValue: "Blast off into orbit! Answer questions correctly to accelerate your rocket ship and beat simulated competitors." })}
                 </p>
                 <div className="mt-3 flex items-center gap-4 text-xs font-semibold">
-                  <span className="text-gold-foreground">🪙 Free Entry</span>
-                  <span className="text-success">🏆 Earn speed boosts</span>
+                  <span className="text-gold-foreground flex items-center gap-1">
+                    <img src={streakCap} alt="" className="size-3.5 select-none" />
+                    {t("games.spaceRush.free", { defaultValue: "Free Entry" })}
+                  </span>
+                  <span className="text-success">🏆 {t("games.spaceRush.bonus", { defaultValue: "Earn speed boosts" })}</span>
                 </div>
               </div>
               <button
                 onClick={() => navigate({ to: "/games/space-rush" })}
-                className="mt-4 flex h-11 items-center justify-center gap-2 rounded-2xl bg-success font-semibold text-success-foreground transition active:scale-95"
+                className="mt-4 flex h-11 items-center justify-center gap-2 rounded-2xl bg-success font-semibold text-success-foreground transition active:scale-95 cursor-pointer"
               >
-                <Sparkles className="size-4" /> Blast Off
+                <Sparkles className="size-4" /> {t("games.spaceRush.start", { defaultValue: "Blast Off" })}
               </button>
             </div>
           </section>
@@ -168,14 +172,14 @@ function GamesHub() {
               <>
                 <div className="mb-4 flex items-center justify-between">
                   <span className="text-xs font-semibold text-muted-foreground">
-                    Collection: {locker?.unlockedIds.length || 0} / {Object.keys(BLOOKS).length}
+                    {t("games.collection", { unlocked: locker?.unlockedIds.length || 0, total: Object.keys(BLOOKS).length, defaultValue: `Collection: ${locker?.unlockedIds.length || 0} / ${Object.keys(BLOOKS).length}` })}
                   </span>
                   {locker?.activeBlookId && (
                     <button
                       onClick={() => equipMutation.mutate(null)}
-                      className="text-xs font-bold text-destructive hover:underline"
+                      className="text-xs font-bold text-destructive hover:underline cursor-pointer"
                     >
-                      Unequip Active Blook
+                      {t("games.unequip", { defaultValue: "Unequip Active Blook" })}
                     </button>
                   )}
                 </div>
@@ -193,13 +197,13 @@ function GamesHub() {
                         key={b.id}
                         disabled={!isUnlocked || equipMutation.isPending}
                         onClick={() => equipMutation.mutate(b.id)}
-                        className={`flex flex-col items-center gap-1 rounded-2xl bg-card p-3 shadow-card transition active:scale-95 disabled:scale-100 ${borderCls} ${
+                        className={`flex flex-col items-center gap-1 rounded-2xl bg-card p-3 shadow-card transition active:scale-95 disabled:scale-100 cursor-pointer disabled:cursor-not-allowed ${borderCls} ${
                           !isUnlocked ? "opacity-40 grayscale" : "hover:bg-muted/30"
                         }`}
                       >
                         <div className="text-3xl select-none">{isUnlocked ? b.emoji : "❓"}</div>
                         <span className="truncate w-full text-[9px] font-bold text-center leading-tight">
-                          {isUnlocked ? b.name : "Locked"}
+                          {isUnlocked ? b.name : t("games.locked", { defaultValue: "Locked" })}
                         </span>
                         {isUnlocked && (
                           <span className={`text-[7px] px-1 rounded-full font-bold uppercase ${
@@ -230,27 +234,30 @@ function GamesHub() {
               return (
                 <div
                   key={pack}
-                  className="rounded-3xl border border-border bg-card p-4 shadow-elegant flex items-center justify-between gap-4"
+                  className="rounded-3xl border border-border bg-card p-4 shadow-[var(--shadow-card)] flex items-center justify-between gap-4 animate-in fade-in slide-in-from-bottom-2 duration-300"
                 >
                   <div className="flex items-center gap-3">
                     <div className="grid size-12 place-items-center rounded-2xl bg-primary/10 text-primary">
                       <ShoppingBag className="size-6" />
                     </div>
                     <div>
-                      <h3 className="font-display font-bold capitalize leading-none">{pack} Pack</h3>
+                      <h3 className="font-display font-bold capitalize leading-none">
+                        {t("games.packTitle", { name: pack, defaultValue: `${pack} Pack` })}
+                      </h3>
                       <p className="mt-1 text-[10px] text-muted-foreground uppercase tracking-wider font-bold">
-                        {pack === "medieval" ? "🛡️ Common to Legendary Blooks" :
-                         pack === "space" ? "🌌 Rare & Epic Boosted" :
-                         "⚡ Top-tier Cyber Badges"}
+                        {pack === "medieval" ? t("games.packMedievalDesc", "🛡️ Common to Legendary Blooks") :
+                         pack === "space" ? t("games.packSpaceDesc", "🌌 Rare & Epic Boosted") :
+                         t("games.packCyberDesc", "⚡ Top-tier Cyber Badges")}
                       </p>
                     </div>
                   </div>
                   <button
                     disabled={!isAffordable || buyMutation.isPending}
                     onClick={() => buyMutation.mutate(pack)}
-                    className="shrink-0 inline-flex h-10 items-center justify-center gap-1.5 rounded-xl bg-gold px-4 font-semibold text-gold-foreground transition active:scale-95 disabled:opacity-60 disabled:scale-100"
+                    className="shrink-0 inline-flex h-10 items-center justify-center gap-1.5 rounded-xl bg-gold px-4 font-semibold text-gold-foreground transition active:scale-95 disabled:opacity-60 disabled:scale-100 cursor-pointer disabled:cursor-not-allowed"
                   >
-                    <span>🪙 {cost}</span>
+                    <img src={streakCap} alt="" className="size-4 shrink-0 select-none" />
+                    <span>{cost}</span>
                   </button>
                 </div>
               );
@@ -273,16 +280,18 @@ function GamesHub() {
                   </span>
                 </div>
                 <h2 className="mt-6 font-display text-2xl font-black text-foreground">
-                  You Unlocked: {revealedBlook.name}!
+                  {t("games.shopSection.unlockedText", { name: revealedBlook.name, defaultValue: `You Unlocked: ${revealedBlook.name}!` })}
                 </h2>
                 <p className="mt-2 text-xs text-muted-foreground uppercase tracking-wider font-bold">
-                  {revealedBlook.rarity === "legendary" ? "👑 ULTRA RARE BADGE!" : "⭐ Added to your collection!"}
+                  {revealedBlook.rarity === "legendary"
+                    ? t("games.shopSection.ultraRare", { defaultValue: "👑 ULTRA RARE BADGE!" })
+                    : t("games.shopSection.addedCollection", { defaultValue: "⭐ Added to your collection!" })}
                 </p>
                 <button
                   onClick={() => setOpeningPack(false)}
-                  className="mt-8 px-6 h-11 bg-primary text-primary-foreground font-semibold rounded-2xl shadow-md transition active:scale-95"
+                  className="mt-8 px-6 h-11 bg-primary text-primary-foreground font-semibold rounded-2xl shadow-md transition active:scale-95 cursor-pointer"
                 >
-                  Awesome!
+                  {t("games.shopSection.awesomeButton", { defaultValue: "Awesome!" })}
                 </button>
               </div>
             ) : (
@@ -290,8 +299,12 @@ function GamesHub() {
                 <div className="size-48 rounded-3xl border-4 border-dashed border-primary bg-primary/5 flex items-center justify-center shadow-card animate-spin duration-[4s]">
                   <ShoppingBag className="size-16 text-primary animate-pulse" />
                 </div>
-                <h3 className="mt-6 font-display text-xl font-bold">Opening Blook Pack...</h3>
-                <p className="mt-1 text-xs text-muted-foreground animate-pulse">Good luck!</p>
+                <h3 className="mt-6 font-display text-xl font-bold">
+                  {t("games.shopSection.unlocking", { defaultValue: "Opening Blook Pack..." })}
+                </h3>
+                <p className="mt-1 text-xs text-muted-foreground animate-pulse">
+                  {t("games.shopSection.goodLuck", { defaultValue: "Good luck!" })}
+                </p>
               </div>
             )}
           </div>

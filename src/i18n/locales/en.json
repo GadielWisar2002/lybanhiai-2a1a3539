@@ -85,5 +85,77 @@
     "title": "Profile", "language": "App language", "streak": "Current streak",
     "longestStreak": "Longest streak", "totalXp": "Total XP", "noBlook": "No Blook equipped"
   },
-  "library": { "title": "Library", "empty": "Coming soon: saved resources and study materials.", "recentQuizzes": "Your recent quizzes", "questions": "questions" }
+  "library": { "title": "Library", "empty": "Coming soon: saved resources and study materials.", "recentQuizzes": "Your recent quizzes", "questions": "questions" },
+  "games": {
+    "title": "Games",
+    "subtitle": "Spend coins to play & collect avatars!",
+    "play": "Play",
+    "locker": "Locker",
+    "shop": "Shop",
+    "activeBlook": "Active Blook",
+    "unequip": "Unequip Active Blook",
+    "locked": "Locked",
+    "collection": "Collection: {{unlocked}} / {{total}}",
+    "packTitle": "{{name}} Pack",
+    "packMedievalDesc": "🛡️ Common to Legendary Blooks",
+    "packSpaceDesc": "🌌 Rare & Epic Boosted",
+    "packCyberDesc": "⚡ Top-tier Cyber Badges",
+    "goldQuest": {
+      "title": "Gold Quest",
+      "style": "Blooket Style",
+      "desc": "Answer fast-paced trivia questions correctly to open mystery chests. Steal or double your gold against AI players!",
+      "free": "Free Entry",
+      "bonus": "Win bonus coins",
+      "start": "Start Quest",
+      "welcome": "Welcome to Gold Quest!",
+      "welcomeDesc": "Answer the questions as fast as possible, open chest cards to multiply your gold, and steal from AI bots to win!",
+      "startGame": "Start Game (60s)",
+      "goldCount": "{{count}} Gold",
+      "timeLeft": "{{count}}s left",
+      "liveRankings": "Live Rankings",
+      "correctChest": "CORRECT! CHOOSE A CHEST:",
+      "stolenSuccess": "Stole 🎓 {{stolen}} coins from {{name}}!",
+      "plusGold": "+{{count}} Gold!",
+      "doubled": "Gold Doubled!",
+      "finished": "Quest Finished!",
+      "collectedGold": "You collected 🪙 {{count}} Gold!",
+      "finalRanks": "Final Ranks",
+      "coinsClaimed": "+ {{count}} Graduation Caps Claimed!",
+      "backHub": "Back to Arcade Hub"
+    },
+    "spaceRush": {
+      "title": "Space Rush",
+      "style": "Quizizz Style",
+      "desc": "Blast off into orbit! Answer questions correctly to accelerate your rocket ship and beat simulated competitors.",
+      "free": "Free Entry",
+      "bonus": "Earn speed boosts",
+      "start": "Blast Off",
+      "welcome": "Space Rush Rocket Race!",
+      "welcomeDesc": "Answer the astronomy questions correctly to fire your rocket boosters and streak ahead of simulated AI pilots. Reach 100 meters to win!",
+      "startRace": "Start Race",
+      "track": "Race Track (100m)",
+      "streakIndicator": "🔥 {{count}} Correct Streak! (Engine Boost)",
+      "boost": "Power Boost! +{{count}}m",
+      "stall": "Engine Stall! 0m",
+      "finished": "Race Finished!",
+      "rankDesc": "You finished in Rank #{{rank}}!",
+      "finalStandings": "Final Standings",
+      "coinsClaimed": "+ {{count}} Graduation Caps Claimed!",
+      "backHub": "Back to Arcade Hub"
+    },
+    "shopSection": {
+      "unlocking": "Opening Blook Pack...",
+      "goodLuck": "Good luck!",
+      "unlockedText": "You Unlocked: {{name}}!",
+      "ultraRare": "👑 ULTRA RARE BADGE!",
+      "addedCollection": "⭐ Added to your collection!",
+      "awesomeButton": "Awesome!",
+      "rarity": {
+        "common": "Common",
+        "rare": "Rare",
+        "epic": "Epic",
+        "legendary": "Legendary"
+      }
+    }
+  }
 }

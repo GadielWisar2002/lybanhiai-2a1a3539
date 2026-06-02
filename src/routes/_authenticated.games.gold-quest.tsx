@@ -7,6 +7,8 @@ import { rewardGameCoins } from "@/lib/games.functions";
 import { AppHeader } from "@/components/AppHeader";
 import { ArrowLeft, Check, Trophy, X } from "lucide-react";
 import { toast } from "sonner";
+import streakCap from "@/assets/streak-cap.png";
+
 
 export const Route = createFileRoute("/_authenticated/games/gold-quest")({
   head: () => ({ meta: [{ title: "Gold Quest — Lybanhi" }] }),
@@ -64,9 +66,9 @@ function GoldQuestGame() {
     mutationFn: (coins: number) => claimRewards({ data: { coins } }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["dashboard"] });
-      toast.success("Rewards claimed successfully!");
+      toast.success(t("games.goldQuest.claimed", { defaultValue: "Rewards claimed successfully!" }));
     },
-    onError: () => toast.error("Could not add coins to your profile"),
+    onError: () => toast.error(t("common.error")),
   });
 
   // Game Loop Timer
@@ -143,41 +145,41 @@ function GoldQuestGame() {
     if (roll < 0.15 && gold > 100) {
       // Steal 25% from top AI
       return {
-        label: "⚔️ Steal 25%",
+        label: "⚔️ " + t("games.goldQuest.steal", { defaultValue: "Steal 25%" }),
         action: () => {
           const leader = leaderboard.find(x => !x.isPlayer);
           if (leader && leader.gold > 50) {
             const stolen = Math.floor(leader.gold * 0.25);
             setGold(g => g + stolen);
-            toast.success(`Stole 🪙 ${stolen} gold from ${leader.name}!`);
+            toast.success(t("games.goldQuest.stolenSuccess", { stolen, name: leader.name, defaultValue: `Stole ${stolen} gold from ${leader.name}!` }));
           } else {
             setGold(g => g + 50);
-            toast.success("+50 Gold!");
+            toast.success(t("games.goldQuest.plusGold", { count: 50, defaultValue: "+50 Gold!" }));
           }
         }
       };
     } else if (roll < 0.3) {
       return {
-        label: "✨ Double Gold",
+        label: "✨ " + t("games.goldQuest.double", { defaultValue: "Double Gold" }),
         action: () => {
           setGold(g => g * 2 || 100);
-          toast.success("Gold Doubled!");
+          toast.success(t("games.goldQuest.doubled", { defaultValue: "Gold Doubled!" }));
         }
       };
     } else if (roll < 0.65) {
       return {
-        label: "🪙 +200 Gold",
+        label: "🪙 +200 " + t("games.goldQuest.gold", { defaultValue: "Gold" }),
         action: () => {
           setGold(g => g + 200);
-          toast.success("+200 Gold!");
+          toast.success(t("games.goldQuest.plusGold", { count: 200, defaultValue: "+200 Gold!" }));
         }
       };
     } else {
       return {
-        label: "🪙 +50 Gold",
+        label: "🪙 +50 " + t("games.goldQuest.gold", { defaultValue: "Gold" }),
         action: () => {
           setGold(g => g + 50);
-          toast.success("+50 Gold!");
+          toast.success(t("games.goldQuest.plusGold", { count: 50, defaultValue: "+50 Gold!" }));
         }
       };
     }
@@ -198,33 +200,41 @@ function GoldQuestGame() {
 
   const currentQ = SAMPLE_QUESTIONS[qIndex];
 
+  // Helper to format player name
+  const formatName = (name: string) => {
+    if (name.includes("(You)")) {
+      return name.replace("(You)", t("games.spaceRush.you", { defaultValue: "(You)" }));
+    }
+    return name;
+  };
+
   return (
     <>
       <AppHeader />
       <div className="mx-auto max-w-md px-5 pt-4 pb-12 flex flex-col min-h-[85vh]">
         {/* Header navigation back */}
         <div className="flex items-center gap-3">
-          <button onClick={() => navigate({ to: "/games" })} className="rounded-full p-1.5 hover:bg-muted">
+          <button onClick={() => navigate({ to: "/games" })} className="rounded-full p-1.5 hover:bg-muted cursor-pointer">
             <ArrowLeft className="size-5" />
           </button>
-          <span className="font-display font-bold text-lg">Gold Quest Arcade</span>
+          <span className="font-display font-bold text-lg">{t("games.goldQuest.title", { defaultValue: "Gold Quest" })} Arcade</span>
         </div>
 
         {/* LOBBY STATE */}
         {gameState === "lobby" && (
-          <div className="flex-1 flex flex-col justify-center items-center text-center mt-12">
+          <div className="flex-1 flex flex-col justify-center items-center text-center mt-12 animate-in fade-in duration-300">
             <div className="size-24 grid place-items-center rounded-3xl bg-amber-400/20 text-5xl mb-6 shadow-md select-none animate-bounce">
               👑
             </div>
-            <h2 className="font-display text-2xl font-extrabold">Welcome to Gold Quest!</h2>
+            <h2 className="font-display text-2xl font-extrabold">{t("games.goldQuest.welcome", { defaultValue: "Welcome to Gold Quest!" })}</h2>
             <p className="mt-2 text-sm text-muted-foreground max-w-xs">
-              Answer the questions as fast as possible, open chest cards to multiply your gold, and steal from AI bots to win!
+              {t("games.goldQuest.welcomeDesc", { defaultValue: "Answer the questions as fast as possible, open chest cards to multiply your gold, and steal from AI bots to win!" })}
             </p>
             <button
               onClick={startGame}
-              className="mt-8 w-full h-12 bg-primary text-primary-foreground font-semibold rounded-2xl shadow-md transition active:scale-95"
+              className="mt-8 w-full h-12 bg-primary text-primary-foreground font-semibold rounded-2xl shadow-md transition active:scale-95 cursor-pointer"
             >
-              Start Game (60s)
+              {t("games.goldQuest.startGame", { defaultValue: "Start Game (60s)" })}
             </button>
           </div>
         )}
@@ -234,17 +244,19 @@ function GoldQuestGame() {
           <div className="flex-1 flex flex-col justify-between mt-6">
             {/* Top Scorebar */}
             <div className="flex justify-between items-center gap-4">
-              <div className="rounded-full bg-amber-500/10 border border-amber-500/25 px-3 py-1 font-display text-sm font-bold text-amber-500">
-                👑 <span>{gold} Gold</span>
+              <div className="rounded-full bg-amber-500/10 border border-amber-500/25 px-3 py-1 font-display text-sm font-bold text-amber-500 flex items-center gap-1">
+                👑 <span>{t("games.goldQuest.goldCount", { count: gold, defaultValue: `${gold} Gold` })}</span>
               </div>
               <div className="rounded-full bg-destructive/10 border border-destructive/25 px-3 py-1 text-sm font-semibold text-destructive">
-                ⏱️ {timeLeft}s left
+                ⏱️ {t("games.goldQuest.timeLeft", { count: timeLeft, defaultValue: `${timeLeft}s left` })}
               </div>
             </div>
 
             {/* Simulated Live Leaderboard Panel */}
             <div className="mt-4 rounded-2xl border border-border bg-card p-3 shadow-card">
-              <h4 className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-2">Live Rankings</h4>
+              <h4 className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-2">
+                {t("games.goldQuest.liveRankings", { defaultValue: "Live Rankings" })}
+              </h4>
               <ul className="space-y-1.5">
                 {leaderboard.map((item, idx) => (
                   <li
@@ -253,7 +265,7 @@ function GoldQuestGame() {
                       item.isPlayer ? "bg-primary/10 text-primary border border-primary/20" : ""
                     }`}
                   >
-                    <span className="truncate max-w-[150px]">{idx + 1}. {item.name}</span>
+                    <span className="truncate max-w-[150px]">{idx + 1}. {formatName(item.name)}</span>
                     <span>🪙 {item.gold}</span>
                   </li>
                 ))}
@@ -262,7 +274,7 @@ function GoldQuestGame() {
 
             {/* Game Screen Quiz/Chests */}
             {gameState === "quiz" ? (
-              <div className="my-auto py-6">
+              <div className="my-auto py-6 animate-in fade-in duration-200">
                 <h3 className="text-center font-display text-lg font-bold leading-snug min-h-[60px] flex items-center justify-center">
                   {currentQ.q}
                 </h3>
@@ -284,7 +296,7 @@ function GoldQuestGame() {
                         <button
                           disabled={isAnswerSelected}
                           onClick={() => handleAnswer(idx)}
-                          className={`flex w-full items-center justify-between gap-3 rounded-2xl border-2 p-3.5 text-left text-sm font-semibold transition active:scale-98 ${bgCls}`}
+                          className={`flex w-full items-center justify-between gap-3 rounded-2xl border-2 p-3.5 text-left text-sm font-semibold transition active:scale-98 cursor-pointer disabled:cursor-not-allowed ${bgCls}`}
                         >
                           <span>{opt}</span>
                           {isAnswerSelected && isCorrectOption && <Check className="size-4 shrink-0" />}
@@ -296,16 +308,16 @@ function GoldQuestGame() {
                 </ul>
               </div>
             ) : (
-              <div className="my-auto py-8 text-center flex flex-col items-center">
+              <div className="my-auto py-8 text-center flex flex-col items-center animate-in zoom-in-95 duration-300">
                 <h3 className="font-display text-xl font-black text-amber-500 animate-pulse">
-                  CORRECT! CHOOSE A CHEST:
+                  {t("games.goldQuest.correctChest", { defaultValue: "CORRECT! CHOOSE A CHEST:" })}
                 </h3>
                 <div className="mt-8 flex gap-4 justify-center w-full max-w-sm">
                   {[0, 1, 2].map((idx) => (
                     <button
                       key={idx}
                       onClick={() => chooseChest(idx)}
-                      className="flex-1 aspect-[2/3] max-h-40 rounded-2xl border-2 border-dashed border-amber-400 bg-amber-500/5 hover:bg-amber-500/10 shadow-md flex flex-col items-center justify-center transition active:scale-95 duration-200"
+                      className="flex-1 aspect-[2/3] max-h-40 rounded-2xl border-2 border-dashed border-amber-400 bg-amber-500/5 hover:bg-amber-500/10 shadow-md flex flex-col items-center justify-center transition active:scale-95 duration-200 cursor-pointer"
                     >
                       <span className="text-4xl select-none animate-bounce">🎁</span>
                     </button>
@@ -318,15 +330,19 @@ function GoldQuestGame() {
 
         {/* ENDED GAME STATE */}
         {gameState === "ended" && (
-          <div className="flex-1 flex flex-col justify-center items-center text-center mt-8">
+          <div className="flex-1 flex flex-col justify-center items-center text-center mt-8 animate-in zoom-in-95 duration-300">
             <div className="size-20 grid place-items-center rounded-3xl bg-amber-400/20 text-4xl mb-4 select-none">
               🏆
             </div>
-            <h2 className="font-display text-3xl font-black">Quest Finished!</h2>
-            <p className="mt-1 text-sm text-muted-foreground">You collected 🪙 {gold} Gold!</p>
+            <h2 className="font-display text-3xl font-black">{t("games.goldQuest.finished", { defaultValue: "Quest Finished!" })}</h2>
+            <p className="mt-1 text-sm text-muted-foreground">
+              {t("games.goldQuest.collectedGold", { count: gold, defaultValue: `You collected 🪙 ${gold} Gold!` })}
+            </p>
 
             <div className="mt-6 w-full max-w-sm rounded-3xl border border-border bg-card p-5 shadow-elegant">
-              <h3 className="font-display font-extrabold text-sm uppercase tracking-widest text-muted-foreground">Final Ranks</h3>
+              <h3 className="font-display font-extrabold text-sm uppercase tracking-widest text-muted-foreground">
+                {t("games.goldQuest.finalRanks", { defaultValue: "Final Ranks" })}
+              </h3>
               <ul className="mt-4 space-y-2">
                 {leaderboard.map((item, idx) => (
                   <li
@@ -335,8 +351,8 @@ function GoldQuestGame() {
                       item.isPlayer ? "bg-primary text-primary-foreground scale-105" : "bg-muted/40"
                     }`}
                   >
-                    <span>{idx + 1}. {item.name}</span>
-                    <span>🪙 {item.gold} Gold</span>
+                    <span>{idx + 1}. {formatName(item.name)}</span>
+                    <span>🪙 {item.gold}</span>
                   </li>
                 ))}
               </ul>
@@ -344,15 +360,20 @@ function GoldQuestGame() {
 
             {/* Reward Claims */}
             <div className="mt-6 flex flex-col gap-2 w-full max-w-sm items-center">
-              <div className="inline-flex items-center gap-1.5 rounded-full bg-gold/25 border border-gold/40 px-3 py-1 font-display text-sm font-bold text-gold-foreground">
-                <Trophy className="size-4" />
-                <span>+ {leaderboard.findIndex(x => x.isPlayer) === 0 ? "10" : leaderboard.findIndex(x => x.isPlayer) === 1 ? "5" : "2"} Arcade Coins Claimed!</span>
+              <div className="inline-flex items-center gap-1.5 rounded-full bg-gold/25 border border-gold/40 px-4 py-2 font-display text-sm font-bold text-gold-foreground">
+                <img src={streakCap} alt="" className="size-4 shrink-0 select-none animate-pulse" />
+                <span>
+                  {t("games.goldQuest.coinsClaimed", {
+                    count: leaderboard.findIndex(x => x.isPlayer) === 0 ? 10 : leaderboard.findIndex(x => x.isPlayer) === 1 ? 5 : 2,
+                    defaultValue: `+ ${leaderboard.findIndex(x => x.isPlayer) === 0 ? "10" : leaderboard.findIndex(x => x.isPlayer) === 1 ? "5" : "2"} Arcade Coins Claimed!`
+                  })}
+                </span>
               </div>
               <button
                 onClick={() => navigate({ to: "/games" })}
-                className="mt-4 w-full h-12 bg-primary text-primary-foreground font-semibold rounded-2xl shadow-md transition active:scale-95"
+                className="mt-4 w-full h-12 bg-primary text-primary-foreground font-semibold rounded-2xl shadow-md transition active:scale-95 cursor-pointer"
               >
-                Back to Arcade Hub
+                {t("games.goldQuest.backHub", { defaultValue: "Back to Arcade Hub" })}
               </button>
             </div>
           </div>

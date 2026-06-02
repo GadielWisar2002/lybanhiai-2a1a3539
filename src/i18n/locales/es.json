@@ -92,5 +92,77 @@
     "title": "Perfil", "language": "Idioma de la app", "streak": "Racha actual",
     "longestStreak": "Racha más larga", "totalXp": "XP total", "noBlook": "Sin Blook equipado"
   },
-  "library": { "title": "Biblioteca", "empty": "Próximamente: recursos guardados y materiales de estudio.", "recentQuizzes": "Tus quizzes recientes", "questions": "preguntas" }
+  "library": { "title": "Biblioteca", "empty": "Próximamente: recursos guardados y materiales de estudio.", "recentQuizzes": "Tus quizzes recientes", "questions": "preguntas" },
+  "games": {
+    "title": "Juegos",
+    "subtitle": "¡Usa tus sombreritos para jugar y coleccionar avatares!",
+    "play": "Jugar",
+    "locker": "Locker",
+    "shop": "Tienda",
+    "activeBlook": "Blook Activo",
+    "unequip": "Desequipar Blook",
+    "locked": "Bloqueado",
+    "collection": "Colección: {{unlocked}} / {{total}}",
+    "packTitle": "Paquete {{name}}",
+    "packMedievalDesc": "🛡️ Blooks Comunes a Legendarios",
+    "packSpaceDesc": "🌌 Probabilidad de Raros y Épicos",
+    "packCyberDesc": "⚡ Insignias Cyber de Alto Nivel",
+    "goldQuest": {
+      "title": "Búsqueda de Oro",
+      "style": "Estilo Blooket",
+      "desc": "Responde preguntas rápidamente para abrir cofres misteriosos. ¡Duplica tu oro o róbale a los bots de IA!",
+      "free": "Entrada Gratis",
+      "bonus": "Gana sombreritos extra",
+      "start": "Iniciar Búsqueda",
+      "welcome": "¡Bienvenido a Búsqueda de Oro!",
+      "welcomeDesc": "Responde las preguntas lo más rápido posible, abre cofres para multiplicar tu oro y roba a los bots para ganar.",
+      "startGame": "Iniciar Juego (60s)",
+      "goldCount": "{{count}} de Oro",
+      "timeLeft": "{{count}}s restantes",
+      "liveRankings": "Posiciones en Vivo",
+      "correctChest": "¡CORRECTO! ELIGE UN COFRE:",
+      "stolenSuccess": "¡Le robaste 🎓 {{stolen}} sombreritos a {{name}}!",
+      "plusGold": "¡+{{count}} de Oro!",
+      "doubled": "¡Oro Duplicado!",
+      "finished": "¡Búsqueda Finalizada!",
+      "collectedGold": "¡Recolectaste 🪙 {{count}} de Oro!",
+      "finalRanks": "Posiciones Finales",
+      "coinsClaimed": "¡+ {{count}} Sombreritos Reclamados!",
+      "backHub": "Volver a Juegos"
+    },
+    "spaceRush": {
+      "title": "Carrera Espacial",
+      "style": "Estilo Quizizz",
+      "desc": "¡Despega hacia la órbita! Responde correctamente para acelerar tu nave y vencer a los competidores.",
+      "free": "Entrada Gratis",
+      "bonus": "Gana impulsos de velocidad",
+      "start": "Despegar",
+      "welcome": "¡Carrera Espacial de Cohetes!",
+      "welcomeDesc": "Responde preguntas de astronomía correctamente para encender tus propuntores y superar a los pilotos de IA. ¡Llega a 100 metros para ganar!",
+      "startRace": "Iniciar Carrera",
+      "track": "Pista de Carrera (100m)",
+      "streakIndicator": "🔥 ¡Racha de {{count}} correctas! (Super Impulso)",
+      "boost": "¡Impulso de Energía! +{{count}}m",
+      "stall": "¡Motor Apagado! 0m",
+      "finished": "¡Carrera Finalizada!",
+      "rankDesc": "¡Terminaste en el puesto #{{rank}}!",
+      "finalStandings": "Posiciones Finales",
+      "coinsClaimed": "¡+ {{count}} Sombreritos Reclamados!",
+      "backHub": "Volver a Juegos"
+    },
+    "shopSection": {
+      "unlocking": "Abriendo Paquete Blook...",
+      "goodLuck": "¡Buena suerte!",
+      "unlockedText": "¡Desbloqueaste a: {{name}}!",
+      "ultraRare": "👑 ¡INSIGNIA ULTRA RARA!",
+      "addedCollection": "⭐ ¡Añadido a tu colección!",
+      "awesomeButton": "¡Genial!",
+      "rarity": {
+        "common": "Común",
+        "rare": "Raro",
+        "epic": "Épico",
+        "legendary": "Legendario"
+      }
+    }
+  }
 }
