@@ -56,12 +56,12 @@ export function RobloxAvatarRenderer({
   useEffect(() => {
     if (!isRotating) return;
     const interval = setInterval(() => {
-      setYaw((prev) => (prev + 1.5) % 360);
+      setYaw((prev) => (prev + 1.2) % 360);
     }, 45);
     return () => clearInterval(interval);
   }, [isRotating]);
 
-  // Skin colors with soft realistic shading
+  // Skin colors with rich realistic gradients
   const skinColors: Record<string, { base: string; shadow: string; glow: string }> = {
     "skin-light-1": { base: "#FFF1EB", shadow: "#ECC5B9", glow: "#FFEBE3" },
     "skin-light-2": { base: "#FCDAB7", shadow: "#DEAE83", glow: "#FEEAD4" },
@@ -73,7 +73,7 @@ export function RobloxAvatarRenderer({
 
   // Organic Hair colors
   const hairColors: Record<string, { base: string; highlight: string; shadow: string }> = {
-    "color-black": { base: "#1E1E1E", highlight: "#3D3D3D", shadow: "#0B0B0B" },
+    "color-black": { base: "#1E1E1E", highlight: "#3D3D3D", shadow: "#0A0A0A" },
     "color-brown-light": { base: "#59311F", highlight: "#8E5136", shadow: "#3A1E11" }, 
     "color-brown-dark": { base: "#361D12", highlight: "#5E3827", shadow: "#200F07" },
     "color-blonde": { base: "#DDA14E", highlight: "#F7D496", shadow: "#A5732C" },
@@ -81,7 +81,7 @@ export function RobloxAvatarRenderer({
     "color-gray": { base: "#7C858A", highlight: "#A6AFB4", shadow: "#525B60" },
     "color-white": { base: "#EBF1F5", highlight: "#FFFFFF", shadow: "#C8D3D9" },
     "color-fantasy-pink": { base: "#D63384", highlight: "#FF7CB2", shadow: "#9A1553" },
-    "color-fantasy-blue": { base: "#0EA5E9", highlight: "#38BDF8", shadow: "#0369A1" },
+    "color-fantasy-blue": { base: "#0B60B0", highlight: "#40A2E3", shadow: "#053B50" },
     "color-fantasy-purple": { base: "#6F42C1", highlight: "#A370F7", shadow: "#4C2B88" },
   };
   const activeHair = hairColors[c.hairColor] || hairColors["color-brown-light"];
@@ -167,7 +167,7 @@ export function RobloxAvatarRenderer({
         }}
       >
         <defs>
-          {/* Glowing neon stage stage */}
+          {/* Glowing neon filter to match floor stage hologram */}
           <filter id="glow-neon-stage" x="-20%" y="-20%" width="140%" height="140%">
             <feGaussianBlur stdDeviation="5" result="blur" />
             <feMerge>
@@ -176,7 +176,7 @@ export function RobloxAvatarRenderer({
             </feMerge>
           </filter>
 
-          {/* Gold glow */}
+          {/* Academic gold shield glow filter */}
           <filter id="gold-glow" x="-30%" y="-30%" width="160%" height="160%">
             <feGaussianBlur stdDeviation="3" result="blur" />
             <feMerge>
@@ -185,12 +185,12 @@ export function RobloxAvatarRenderer({
             </feMerge>
           </filter>
 
-          {/* Premium soft drop shadow */}
+          {/* Premium soft drop shadow for layers depth */}
           <filter id="soft-shadow" x="-10%" y="-10%" width="120%" height="120%">
             <feDropShadow dx="0" dy="4" stdDeviation="4" floodColor="#000000" floodOpacity="0.22" />
           </filter>
 
-          {/* Neon Gradient */}
+          {/* Stage Neon Gradient */}
           <linearGradient id="stage-neon" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" stopColor="#8B5CF6" />
             <stop offset="50%" stopColor="#EC4899" />
@@ -263,7 +263,7 @@ export function RobloxAvatarRenderer({
 
           {/* Blush gradient */}
           <radialGradient id="blush-radial" cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stopColor="#F43F5E" stopOpacity="0.3" />
+            <stop offset="0%" stopColor="#F43F5E" stopOpacity="0.25" />
             <stop offset="100%" stopColor="#F43F5E" stopOpacity="0" />
           </radialGradient>
         </defs>
@@ -299,13 +299,14 @@ export function RobloxAvatarRenderer({
           <g transform={`translate(${hairBackX}, ${charYOffset})`}>
             {(c.hairStyle === "hair-long" || c.hairStyle === "hair-wavy" || c.hairStyle === "hair-curly" || (isGirl && c.hairStyle === "hair-short")) && (
               <g>
-                <path d="M100,72 C80,105 78,165 92,205 C100,215 110,210 110,185 C110,150 114,106 130,106 C146,106 150,150 150,185 C150,210 160,215 168,205 C182,165 180,105 160,72 Z" fill="url(#hair-organic-shine)" />
+                {/* Volumetric high-fidelity wavy hair flowing down back */}
+                <path d="M102,72 Q86,110 88,150 Q90,195 98,225 C108,235 116,230 114,195 C112,150 114,106 130,106 C146,106 148,150 146,195 C144,230 152,235 162,225 Q170,195 172,150 Q174,110 158,72 Z" fill="url(#hair-organic-shine)" />
                 
                 {/* Hair highlights / mechas details */}
                 {activeHighlightHex && (
                   <g opacity="0.8">
-                    <path d="M90,110 C86,140 92,175 99,195" stroke={activeHighlightHex} strokeWidth="2.5" fill="none" opacity="0.8" />
-                    <path d="M170,110 C174,140 168,175 161,195" stroke={activeHighlightHex} strokeWidth="2.5" fill="none" opacity="0.8" />
+                    <path d="M92,112 Q88,142 93,172" stroke={activeHighlightHex} strokeWidth="2.5" fill="none" opacity="0.7" />
+                    <path d="M168,112 Q172,142 167,172" stroke={activeHighlightHex} strokeWidth="2.5" fill="none" opacity="0.7" />
                   </g>
                 )}
               </g>
@@ -361,14 +362,14 @@ export function RobloxAvatarRenderer({
           </g>
         )}
 
-        {/* 6. CHARACTER BODY (Legs, Torso, Arms - Perfectly proportioned in 1:5 ratio) */}
+        {/* 6. CHARACTER BODY (Legs, Torso, Arms - Proportioned in 1:5 ratio) */}
         <g filter="url(#soft-shadow)">
           {isGirl ? (
             // ==========================================
             // FEMALE CHARACTER - STYLIZED PROPORTIONS (MUJER)
             // ==========================================
             <g>
-              {/* Slender tapered legs (not pillars!) */}
+              {/* Slender tapered legs */}
               <g transform={`translate(${feetX}, 0)`}>
                 <path d="M110,196 Q107,238 111,280 L118,280 Q118,238 117,196 Z" fill="url(#skin-shading-left)" />
                 <path d="M142,196 Q142,238 142,280 L149,280 Q153,238 150,196 Z" fill="url(#skin-shading-right)" />
