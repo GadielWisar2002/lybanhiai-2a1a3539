@@ -25,7 +25,7 @@ function Profile() {
   const fn = useServerFn(getDashboard);
   const updLang = useServerFn(updateLanguage);
   const trans = useServerFn(translateRecommendations);
-  const { data } = useQuery({ queryKey: ["dashboard"], queryFn: () => fn() });
+  const { data, isLoading } = useQuery({ queryKey: ["dashboard"], queryFn: () => fn() });
   
   const [loadingLang, setLoadingLang] = useState(false);
 
@@ -47,6 +47,32 @@ function Profile() {
   const signOut = async () => { await supabase.auth.signOut(); navigate({ to: "/" }); };
 
   const activeBlook = data?.profile?.active_blook_id ? BLOOKS[data.profile.active_blook_id] : null;
+
+  if (isLoading) {
+    return (
+      <>
+        <AppHeader />
+        <div className="mx-auto max-w-md px-5 pt-4 space-y-6">
+          <div className="h-8 w-24 animate-pulse rounded-lg bg-muted" />
+          
+          <div className="flex items-center gap-3.5 rounded-2xl border border-border bg-card p-4 shadow-[var(--shadow-card)]">
+            <div className="size-14 animate-pulse rounded-2xl bg-muted" />
+            <div className="space-y-2 flex-1">
+              <div className="h-5 w-32 animate-pulse rounded bg-muted" />
+              <div className="h-3.5 w-20 animate-pulse rounded bg-muted" />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div className="h-20 animate-pulse rounded-2xl border border-border bg-card" />
+            <div className="h-20 animate-pulse rounded-2xl border border-border bg-card" />
+          </div>
+
+          <div className="h-28 animate-pulse rounded-2xl border border-border bg-card" />
+        </div>
+      </>
+    );
+  }
 
   return (
     <>

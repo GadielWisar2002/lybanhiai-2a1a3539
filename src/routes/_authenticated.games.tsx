@@ -32,7 +32,7 @@ function GamesHub() {
   const purchasePack = useServerFn(buyBlookPack);
   const equipAvatar = useServerFn(equipBlook);
 
-  const { data: dash } = useQuery({ queryKey: ["dashboard"], queryFn: () => getDash() });
+  const { data: dash, isLoading: dashLoading } = useQuery({ queryKey: ["dashboard"], queryFn: () => getDash() });
   const { data: locker, isLoading: lockerLoading } = useQuery({ queryKey: ["unlockedBlooks"], queryFn: () => listBlooks() });
 
   const [activeTab, setActiveTab] = useState<"play" | "locker" | "shop">(tab ?? "play");
@@ -46,6 +46,30 @@ function GamesHub() {
   }, [tab]);
 
   const coins = dash?.streak.coins ?? 0;
+
+  if (dashLoading) {
+    return (
+      <>
+        <AppHeader />
+        <div className="mx-auto max-w-md px-5 pt-4 space-y-6">
+          <div className="flex items-center justify-between">
+            <div className="space-y-2">
+              <div className="h-8 w-32 animate-pulse rounded-lg bg-muted" />
+              <div className="h-3 w-48 animate-pulse rounded-lg bg-muted" />
+            </div>
+            <div className="h-8 w-16 animate-pulse rounded-full bg-muted" />
+          </div>
+          
+          <div className="h-10 animate-pulse rounded-lg bg-muted" />
+          
+          <div className="space-y-4">
+            <div className="h-44 animate-pulse rounded-3xl bg-muted animate-in fade-in" />
+            <div className="h-44 animate-pulse rounded-3xl bg-muted animate-in fade-in" />
+          </div>
+        </div>
+      </>
+    );
+  }
 
   const buyMutation = useMutation({
     mutationFn: (pack: PackType) => purchasePack({ data: { pack } }),
