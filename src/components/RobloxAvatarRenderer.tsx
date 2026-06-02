@@ -169,8 +169,8 @@ export function RobloxAvatarRenderer({
       >
         <defs>
           {/* Glowing stage stage */}
-          <filter id="glow-neon-stage" x="-20%" y="-20%" width="140%" height="140%">
-            <feGaussianBlur stdDeviation="5" result="blur" />
+          <filter id="glow-neon-stage" x="-25%" y="-25%" width="150%" height="150%">
+            <feGaussianBlur stdDeviation="6" result="blur" />
             <feMerge>
               <feMergeNode in="blur" />
               <feMergeNode in="SourceGraphic" />
@@ -188,15 +188,21 @@ export function RobloxAvatarRenderer({
 
           {/* Premium soft drop shadow */}
           <filter id="soft-shadow" x="-10%" y="-10%" width="120%" height="120%">
-            <feDropShadow dx="0" dy="4" stdDeviation="4" floodColor="#000000" floodOpacity="0.22" />
+            <feDropShadow dx="0" dy="4" stdDeviation="4" floodColor="#000000" floodOpacity="0.25" />
           </filter>
 
           {/* Neon stage gradient */}
           <linearGradient id="stage-neon" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#8B5CF6" />
-            <stop offset="50%" stopColor="#EC4899" />
-            <stop offset="100%" stopColor="#3B82F6" />
+            <stop offset="0%" stopColor="#06B6D4" />
+            <stop offset="50%" stopColor="#3B82F6" />
+            <stop offset="100%" stopColor="#6366F1" />
           </linearGradient>
+
+          {/* Hologram fill radial */}
+          <radialGradient id="hologram-radial" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#22D3EE" stopOpacity="0.45" />
+            <stop offset="100%" stopColor="#06B6D4" stopOpacity="0" />
+          </radialGradient>
 
           {/* Skirt navy checkers */}
           <linearGradient id="skirt-checkers" x1="0%" y1="0%" x2="0%" y2="100%">
@@ -211,16 +217,38 @@ export function RobloxAvatarRenderer({
             <stop offset="100%" stopColor="#E2E8F0" />
           </linearGradient>
 
+          {/* White hoodie grad identifier fallback */}
+          <linearGradient id="white-hoodie-grad" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#FFFFFF" />
+            <stop offset="70%" stopColor="#F8FAFC" />
+            <stop offset="100%" stopColor="#E2E8F0" />
+          </linearGradient>
+
           {/* Varsity sleeves (azul marino) */}
           <linearGradient id="sleeve-blue" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" stopColor="#2563EB" />
             <stop offset="100%" stopColor="#1E3A8A" />
           </linearGradient>
 
-          {/* Varsity jacket body (boy) */}
-          <linearGradient id="jacket-blue" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor="#1E40AF" />
-            <stop offset="100%" stopColor="#172554" />
+          {/* Navy fabric general grad */}
+          <linearGradient id="navy-fabric-grad" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#2E4A7D" />
+            <stop offset="50%" stopColor="#1B2E53" />
+            <stop offset="100%" stopColor="#0E1B33" />
+          </linearGradient>
+
+          {/* Blue varsity jacket body (boy) */}
+          <linearGradient id="jacket-blue-grad" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#2563EB" />
+            <stop offset="50%" stopColor="#1D4ED8" />
+            <stop offset="100%" stopColor="#1E3A8A" />
+          </linearGradient>
+
+          {/* Red fabric general grad */}
+          <linearGradient id="red-fabric-grad" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#EF4444" />
+            <stop offset="55%" stopColor="#B91C1C" />
+            <stop offset="100%" stopColor="#7F1D1D" />
           </linearGradient>
 
           {/* Gold crest */}
@@ -229,10 +257,10 @@ export function RobloxAvatarRenderer({
             <stop offset="100%" stopColor="#D97706" />
           </linearGradient>
 
-          {/* Hair shining */}
-          <linearGradient id={hairGradId} x1="0%" y1="0%" x2="0%" y2="100%">
+          {/* Hair shining dynamic */}
+          <linearGradient id="hair-dynamic-grad" x1="0%" y1="0%" x2="0%" y2="100%">
             <stop offset="0%" stopColor={activeHair.highlight} />
-            <stop offset="50%" stopColor={activeHair.base} />
+            <stop offset="45%" stopColor={activeHair.base} />
             <stop offset="100%" stopColor={activeHair.shadow} />
           </linearGradient>
 
@@ -244,7 +272,7 @@ export function RobloxAvatarRenderer({
           </radialGradient>
 
           {/* Dark denim pants */}
-          <linearGradient id="denim-grad" x1="0%" y1="0%" x2="0%" y2="100%">
+          <linearGradient id="denim-pants-grad" x1="0%" y1="0%" x2="0%" y2="100%">
             <stop offset="0%" stopColor="#4A75B4" />
             <stop offset="55%" stopColor="#2D4D7F" />
             <stop offset="100%" stopColor="#192A47" />
@@ -254,27 +282,27 @@ export function RobloxAvatarRenderer({
           <linearGradient id="skin-1-grad" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stopColor="#FFF5F0" />
             <stop offset="60%" stopColor="#FFE4D9" />
-            <stop offset="100%" stopColor="#E8C1B3" />
+            <stop offset="100%" stopColor="#EAD3C8" />
           </linearGradient>
           <linearGradient id="skin-2-grad" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stopColor="#FFF0E0" />
             <stop offset="60%" stopColor="#FAD5B4" />
-            <stop offset="100%" stopColor="#DFA279" />
+            <stop offset="100%" stopColor="#E2BD9F" />
           </linearGradient>
           <linearGradient id="skin-3-grad" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stopColor="#F5D3B8" />
             <stop offset="60%" stopColor="#E3A376" />
-            <stop offset="100%" stopColor="#B87247" />
+            <stop offset="100%" stopColor="#C48D66" />
           </linearGradient>
           <linearGradient id="skin-4-grad" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stopColor="#DBA279" />
             <stop offset="60%" stopColor="#BE7B50" />
-            <stop offset="100%" stopColor="#8E4C24" />
+            <stop offset="100%" stopColor="#965D37" />
           </linearGradient>
           <linearGradient id="skin-5-grad" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stopColor="#9A6543" />
             <stop offset="60%" stopColor="#774324" />
-            <stop offset="100%" stopColor="#4E2711" />
+            <stop offset="100%" stopColor="#5C3117" />
           </linearGradient>
 
           {/* Blush gradient */}
@@ -284,11 +312,20 @@ export function RobloxAvatarRenderer({
           </radialGradient>
         </defs>
 
-        {/* Concentric stage */}
+        {/* Technological dark blue background */}
+        <rect x="0" y="0" width="260" height="350" fill="#070913" rx="24" />
+        <path d="M 0 50 L 260 50 M 0 100 L 260 100 M 0 150 L 260 150 M 0 200 L 260 200 M 0 250 L 260 250 M 0 300 L 260 300 M 43 0 L 43 350 M 86 0 L 86 350 M 130 0 L 130 350 M 173 0 L 173 350 M 216 0 L 216 350" stroke="#1E293B" strokeWidth="0.5" opacity="0.25" />
+        <circle cx="130" cy="150" r="90" fill="none" stroke="#3B82F6" strokeWidth="1" strokeDasharray="3,15" opacity="0.2" />
+
+        {/* circular holographic platform */}
         <g transform="translate(0, 8)">
-          <ellipse cx="130" cy="306" rx="74" ry="18" fill="none" stroke="url(#stage-neon)" strokeWidth="3.5" filter="url(#glow-neon-stage)" opacity="0.8" />
-          <ellipse cx="130" cy="306" rx="55" ry="13" fill="none" stroke="#EC4899" strokeWidth="1.8" filter="url(#glow-neon-stage)" opacity="0.5" />
-          <ellipse cx="130" cy="306" rx="42" ry="10" fill="#000" opacity="0.35" />
+          <ellipse cx="130" cy="302" rx="74" ry="16" fill="none" stroke="url(#stage-neon)" strokeWidth="3" filter="url(#glow-neon-stage)" opacity="0.9" />
+          <ellipse cx="130" cy="302" rx="60" ry="12" fill="url(#hologram-radial)" opacity="0.5" />
+          <ellipse cx="130" cy="302" rx="42" ry="8" fill="none" stroke="#22D3EE" strokeWidth="1" opacity="0.6" filter="url(#glow-neon-stage)" />
+          {/* Hologram vertical rays */}
+          <line x1="75" y1="270" x2="75" y2="302" stroke="#22D3EE" strokeWidth="0.6" opacity="0.4" filter="url(#glow-neon-stage)" />
+          <line x1="185" y1="270" x2="185" y2="302" stroke="#22D3EE" strokeWidth="0.6" opacity="0.4" filter="url(#glow-neon-stage)" />
+          <line x1="130" y1="250" x2="130" y2="302" stroke="#22D3EE" strokeWidth="0.4" opacity="0.3" filter="url(#glow-neon-stage)" />
         </g>
 
         {/* Aura */}
@@ -299,7 +336,7 @@ export function RobloxAvatarRenderer({
           </g>
         )}
         {c.aura === "aura-math" && (
-          <g filter="url(#glow-neon)" opacity="0.55" stroke="#22D3EE" strokeWidth="1" fill="none" className="font-mono text-[8px] font-bold">
+          <g filter="url(#glow-neon-stage)" opacity="0.55" stroke="#22D3EE" strokeWidth="1" fill="none" className="font-mono text-[8px] font-bold">
             <circle cx="130" cy="150" r="85" strokeDasharray="4,12" />
             <text x="60" y="90" fill="#22D3EE">E = mc²</text>
             <text x="175" y="105" fill="#22D3EE">π ≈ 3.14</text>
@@ -313,7 +350,7 @@ export function RobloxAvatarRenderer({
           <g transform={`translate(${hairBackX}, ${charYOffset})`}>
             {c.hairStyle === "hair-wavy" && (
               <g>
-                <path d="M102,72 C84,95 72,130 76,195 C80,215 96,210 94,180 C92,145 106,104 130,104 C154,104 168,145 166,180 C164,210 180,215 184,195 C188,130 176,95 158,72 Z" fill={`url(#${hairGradId})`} />
+                <path d="M102,72 C84,95 72,130 76,195 C80,215 96,210 94,180 C92,145 106,104 130,104 C154,104 168,145 166,180 C164,210 180,215 184,195 C188,130 176,95 158,72 Z" fill="url(#hair-dynamic-grad)" />
                 {activeHighlightHex !== "transparent" && (
                   <g opacity="0.75">
                     <path d="M80,120 Q68,160 84,190" stroke={activeHighlightHex} strokeWidth="3" fill="none" />
@@ -325,7 +362,7 @@ export function RobloxAvatarRenderer({
 
             {c.hairStyle === "hair-long" && (
               <g>
-                <path d="M102,72 C80,105 76,160 80,225 C84,235 98,230 96,200 C94,150 106,104 130,104 C154,104 166,150 164,200 C162,230 176,235 180,225 C184,160 180,105 158,72 Z" fill={`url(#${hairGradId})`} />
+                <path d="M102,72 C80,105 76,160 80,225 C84,235 98,230 96,200 C94,150 106,104 130,104 C154,104 166,150 164,200 C162,230 176,235 180,225 C184,160 180,105 158,72 Z" fill="url(#hair-dynamic-grad)" />
                 {activeHighlightHex !== "transparent" && (
                   <g opacity="0.75">
                     <path d="M82,110 C78,140 82,180 88,210" stroke={activeHighlightHex} strokeWidth="2.8" fill="none" />
@@ -337,30 +374,30 @@ export function RobloxAvatarRenderer({
 
             {c.hairStyle === "hair-straight" && (
               <g>
-                <path d="M102,72 C86,105 84,160 84,215 C84,222 94,222 96,215 C96,150 106,104 130,104 C154,104 164,150 164,215 C166,222 176,222 176,215 C176,160 174,105 158,72 Z" fill={`url(#${hairGradId})`} />
+                <path d="M102,72 C86,105 84,160 84,215 C84,222 94,222 96,215 C96,150 106,104 130,104 C154,104 164,150 164,215 C166,222 176,222 176,215 C176,160 174,105 158,72 Z" fill="url(#hair-dynamic-grad)" />
               </g>
             )}
 
             {c.hairStyle === "hair-curly" && (
               <g>
-                <path d="M102,72 C80,95 68,130 72,185 C76,195 90,195 88,175 C86,145 106,104 130,104 C154,104 174,145 172,175 C170,195 184,195 188,185 C192,130 180,95 158,72 Z" fill={`url(#${hairGradId})`} />
+                <path d="M102,72 C80,95 68,130 72,185 C76,195 90,195 88,175 C86,145 106,104 130,104 C154,104 174,145 172,175 C170,195 184,195 188,185 C192,130 180,95 158,72 Z" fill="url(#hair-dynamic-grad)" />
               </g>
             )}
 
             {c.hairStyle === "hair-braids" && (
               <g>
-                <path d="M106,70 L98,82 L106,94 L102,106 L108,118 L102,130 L108,142 L102,154 L106,166 L100,175 Q98,180 104,180 L108,172 L108,70 Z" fill={`url(#${hairGradId})`} stroke={activeHair.shadow} strokeWidth="0.8" />
+                <path d="M106,70 L98,82 L106,94 L102,106 L108,118 L102,130 L108,142 L102,154 L106,166 L100,175 Q98,180 104,180 L108,172 L108,70 Z" fill="url(#hair-dynamic-grad)" stroke={activeHair.shadow} strokeWidth="0.8" />
                 <circle cx="102" cy="180" r="3.5" fill="#EF4444" />
-                <path d="M154,70 L162,82 L154,94 L158,106 L152,118 L158,130 L152,142 L158,154 L154,166 L160,175 Q162,180 156,180 L152,172 L152,70 Z" fill={`url(#${hairGradId})`} stroke={activeHair.shadow} strokeWidth="0.8" />
+                <path d="M154,70 L162,82 L154,94 L158,106 L152,118 L158,130 L152,142 L158,154 L154,166 L160,175 Q162,180 156,180 L152,172 L152,70 Z" fill="url(#hair-dynamic-grad)" stroke={activeHair.shadow} strokeWidth="0.8" />
                 <circle cx="158" cy="180" r="3.5" fill="#EF4444" />
               </g>
             )}
 
             {c.hairStyle === "hair-pigtails" && (
               <g>
-                <ellipse cx="86" cy="62" rx="14" ry="24" fill={`url(#${hairGradId})`} transform="rotate(-30, 86, 62)" />
+                <ellipse cx="86" cy="62" rx="14" ry="24" fill="url(#hair-dynamic-grad)" transform="rotate(-30, 86, 62)" />
                 <circle cx="95" cy="54" r="3.5" fill="#EF4444" />
-                <ellipse cx="174" cy="62" rx="14" ry="24" fill={`url(#${hairGradId})`} transform="rotate(30, 174, 62)" />
+                <ellipse cx="174" cy="62" rx="14" ry="24" fill="url(#hair-dynamic-grad)" transform="rotate(30, 174, 62)" />
                 <circle cx="165" cy="54" r="3.5" fill="#EF4444" />
               </g>
             )}
@@ -377,7 +414,6 @@ export function RobloxAvatarRenderer({
             <circle cx="16" cy="9" r="4" fill="#FDE047" stroke="#3E2723" strokeWidth="0.8" />
             <circle cx="16" cy="9" r="1.8" fill="#000" />
             <polygon points="12,11 9,14 15,14" fill="#D97706" />
-            {/* Tiny graduation hat for pet owl */}
             <polygon points="12,-4 22,-1 12,2 2,-1" fill="#1E293B" />
             <rect x="10" y="0" width="4" height="4" fill="#1E293B" />
           </g>
@@ -397,14 +433,12 @@ export function RobloxAvatarRenderer({
               <g>
                 <rect x="97" y="110" width="66" height="68" rx="10" fill="#1E293B" stroke="#0F172A" strokeWidth="2" />
                 <rect x="103" y="116" width="54" height="46" rx="5" fill="#10B981" />
-                {/* Glowing cyan tubes */}
-                <rect x="110" y="122" width="8" height="30" rx="2" fill="#06B6D4" filter="url(#glow-neon)" />
-                <rect x="142" y="122" width="8" height="30" rx="2" fill="#06B6D4" filter="url(#glow-neon)" />
+                <rect x="110" y="122" width="8" height="30" rx="2" fill="#06B6D4" filter="url(#glow-neon-stage)" />
+                <rect x="142" y="122" width="8" height="30" rx="2" fill="#06B6D4" filter="url(#glow-neon-stage)" />
               </g>
             )}
             {c.accessory === "acc-college-backpack" && (
               <g>
-                {/* Stack of leather bound books */}
                 <rect x="99" y="112" width="62" height="18" rx="3" fill="#78350F" stroke="#451A03" strokeWidth="1" />
                 <rect x="101" y="115" width="58" height="12" fill="#FEF3C7" />
                 <rect x="97" y="130" width="66" height="18" rx="3" fill="#1E3A8A" stroke="#172554" strokeWidth="1" />
@@ -425,13 +459,13 @@ export function RobloxAvatarRenderer({
             <g>
               {/* Slender tapered legs (not pillars!) */}
               <g transform={`translate(${feetX}, 0)`}>
-                {/* Thighs narrow down to knees at 240, then expand slightly at calves, narrowing at ankles 278 */}
                 <path d="M116,203 Q114,240 117,278 L124,278 Q123,240 122,203 Z" fill={`url(#${activeSkin.gradId})`} />
                 <path d="M138,203 Q137,240 136,278 L143,278 Q146,240 144,203 Z" fill={`url(#${activeSkin.gradId})`} />
                 
                 {/* White socks wrap legs */}
                 <path d="M116.5,232 C116.5,232 119.5,233.5 122.5,232 L124,278 L117,278 Z" fill="#FFFFFF" />
                 <path d="M116.5,232 C116.5,232 119.5,233.5 122.5,232" stroke="#CBD5E1" strokeWidth="1" fill="none" />
+                {/* Dark blue sock stripes */}
                 <path d="M116.6,236 Q119.5,237.5 122.3,236" stroke="#1B2E53" strokeWidth="1.5" fill="none" />
                 <path d="M116.7,240 Q119.5,241.5 122.2,240" stroke="#1B2E53" strokeWidth="1.5" fill="none" />
 
@@ -504,7 +538,7 @@ export function RobloxAvatarRenderer({
               {c.outfit === "" && (c.shirt === "shirt-basic-hoodie" || c.shirt === "shirt-basic-tee" || c.shirt === "shirt-academic-jacket" || c.shirt === "shirt-lab-coat") && (
                 <g transform={`translate(${chestX}, 0)`}>
                   {/* Tapered body */}
-                  <path d="M96,112 C96,98 164,98 164,112 L146,170 C146,172 114,172 114,170 Z" fill="url(#white-hoodie)" stroke="#CBD5E1" strokeWidth="0.8" />
+                  <path d="M96,112 C96,98 164,98 164,112 L146,170 C146,172 114,172 114,170 Z" fill="url(#white-hoodie-grad)" stroke="#CBD5E1" strokeWidth="0.8" />
                   
                   {/* Collar neck opening */}
                   <path d="M120,112 L140,112 L130,126 Z" fill={`url(#${activeSkin.gradId})`} />
@@ -581,7 +615,7 @@ export function RobloxAvatarRenderer({
               {/* Male Varsity Jacket / Shirt */}
               {c.outfit === "" && (c.shirt === "shirt-basic-hoodie" || c.shirt === "shirt-basic-tee" || c.shirt === "shirt-academic-jacket" || c.shirt === "shirt-lab-coat") && (
                 <g transform={`translate(${chestX}, 0)`}>
-                  <path d="M94,110 C94,98 166,98 166,110 L148,170 C148,172 112,172 112,170 Z" fill="url(#navy-fabric-grad)" stroke="#0F172A" strokeWidth="0.8" />
+                  <path d="M94,110 C94,98 166,98 166,110 L148,170 C148,172 112,172 112,170 Z" fill="url(#jacket-blue-grad)" stroke="#0F172A" strokeWidth="0.8" />
                   <rect x="110" y="166" width="40" height="6" rx="2" fill="#1E3A8A" />
 
                   {/* Collar and neck */}
@@ -657,25 +691,25 @@ export function RobloxAvatarRenderer({
                   
                   {/* Glowing cyber reactor */}
                   <g transform={`translate(${chestX}, 0)`}>
-                    <circle cx="130" cy="135" r="10" fill="#06B6D4" filter="url(#glow-neon)" />
+                    <circle cx="130" cy="135" r="10" fill="#06B6D4" filter="url(#glow-neon-stage)" />
                     <circle cx="130" cy="135" r="5" fill="#FFFFFF" />
-                    <path d="M94,110 L106,122 M166,110 L154,122" stroke="#06B6D4" strokeWidth="2.5" filter="url(#glow-neon)" />
+                    <path d="M94,110 L106,122 M166,110 L154,122" stroke="#06B6D4" strokeWidth="2.5" filter="url(#glow-neon-stage)" />
                   </g>
 
                   {/* Robot arm sleeves */}
                   <g transform={`translate(${armsX}, 0)`}>
                     <path d="M94,110 C86,124 84,142 88,162" stroke="#1E293B" strokeWidth="10.5" fill="none" />
-                    <path d="M94,110 C86,124 84,142 88,162" stroke="#06B6D4" strokeWidth="2" fill="none" filter="url(#glow-neon)" opacity="0.8" />
+                    <path d="M94,110 C86,124 84,142 88,162" stroke="#06B6D4" strokeWidth="2" fill="none" filter="url(#glow-neon-stage)" opacity="0.8" />
                     <path d="M166,110 C174,124 176,142 172,162" stroke="#1E293B" strokeWidth="10.5" fill="none" />
-                    <path d="M166,110 C174,124 176,142 172,162" stroke="#06B6D4" strokeWidth="2" fill="none" filter="url(#glow-neon)" opacity="0.8" />
+                    <path d="M166,110 C174,124 176,142 172,162" stroke="#06B6D4" strokeWidth="2" fill="none" filter="url(#glow-neon-stage)" opacity="0.8" />
                   </g>
 
                   {/* Robot legs */}
                   <g transform={`translate(${feetX}, 0)`}>
                     <path d="M112,170 L108,278 L124,278 L122,170 Z" fill="#0F172A" />
                     <path d="M138,170 L136,278 L152,278 L148,170 Z" fill="#0F172A" />
-                    <rect x="110" y="222" width="10" height="12" rx="3" fill="#06B6D4" filter="url(#glow-neon)" />
-                    <rect x="140" y="222" width="10" height="12" rx="3" fill="#06B6D4" filter="url(#glow-neon)" />
+                    <rect x="110" y="222" width="10" height="12" rx="3" fill="#06B6D4" filter="url(#glow-neon-stage)" />
+                    <rect x="140" y="222" width="10" height="12" rx="3" fill="#06B6D4" filter="url(#glow-neon-stage)" />
                   </g>
                 </g>
               )}
@@ -741,7 +775,7 @@ export function RobloxAvatarRenderer({
               {c.outfit === "outfit-academic-legend" && (
                 <g>
                   {/* Royal red cape in background */}
-                  <path d="M84,110 C70,140 68,220 84,280 C90,290 170,290 176,280 C192,220 190,140 176,110 Z" fill="url(#crimson-fabric-grad)" transform={`translate(${chestX * 0.5}, 0)`} />
+                  <path d="M84,110 C70,140 68,220 84,280 C90,290 170,290 176,280 C192,220 190,140 176,110 Z" fill="url(#red-fabric-grad)" transform={`translate(${chestX * 0.5}, 0)`} />
                   
                   {/* Golden armor plate breastplate */}
                   <path d="M96,110 C96,98 164,98 164,110 L148,170 L112,170 Z" fill="url(#crest-gradient)" stroke="#B45309" strokeWidth="1" transform={`translate(${chestX}, 0)`} />
@@ -847,8 +881,8 @@ export function RobloxAvatarRenderer({
                   <circle cx="143" cy="74" r="10.5" stroke="#64748B" strokeWidth="0.8" fill="none" opacity="0.4" />
                   <line x1="127.5" y1="74" x2="132.5" y2="74" stroke="#1E293B" strokeWidth="2.5" />
                   {/* Glass highlights */}
-                  <path d="M110,69 L115,64" stroke="#FFFFFF" strokeWidth="1.2" opacity="0.5" strokeLinecap="round" />
-                  <path d="M136,69 L141,64" stroke="#FFFFFF" strokeWidth="1.2" opacity="0.5" strokeLinecap="round" />
+                  <path d="M110,69 L115,64" stroke="#FFFFFF" strokeWidth="1" opacity="0.5" strokeLinecap="round" />
+                  <path d="M136,69 L141,64" stroke="#FFFFFF" strokeWidth="1" opacity="0.5" strokeLinecap="round" />
                 </g>
               )}
 
@@ -892,7 +926,7 @@ export function RobloxAvatarRenderer({
               {/* FACE: WINK (Playful smirk) */}
               {c.face === "face-wink" && (
                 <g>
-                  {/* Left Premium Eye open */}
+                  {/* Left eye open */}
                   <ellipse cx="117" cy="74" rx="7" ry="5.5" fill="#FFFFFF" />
                   <circle cx="117" cy="74" r="4.2" fill="url(#eyes-pupil)" />
                   <circle cx="115.5" cy="72.5" r="1.3" fill="#FFFFFF" />
@@ -934,78 +968,77 @@ export function RobloxAvatarRenderer({
               {c.hairStyle === "hair-wavy" && (
                 <g>
                   {/* Cap crown */}
-                  <path d="M107,56 C107,24 153,24 153,56 C153,64 146,65 141,60 C130,46 128,46 119,60 C114,65 107,64 107,56 Z" fill={`url(#${hairGradId})`} />
+                  <path d="M107,56 C107,24 153,24 153,56 C153,64 146,65 141,60 C130,46 128,46 119,60 C114,65 107,64 107,56 Z" fill="url(#hair-dynamic-grad)" />
                   {/* Dynamic wave bangs */}
                   <path d="M109,56 C120,44 140,44 151,56 C143,50 135,50 130,53 C125,50 117,50 109,56 Z" fill={activeHair.highlight} opacity="0.9" />
                   {/* Side locks framing temple */}
-                  <path d="M107,56 C103,72 105,86 109,92" stroke={`url(#${hairGradId})`} strokeWidth="3.2" strokeLinecap="round" fill="none" />
-                  <path d="M153,56 C157,72 155,86 151,92" stroke={`url(#${hairGradId})`} strokeWidth="3.2" strokeLinecap="round" fill="none" />
+                  <path d="M107,56 C103,72 105,86 109,92" stroke="url(#hair-dynamic-grad)" strokeWidth="3.2" strokeLinecap="round" fill="none" />
+                  <path d="M153,56 C157,72 155,86 151,92" stroke="url(#hair-dynamic-grad)" strokeWidth="3.2" strokeLinecap="round" fill="none" />
                 </g>
               )}
 
               {c.hairStyle === "hair-long" && (
                 <g>
-                  <path d="M107,56 C107,24 153,24 153,56 C153,64 146,64 141,60 C132,48 128,48 119,60 C114,64 107,64 107,56 Z" fill={`url(#${hairGradId})`} />
-                  <path d="M107,56 Q102,75 106,102 C108,102 109,75 108,56" fill={`url(#${hairGradId})`} />
-                  <path d="M153,56 Q158,75 154,102 C152,102 151,75 152,56" fill={`url(#${hairGradId})`} />
+                  <path d="M107,56 C107,24 153,24 153,56 C153,64 146,64 141,60 C132,48 128,48 119,60 C114,64 107,64 107,56 Z" fill="url(#hair-dynamic-grad)" />
+                  <path d="M107,56 Q102,75 106,102 C108,102 109,75 108,56" fill="url(#hair-dynamic-grad)" />
+                  <path d="M153,56 Q158,75 154,102 C152,102 151,75 152,56" fill="url(#hair-dynamic-grad)" />
                 </g>
               )}
 
               {c.hairStyle === "hair-straight" && (
                 <g>
-                  <path d="M107,56 C107,24 153,24 153,56 C151,64 147,65 142,61 C135,53 125,53 118,61 C113,65 109,64 107,56 Z" fill={`url(#${hairGradId})`} />
-                  <rect x="105" y="56" width="5.5" height="38" rx="2" fill={`url(#${hairGradId})`} />
-                  <rect x="149.5" y="56" width="5.5" height="38" rx="2" fill={`url(#${hairGradId})`} />
+                  <path d="M107,56 C107,24 153,24 153,56 C151,64 147,65 142,61 C135,53 125,53 118,61 C113,65 109,64 107,56 Z" fill="url(#hair-dynamic-grad)" />
+                  <rect x="105" y="56" width="5.5" height="38" rx="2" fill="url(#hair-dynamic-grad)" />
+                  <rect x="149.5" y="56" width="5.5" height="38" rx="2" fill="url(#hair-dynamic-grad)" />
                   <rect x="105" y="66" width="50" height="3" fill="#FFFFFF" opacity="0.3" />
                 </g>
               )}
 
               {c.hairStyle === "hair-curly" && (
                 <g>
-                  {/* Interlocking fluffy curl rings */}
-                  <circle cx="106" cy="50" r="14" fill={`url(#${hairGradId})`} />
-                  <circle cx="120" cy="40" r="14" fill={`url(#${hairGradId})`} />
-                  <circle cx="140" cy="40" r="14" fill={`url(#${hairGradId})`} />
-                  <circle cx="154" cy="50" r="14" fill={`url(#${hairGradId})`} />
-                  <circle cx="112" cy="62" r="10" fill={`url(#${hairGradId})`} />
-                  <circle cx="148" cy="62" r="10" fill={`url(#${hairGradId})`} />
-                  <circle cx="130" cy="48" r="12" fill={`url(#${hairGradId})`} />
+                  <circle cx="106" cy="50" r="14" fill="url(#hair-dynamic-grad)" />
+                  <circle cx="120" cy="40" r="14" fill="url(#hair-dynamic-grad)" />
+                  <circle cx="140" cy="40" r="14" fill="url(#hair-dynamic-grad)" />
+                  <circle cx="154" cy="50" r="14" fill="url(#hair-dynamic-grad)" />
+                  <circle cx="112" cy="62" r="10" fill="url(#hair-dynamic-grad)" />
+                  <circle cx="148" cy="62" r="10" fill="url(#hair-dynamic-grad)" />
+                  <circle cx="130" cy="48" r="12" fill="url(#hair-dynamic-grad)" />
                 </g>
               )}
 
               {c.hairStyle === "hair-afro" && (
                 <g>
-                  <path d="M130,16 C105,16 90,30 90,54 C90,70 100,82 110,88 C100,94 104,104 114,102 C120,106 140,106 146,102 C156,104 160,94 150,88 C160,82 170,70 170,54 C170,30 155,16 130,16 Z" fill={`url(#${hairGradId})`} />
-                  <circle cx="104" cy="44" r="18" fill={`url(#${hairGradId})`} />
-                  <circle cx="156" cy="44" r="18" fill={`url(#${hairGradId})`} />
-                  <circle cx="112" cy="74" r="16" fill={`url(#${hairGradId})`} />
-                  <circle cx="148" cy="74" r="16" fill={`url(#${hairGradId})`} />
-                  <circle cx="130" cy="34" r="22" fill={`url(#${hairGradId})`} />
+                  <path d="M130,16 C105,16 90,30 90,54 C90,70 100,82 110,88 C100,94 104,104 114,102 C120,106 140,106 146,102 C156,104 160,94 150,88 C160,82 170,70 170,54 C170,30 155,16 130,16 Z" fill="url(#hair-dynamic-grad)" />
+                  <circle cx="104" cy="44" r="18" fill="url(#hair-dynamic-grad)" />
+                  <circle cx="156" cy="44" r="18" fill="url(#hair-dynamic-grad)" />
+                  <circle cx="112" cy="74" r="16" fill="url(#hair-dynamic-grad)" />
+                  <circle cx="148" cy="74" r="16" fill="url(#hair-dynamic-grad)" />
+                  <circle cx="130" cy="34" r="22" fill="url(#hair-dynamic-grad)" />
                 </g>
               )}
 
               {c.hairStyle === "hair-braids" && (
                 <g>
-                  <path d="M107,56 C107,24 153,24 153,56 C153,64 146,64 141,60 C132,48 128,48 119,60 C114,64 107,64 107,56 Z" fill={`url(#${hairGradId})`} />
+                  <path d="M107,56 C107,24 153,24 153,56 C153,64 146,64 141,60 C132,48 128,48 119,60 C114,64 107,64 107,56 Z" fill="url(#hair-dynamic-grad)" />
                 </g>
               )}
 
               {c.hairStyle === "hair-pigtails" && (
                 <g>
-                  <path d="M107,56 C107,24 153,24 153,56 C153,64 146,64 141,60 C132,48 128,48 119,60 C114,64 107,64 107,56 Z" fill={`url(#${hairGradId})`} />
+                  <path d="M107,56 C107,24 153,24 153,56 C153,64 146,64 141,60 C132,48 128,48 119,60 C114,64 107,64 107,56 Z" fill="url(#hair-dynamic-grad)" />
                 </g>
               )}
 
               {c.hairStyle === "hair-short" && (
                 <g>
-                  <path d="M107,56 C107,24 153,24 153,56 C153,62 146,62 141,58 C132,48 128,48 119,58 C114,62 107,62 107,56 Z" fill={`url(#${hairGradId})`} />
-                  <polygon points="107,44 115,30 120,40" fill={`url(#${hairGradId})`} />
-                  <polygon points="118,34 128,20 132,30" fill={`url(#${hairGradId})`} />
-                  <polygon points="128,30 138,18 142,32" fill={`url(#${hairGradId})`} />
-                  <polygon points="138,34 146,24 151,38" fill={`url(#${hairGradId})`} />
-                  <polygon points="145,44 153,32 155,46" fill={`url(#${hairGradId})`} />
-                  <path d="M107,56 C104,66 105,74 107,77" stroke={`url(#${hairGradId})`} strokeWidth="3" strokeLinecap="round" />
-                  <path d="M153,56 C156,66 155,74 153,77" stroke={`url(#${hairGradId})`} strokeWidth="3" strokeLinecap="round" />
+                  <path d="M107,56 C107,24 153,24 153,56 C153,62 146,62 141,58 C132,48 128,48 119,58 C114,62 107,62 107,56 Z" fill="url(#hair-dynamic-grad)" />
+                  <polygon points="107,44 115,30 120,40" fill="url(#hair-dynamic-grad)" />
+                  <polygon points="118,34 128,20 132,30" fill="url(#hair-dynamic-grad)" />
+                  <polygon points="128,30 138,18 142,32" fill="url(#hair-dynamic-grad)" />
+                  <polygon points="138,34 146,24 151,38" fill="url(#hair-dynamic-grad)" />
+                  <polygon points="145,44 153,32 155,46" fill="url(#hair-dynamic-grad)" />
+                  <path d="M107,56 C104,66 105,74 107,77" stroke="url(#hair-dynamic-grad)" strokeWidth="3" strokeLinecap="round" />
+                  <path d="M153,56 C156,66 155,74 153,77" stroke="url(#hair-dynamic-grad)" strokeWidth="3" strokeLinecap="round" />
                 </g>
               )}
             </g>
@@ -1032,7 +1065,6 @@ export function RobloxAvatarRenderer({
               {c.accessory === "acc-knowledge-crown" && (
                 <g filter="url(#gold-glow)">
                   <path d="M108,48 L110,26 L120,37 L130,18 L140,37 L150,26 L152,48 Z" fill="url(#crest-gradient)" stroke="#78350F" strokeWidth="0.8" />
-                  {/* Jewels */}
                   <circle cx="130" cy="30" r="2.5" fill="#EF4444" />
                   <circle cx="118" cy="40" r="1.8" fill="#3B82F6" />
                   <circle cx="142" cy="40" r="1.8" fill="#3B82F6" />
@@ -1063,10 +1095,8 @@ export function RobloxAvatarRenderer({
               {c.accessory === "acc-education-globe" && (
                 <g filter="url(#soft-shadow)" transform="translate(48, 140)">
                   <circle cx="0" cy="0" r="12" fill="#3B82F6" />
-                  {/* Green continents */}
                   <path d="M-6,-4 C-6,-4 -2,-8 2,-4 C6,0 6,-2 2,2 C-2,6 -4,2 -6,-4 Z" fill="#10B981" />
                   <path d="M-10,0 C-10,0 -8,-2 -6,2 Z" fill="#10B981" />
-                  {/* Ring */}
                   <ellipse cx="0" cy="0" rx="18" ry="4" fill="none" stroke="#60A5FA" strokeWidth="1.8" transform="rotate(-15)" />
                 </g>
               )}
@@ -1074,12 +1104,10 @@ export function RobloxAvatarRenderer({
               {/* ACC: FLOATING WISDOM BOOK */}
               {c.accessory === "acc-floating-book" && (
                 <g filter="url(#soft-shadow)" transform="translate(-48, 120)">
-                  {/* Open book */}
                   <polygon points="-12,-8 0,-4 0,10 -12,6" fill="#F8FAFC" />
                   <polygon points="12,-8 0,-4 0,10 12,6" fill="#F8FAFC" />
                   <path d="-12,-8 L-14,-7 L-14,7 L-12,6 Z" fill="#78350F" />
                   <path d="12,-8 L14,-7 L14,7 L12,6 Z" fill="#78350F" />
-                  {/* Magic sparkles */}
                   <circle cx="-6" cy="-14" r="1.5" fill="#FBBF24" filter="url(#gold-glow)" />
                   <circle cx="8" cy="-18" r="1" fill="#FBBF24" filter="url(#gold-glow)" />
                 </g>
@@ -1091,7 +1119,7 @@ export function RobloxAvatarRenderer({
           {!isFront && (
             <g transform={`translate(${backpackX}, ${charYOffset})`} filter="url(#soft-shadow)">
               {/* Back hair covering head from behind */}
-              <path d="M109,56 C92,92 88,140 100,195 C108,205 114,200 112,165 C110,135 114,92 130,92 C146,92 150,135 148,165 C146,200 152,205 160,195 C172,140 168,92 151,56 Z" fill={`url(#${hairGradId})`} transform={`translate(${headX - backpackX}, 0)`} />
+              <path d="M109,56 C92,92 88,140 100,195 C108,205 114,200 112,165 C110,135 114,92 130,92 C146,92 150,135 148,165 C146,200 152,205 160,195 C172,140 168,92 151,56 Z" fill="url(#hair-dynamic-grad)" transform={`translate(${headX - backpackX}, 0)`} />
               
               {/* Backpack fully visible on reverso */}
               {c.accessory.includes("backpack") && (
@@ -1100,7 +1128,6 @@ export function RobloxAvatarRenderer({
                     <g>
                       <rect x="96" y="112" width="68" height="68" rx="16" fill="#EF4444" stroke="#B91C1C" strokeWidth="2.5" />
                       <rect x="104" y="130" width="52" height="36" rx="8" fill="#B91C1C" />
-                      {/* Shoulder strap loops */}
                       <path d="M100,112 C100,98 114,98 114,112" fill="none" stroke="#7F1D1D" strokeWidth="4" />
                       <path d="M160,112 C160,98 146,98 146,112" fill="none" stroke="#7F1D1D" strokeWidth="4" />
                     </g>
@@ -1109,8 +1136,8 @@ export function RobloxAvatarRenderer({
                     <g>
                       <rect x="96" y="110" width="68" height="70" rx="12" fill="#1E293B" stroke="#0F172A" strokeWidth="2.5" />
                       <rect x="102" y="116" width="56" height="48" rx="6" fill="#10B981" />
-                      <rect x="112" y="122" width="8" height="32" rx="2" fill="#06B6D4" filter="url(#glow-neon)" />
-                      <rect x="140" y="122" width="8" height="32" rx="2" fill="#06B6D4" filter="url(#glow-neon)" />
+                      <rect x="112" y="122" width="8" height="32" rx="2" fill="#06B6D4" filter="url(#glow-neon-stage)" />
+                      <rect x="140" y="122" width="8" height="32" rx="2" fill="#06B6D4" filter="url(#glow-neon-stage)" />
                     </g>
                   )}
                   {c.accessory === "acc-college-backpack" && (
@@ -1169,7 +1196,7 @@ export function RobloxAvatarRenderer({
       </div>
 
       {/* Floating drag rotation instructions */}
-      <span className="absolute top-3 right-4 text-[9px] font-bold tracking-wide text-purple-400 uppercase bg-slate-950/85 px-2 py-0.5 rounded-full border border-purple-500/20 shadow-sm animate-pulse">
+      <span className="absolute top-3 right-4 text-[9px] font-bold tracking-wide text-cyan-400 uppercase bg-slate-950/85 px-2 py-0.5 rounded-full border border-cyan-500/20 shadow-sm animate-pulse">
         Arrastra para rotar
       </span>
     </div>
