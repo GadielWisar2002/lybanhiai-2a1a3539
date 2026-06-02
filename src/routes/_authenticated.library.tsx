@@ -4,14 +4,13 @@ import { useServerFn } from "@tanstack/react-start";
 import { useTranslation } from "react-i18next";
 import { AppHeader } from "@/components/AppHeader";
 import { listMyQuizzes } from "@/lib/quiz.functions";
+import { TOPICS, type Cat, type Lang } from "@/lib/topics";
 import { BookOpen, Brain, Calculator, Languages, GraduationCap, Sparkles, ChevronRight } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/library")({
   head: () => ({ meta: [{ title: "Library — Lybanhi" }] }),
   component: Library,
 });
-
-import { TOPICS, type Cat, type Lang } from "@/lib/topics";
 
 const ICONS = {
   logic: Brain,
@@ -36,18 +35,21 @@ function localizeTopic(topic: string, targetLang: string): string {
   const base = topic.replace(prefixRe, "").trim();
   const hadPrefix = base !== topic.trim();
   
-  const langKey = (targetLang.slice(0, 2).toLowerCase() as Lang) || "es";
+  const langKey = ((targetLang || "es").slice(0, 2).toLowerCase() as Lang) || "es";
   let translatedBase = base;
+
+  const cleanStr = (s: string) => (s || "").normalize("NFC").trim().toLowerCase();
+  const baseClean = cleanStr(base);
 
   outerLoop:
   for (const cat of Object.keys(TOPICS) as Cat[]) {
     const translations = TOPICS[cat];
     for (const l of ["es", "en", "fr"] as Lang[]) {
       const idx = translations[l].findIndex(
-        t => t.toLowerCase() === base.toLowerCase()
+        t => cleanStr(t) === baseClean
       );
       if (idx !== -1) {
-        translatedBase = translations[langKey][idx];
+        translatedBase = translations[langKey]?.[idx] || translatedBase;
         break outerLoop;
       }
     }
