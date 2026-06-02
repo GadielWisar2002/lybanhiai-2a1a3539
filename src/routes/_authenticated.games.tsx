@@ -442,7 +442,6 @@ function GamesHub() {
               </button>
             </div>
           </div>
-          </div>
         </div>
       )}
     </>
