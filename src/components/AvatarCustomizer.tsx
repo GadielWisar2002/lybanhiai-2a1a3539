@@ -194,9 +194,11 @@ export function AvatarCustomizer({ onClose, inline = false }: AvatarCustomizerPr
     try {
       const currency = selectedItem.currency === "xp" ? "xp" : "sombreritos";
       await unlockItem({
-        itemId: selectedItem.id,
-        currency,
-        cost: selectedItem.cost,
+        data: {
+          itemId: selectedItem.id,
+          currency,
+          cost: selectedItem.cost,
+        },
       });
 
       // Update local query state
