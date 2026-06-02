@@ -293,7 +293,7 @@ function SpaceRushGame() {
                       item.isPlayer ? "bg-success text-success-foreground scale-105" : "bg-muted/40"
                     }`}
                   >
-                    <span>{idx + 1}. {formatName(item.name)}</span>
+                    <span>{idx + 1}. {item.name}</span>
                     <span>{item.distance}m</span>
                   </li>
                 ))}
