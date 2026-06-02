@@ -20,7 +20,6 @@ import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authentic
 import { Route as AuthenticatedLibraryRouteImport } from './routes/_authenticated.library'
 import { Route as AuthenticatedGamesRouteImport } from './routes/_authenticated.games'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated.dashboard'
-import { Route as AuthenticatedProfileAvatarRouteImport } from './routes/_authenticated.profile_.avatar'
 import { Route as AuthenticatedGamesSpaceRushRouteImport } from './routes/_authenticated.games.space-rush'
 import { Route as AuthenticatedGamesGoldQuestRouteImport } from './routes/_authenticated.games.gold-quest'
 import { Route as AuthenticatedPrepQuizQuizIdRouteImport } from './routes/_authenticated.prep_.quiz.$quizId'
@@ -80,12 +79,6 @@ const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   path: '/dashboard',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
-const AuthenticatedProfileAvatarRoute =
-  AuthenticatedProfileAvatarRouteImport.update({
-    id: '/profile_/avatar',
-    path: '/profile/avatar',
-    getParentRoute: () => AuthenticatedRoute,
-  } as any)
 const AuthenticatedGamesSpaceRushRoute =
   AuthenticatedGamesSpaceRushRouteImport.update({
     id: '/space-rush',
@@ -118,7 +111,6 @@ export interface FileRoutesByFullPath {
   '/recommendations': typeof AuthenticatedRecommendationsRoute
   '/games/gold-quest': typeof AuthenticatedGamesGoldQuestRoute
   '/games/space-rush': typeof AuthenticatedGamesSpaceRushRoute
-  '/profile/avatar': typeof AuthenticatedProfileAvatarRoute
   '/prep/quiz/$quizId': typeof AuthenticatedPrepQuizQuizIdRoute
 }
 export interface FileRoutesByTo {
@@ -134,7 +126,6 @@ export interface FileRoutesByTo {
   '/recommendations': typeof AuthenticatedRecommendationsRoute
   '/games/gold-quest': typeof AuthenticatedGamesGoldQuestRoute
   '/games/space-rush': typeof AuthenticatedGamesSpaceRushRoute
-  '/profile/avatar': typeof AuthenticatedProfileAvatarRoute
   '/prep/quiz/$quizId': typeof AuthenticatedPrepQuizQuizIdRoute
 }
 export interface FileRoutesById {
@@ -152,7 +143,6 @@ export interface FileRoutesById {
   '/_authenticated/recommendations': typeof AuthenticatedRecommendationsRoute
   '/_authenticated/games/gold-quest': typeof AuthenticatedGamesGoldQuestRoute
   '/_authenticated/games/space-rush': typeof AuthenticatedGamesSpaceRushRoute
-  '/_authenticated/profile_/avatar': typeof AuthenticatedProfileAvatarRoute
   '/_authenticated/prep_/quiz/$quizId': typeof AuthenticatedPrepQuizQuizIdRoute
 }
 export interface FileRouteTypes {
@@ -170,7 +160,6 @@ export interface FileRouteTypes {
     | '/recommendations'
     | '/games/gold-quest'
     | '/games/space-rush'
-    | '/profile/avatar'
     | '/prep/quiz/$quizId'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -186,7 +175,6 @@ export interface FileRouteTypes {
     | '/recommendations'
     | '/games/gold-quest'
     | '/games/space-rush'
-    | '/profile/avatar'
     | '/prep/quiz/$quizId'
   id:
     | '__root__'
@@ -203,7 +191,6 @@ export interface FileRouteTypes {
     | '/_authenticated/recommendations'
     | '/_authenticated/games/gold-quest'
     | '/_authenticated/games/space-rush'
-    | '/_authenticated/profile_/avatar'
     | '/_authenticated/prep_/quiz/$quizId'
   fileRoutesById: FileRoutesById
 }
@@ -293,13 +280,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
-    '/_authenticated/profile_/avatar': {
-      id: '/_authenticated/profile_/avatar'
-      path: '/profile/avatar'
-      fullPath: '/profile/avatar'
-      preLoaderRoute: typeof AuthenticatedProfileAvatarRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
     '/_authenticated/games/space-rush': {
       id: '/_authenticated/games/space-rush'
       path: '/space-rush'
@@ -345,7 +325,6 @@ interface AuthenticatedRouteChildren {
   AuthenticatedPrepRoute: typeof AuthenticatedPrepRoute
   AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
   AuthenticatedRecommendationsRoute: typeof AuthenticatedRecommendationsRoute
-  AuthenticatedProfileAvatarRoute: typeof AuthenticatedProfileAvatarRoute
   AuthenticatedPrepQuizQuizIdRoute: typeof AuthenticatedPrepQuizQuizIdRoute
 }
 
@@ -357,7 +336,6 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedPrepRoute: AuthenticatedPrepRoute,
   AuthenticatedProfileRoute: AuthenticatedProfileRoute,
   AuthenticatedRecommendationsRoute: AuthenticatedRecommendationsRoute,
-  AuthenticatedProfileAvatarRoute: AuthenticatedProfileAvatarRoute,
   AuthenticatedPrepQuizQuizIdRoute: AuthenticatedPrepQuizQuizIdRoute,
 }
 
