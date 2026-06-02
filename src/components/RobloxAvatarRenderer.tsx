@@ -128,7 +128,7 @@ export function Box3D({
           top: `calc(50% - ${halfD}px)`,
           backgroundColor: color,
           transform: `rotateX(90deg) translate3d(0, 0, ${halfH}px)`,
-          filter: "brightness(1.1)",
+          filter: "brightness(1.15)",
           boxShadow: "inset 0 0 6px rgba(0,0,0,0.05), inset 0 1px 2px rgba(255,255,255,0.28)",
           border: "0.5px solid rgba(255,255,255,0.12)",
         }}
@@ -205,32 +205,32 @@ export function RobloxAvatarRenderer({
   const isGirl = c.gender === "girl";
 
   // ==========================================
-  // EXACT COHERENCE: SAME BODY STRUCTURE FOR BOTH GENDERS
-  // Both avatars share exactly the same size, thickness, and height!
+  // ADAPTIVE MODEL: SLIMMER AND HIGHER FIDELITY FEMININE PROPORTIONS
+  // BUT robust 3D blocky structures to belong to the exact same universe!
   // ==========================================
-  const torsoW = 58;
-  const torsoH = 74;
-  const torsoD = 28;
+  const torsoW = isGirl ? 48 : 58;
+  const torsoH = isGirl ? 70 : 74;
+  const torsoD = isGirl ? 24 : 28;
 
-  const armW = 18;
-  const armH = 72;
-  const armD = 18;
-  const armX = 39; // shoulder horizontal center offset
+  const armW = isGirl ? 14 : 18;
+  const armH = isGirl ? 68 : 72;
+  const armD = isGirl ? 14 : 18;
+  const armX = isGirl ? 32 : 39; // shoulder horizontal center offset
 
-  const legW = 22;
-  const legH = 72;
-  const legD = 22;
-  const legX = 14;
+  const legW = isGirl ? 18 : 22;
+  const legH = isGirl ? 68 : 72;
+  const legD = isGirl ? 18 : 22;
+  const legX = isGirl ? 11 : 14;
 
-  const headW = 44;
-  const headH = 44;
-  const headD = 44;
+  const headW = isGirl ? 38 : 44;
+  const headH = isGirl ? 38 : 44;
+  const headD = isGirl ? 38 : 44;
 
-  const headY = -60;
-  const legY = 72;
-  const skirtY = 43;
-  const backpackZ = -24;
-  const handY = 15;
+  const headY = isGirl ? -55 : -60;
+  const legY = isGirl ? 68 : 72;
+  const skirtY = isGirl ? 41 : 43;
+  const backpackZ = isGirl ? -22 : -24;
+  const handY = isGirl ? 13 : 15;
 
   useEffect(() => {
     setIsRotating(autoRotate);
@@ -257,7 +257,7 @@ export function RobloxAvatarRenderer({
   // Hair hex colors
   const hairColors: Record<string, string> = {
     "color-black": "#1c1917",
-    "color-brown-light": "#78350f", // Chocolate
+    "color-brown-light": "#78350f", // Chocolatecastaño
     "color-brown-dark": "#451a03",
     "color-blonde": "#ca8a04",
     "color-red": "#b91c1c",
@@ -282,101 +282,190 @@ export function RobloxAvatarRenderer({
   // Decals & Textures
   // ----------------------------------------------------
 
-  // Face textures matching high-fidelity Roblox Modern / Lego (NO Anime/Chibi, clean size eyes)
+  // Face textures matching high-fidelity Roblox Modern / Lego (Expressive, Motivated, Clean sized)
   const renderFaceDecal = () => {
-    switch (c.face) {
-      case "face-studying":
-        return (
-          <svg className="w-full h-full p-2" viewBox="0 0 100 100" fill="none">
-            {/* Serious eyebrows */}
-            <path d="M22 24 Q32 30 40 26" stroke="#1c1917" strokeWidth="4.5" strokeLinecap="round" fill="none" />
-            <path d="M78 24 Q68 30 60 26" stroke="#1c1917" strokeWidth="4.5" strokeLinecap="round" fill="none" />
-            {/* Normal round eyes */}
-            <circle cx="28" cy="40" r="5.5" fill="#0284c7" />
-            <circle cx="72" cy="40" r="5.5" fill="#0284c7" />
-            <circle cx="27" cy="38" r="1.8" fill="#fff" />
-            <circle cx="71" cy="38" r="1.8" fill="#fff" />
-            {/* Blush */}
-            <circle cx="16" cy="56" r="4.5" fill="#fb7185" opacity="0.5" />
-            <circle cx="84" cy="56" r="4.5" fill="#fb7185" opacity="0.5" />
-            {/* Lentes académicos blocky frame */}
-            <rect x="13" y="30" width="30" height="24" rx="5" stroke="#1c1917" strokeWidth="3.5" fill="none" />
-            <rect x="57" y="30" width="30" height="24" rx="5" stroke="#1c1917" strokeWidth="3.5" fill="none" />
-            <line x1="43" y1="40" x2="57" y2="40" stroke="#1c1917" strokeWidth="3.5" />
-            <path d="M110 38 L90 50" stroke="#1c1917" strokeWidth="2.5" />
-            <path d="M125 90 Q130 92 135 90" stroke="#1c1917" strokeWidth="2.2" />
-            <path d="M40 70 Q50 74 60 70" stroke="#1c1917" strokeWidth="3.2" strokeLinecap="round" fill="none" />
-          </svg>
-        );
-      case "face-excited":
-        return (
-          <svg className="w-full h-full p-2" viewBox="0 0 100 100" fill="none">
-            {/* Star eyes */}
-            <polygon points="28,26 31,33 39,33 33,37 35,45 28,41 21,45 23,37 17,33 25,33" fill="#eab308" stroke="#1c1917" strokeWidth="1.5" />
-            <polygon points="72,26 75,33 83,33 77,37 79,45 72,41 65,45 67,37 61,33 69,33" fill="#eab308" stroke="#1c1917" strokeWidth="1.5" />
-            <circle cx="28" cy="33" r="1.5" fill="#fff" />
-            <circle cx="72" cy="33" r="1.5" fill="#fff" />
-            {/* Blushing */}
-            <circle cx="16" cy="56" r="5" fill="#ec4899" opacity="0.45" />
-            <circle cx="84" cy="56" r="5" fill="#ec4899" opacity="0.45" />
-            {/* Huge open mouth */}
-            <path d="M38 62 Q50 82 62 62 Z" fill="#991b1b" stroke="#1c1917" strokeWidth="3" />
-            <path d="M41 63 Q50 67 59 63" fill="#fff" />
-          </svg>
-        );
-      case "face-cool":
-        return (
-          <svg className="w-full h-full p-2" viewBox="0 0 100 100" fill="none">
-            {/* Black cool square glasses */}
-            <polygon points="12,32 46,32 42,50 16,50" fill="#1e293b" stroke="#0f172a" strokeWidth="2.5" />
-            <polygon points="54,32 88,32 84,50 58,50" fill="#1e293b" stroke="#0f172a" strokeWidth="2.5" />
-            <line x1="46" y1="38" x2="54" y2="38" stroke="#0f172a" strokeWidth="3.5" />
-            {/* Cool smug mouth */}
-            <path d="M42 68 Q53 70 59 64" stroke="#1c1917" strokeWidth="3.5" strokeLinecap="round" fill="none" />
-          </svg>
-        );
-      case "face-wink":
-        return (
-          <svg className="w-full h-full p-2" viewBox="0 0 100 100" fill="none">
-            {/* Left eye open */}
-            <circle cx="28" cy="40" r="5.5" fill="#1c1917" />
-            <circle cx="26.5" cy="37.5" r="1.8" fill="#fff" />
-            {/* Right eye winking */}
-            <path d="M60 41 Q70 48 80 41" stroke="#1c1917" strokeWidth="4" strokeLinecap="round" fill="none" />
-            {/* Smirk mouth */}
-            <path d="M42 66 Q50 71 58 66" stroke="#1c1917" strokeWidth="2.5" strokeLinecap="round" fill="none" />
-          </svg>
-        );
-      case "face-curious":
-        return (
-          <svg className="w-full h-full p-2" viewBox="0 0 100 100" fill="none">
-            <circle cx="28" cy="38" r="5" fill="#1c1917" />
-            <circle cx="72" cy="38" r="5" fill="#1c1917" />
-            {/* Asymmetrical motivated eyebrows */}
-            <path d="M18 24 Q30 18 38 24" stroke="#1c1917" strokeWidth="3.5" fill="none" />
-            <path d="M78 28 Q68 26 62 30" stroke="#1c1917" strokeWidth="3.5" fill="none" />
-            <ellipse cx="50" cy="68" rx="4.5" ry="3" fill="#1c1917" />
-          </svg>
-        );
-      case "face-happy":
-      default:
-        return (
-          <svg className="w-full h-full p-2.5" viewBox="0 0 100 100" fill="none">
-            {/* Normal round eyes, perfectly scaled */}
-            <circle cx="28" cy="42" r="5" fill="#1c1917" />
-            <circle cx="72" cy="42" r="5" fill="#1c1917" />
-            <circle cx="26.5" cy="39.5" r="1.5" fill="#fff" />
-            <circle cx="70.5" cy="39.5" r="1.5" fill="#fff" />
-            {/* Motivated brows */}
-            <path d="M20 28 Q30 23 38 27" stroke="#451a03" strokeWidth="3" strokeLinecap="round" fill="none" />
-            <path d="M80 28 Q70 23 62 27" stroke="#451a03" strokeWidth="3" strokeLinecap="round" fill="none" />
-            {/* Blushing */}
-            <circle cx="16" cy="56" r="4.5" fill="#fb7185" opacity="0.5" />
-            <circle cx="84" cy="56" r="4.5" fill="#fb7185" opacity="0.5" />
-            {/* Polite sweet smile */}
-            <path d="M38 62 Q50 74 62 62" stroke="#1c1917" strokeWidth="3.5" strokeLinecap="round" fill="none" />
-          </svg>
-        );
+    if (isGirl) {
+      // Distinctly elegant feminine facial features (eyelashes, blush, pink smiling lips)
+      switch (c.face) {
+        case "face-studying":
+          return (
+            <svg className="w-full h-full p-2" viewBox="0 0 100 100" fill="none">
+              {/* Focused thin motivated brows */}
+              <path d="M22 25 Q32 31 38 27" stroke="#1c1917" strokeWidth="3" strokeLinecap="round" fill="none" />
+              <path d="M78 25 Q68 31 62 27" stroke="#1c1917" strokeWidth="3" strokeLinecap="round" fill="none" />
+              {/* Focused eyes with double shiny highlights & eyelashes */}
+              <ellipse cx="28" cy="42" rx="4.5" ry="6.5" fill="#0284c7" />
+              <ellipse cx="72" cy="42" rx="4.5" ry="6.5" fill="#0284c7" />
+              <circle cx="26.5" cy="39" r="1.5" fill="#fff" />
+              <circle cx="70.5" cy="39" r="1.5" fill="#fff" />
+              {/* Elegant feminine eyelashes */}
+              <path d="M18 36 Q26 31 32 35" stroke="#1c1917" strokeWidth="2.5" fill="none" />
+              <path d="M82 36 Q74 31 68 35" stroke="#1c1917" strokeWidth="2.5" fill="none" />
+              {/* Rosy blush */}
+              <circle cx="16" cy="56" r="4" fill="#f43f5e" opacity="0.45" />
+              <circle cx="84" cy="56" r="4" fill="#f43f5e" opacity="0.45" />
+              {/* Sleek round academic glasses frame */}
+              <rect x="14" y="32" width="28" height="22" rx="6" stroke="#1f2937" strokeWidth="3.2" fill="none" />
+              <rect x="58" y="32" width="28" height="22" rx="6" stroke="#1f2937" strokeWidth="3.2" fill="none" />
+              <line x1="42" y1="42" x2="58" y2="42" stroke="#1f2937" strokeWidth="3.2" />
+              {/* Polite focused mouth */}
+              <path d="M42 66 Q50 71 58 66" stroke="#e11d48" strokeWidth="3.5" strokeLinecap="round" fill="none" />
+            </svg>
+          );
+        case "face-excited":
+          return (
+            <svg className="w-full h-full p-2" viewBox="0 0 100 100" fill="none">
+              {/* Sparkling star eyes */}
+              <polygon points="28,26 31,33 39,33 33,37 35,45 28,41 21,45 23,37 17,33 25,33" fill="#fbbf24" stroke="#1c1917" strokeWidth="1.2" />
+              <polygon points="72,26 75,33 83,33 77,37 79,45 72,41 65,45 67,37 61,33 69,33" fill="#fbbf24" stroke="#1c1917" strokeWidth="1.2" />
+              <circle cx="28" cy="33" r="1.5" fill="#fff" />
+              <circle cx="72" cy="33" r="1.5" fill="#fff" />
+              {/* Long eyelashes */}
+              <path d="M15 32 L22 30" stroke="#1c1917" strokeWidth="2" strokeLinecap="round" />
+              <path d="M85 32 L78 30" stroke="#1c1917" strokeWidth="2" strokeLinecap="round" />
+              {/* Blushing */}
+              <circle cx="16" cy="56" r="4.5" fill="#ec4899" opacity="0.55" />
+              <circle cx="84" cy="56" r="4.5" fill="#ec4899" opacity="0.55" />
+              {/* Open rosy smile */}
+              <path d="M38 62 Q50 80 62 62 Z" fill="#e11d48" stroke="#991b1b" strokeWidth="1.5" />
+              <path d="M42 63 Q50 67 58 63" fill="#fff" />
+            </svg>
+          );
+        case "face-cool":
+          return (
+            <svg className="w-full h-full p-2" viewBox="0 0 100 100" fill="none">
+              {/* Black cool shades */}
+              <polygon points="14,33 46,33 42,49 18,49" fill="#1e293b" stroke="#0f172a" strokeWidth="2" />
+              <polygon points="54,33 86,33 82,49 58,49" fill="#1e293b" stroke="#0f172a" strokeWidth="2" />
+              <line x1="46" y1="38" x2="54" y2="38" stroke="#0f172a" strokeWidth="3" />
+              {/* Rosy blush */}
+              <circle cx="16" cy="55" r="4" fill="#f43f5e" opacity="0.45" />
+              <circle cx="84" cy="55" r="4" fill="#f43f5e" opacity="0.45" />
+              {/* Confident rosy smile */}
+              <path d="M42 68 Q52 70 58 64" stroke="#e11d48" strokeWidth="3" strokeLinecap="round" fill="none" />
+            </svg>
+          );
+        case "face-wink":
+          return (
+            <svg className="w-full h-full p-2" viewBox="0 0 100 100" fill="none">
+              {/* Left eye open with lashes */}
+              <ellipse cx="28" cy="42" rx="4.5" ry="6.5" fill="#1c1917" />
+              <circle cx="26.5" cy="39" r="1.5" fill="#fff" />
+              <path d="M19 36 Q26 31 32 35" stroke="#1c1917" strokeWidth="2" fill="none" />
+              {/* Right eye winking */}
+              <path d="M60 41 Q70 47 80 41" stroke="#1c1917" strokeWidth="3.5" fill="none" strokeLinecap="round" />
+              {/* Rosy blush */}
+              <circle cx="16" cy="56" r="4" fill="#f43f5e" opacity="0.5" />
+              <circle cx="84" cy="56" r="4" fill="#f43f5e" opacity="0.5" />
+              {/* Smirk pink lips */}
+              <path d="M42 66 Q50 71 58 66" stroke="#e11d48" strokeWidth="3" strokeLinecap="round" fill="none" />
+            </svg>
+          );
+        case "face-curious":
+          return (
+            <svg className="w-full h-full p-2" viewBox="0 0 100 100" fill="none">
+              <ellipse cx="28" cy="38" rx="4" ry="6" fill="#1c1917" />
+              <ellipse cx="72" cy="38" rx="4" ry="6" fill="#1c1917" />
+              <path d="M19 32 Q26 27 32 31" stroke="#1c1917" strokeWidth="2" fill="none" />
+              <path d="M81 32 Q74 27 68 31" stroke="#1c1917" strokeWidth="2" fill="none" />
+              {/* Asymmetrical curious brows */}
+              <path d="M18 24 Q30 18 38 24" stroke="#1c1917" strokeWidth="2.5" fill="none" />
+              <path d="M78 28 Q68 26 62 30" stroke="#1c1917" strokeWidth="2.5" fill="none" />
+              <ellipse cx="50" cy="66" rx="4.5" ry="3" fill="#e11d48" />
+            </svg>
+          );
+        case "face-happy":
+        default:
+          return (
+            <svg className="w-full h-full p-2.5" viewBox="0 0 100 100" fill="none">
+              {/* Normal detailed eyes with double glares & lashes */}
+              <ellipse cx="28" cy="42" rx="4.5" ry="6.5" fill="#1c1917" />
+              <ellipse cx="72" cy="42" rx="4.5" ry="6.5" fill="#1c1917" />
+              <circle cx="26.5" cy="39" r="1.5" fill="#fff" />
+              <circle cx="70.5" cy="39" r="1.5" fill="#fff" />
+              {/* Motivated thin brows */}
+              <path d="M20 28 Q30 23 38 27" stroke="#451a03" strokeWidth="2.5" strokeLinecap="round" fill="none" />
+              <path d="M80 28 Q70 23 62 27" stroke="#451a03" strokeWidth="2.5" strokeLinecap="round" fill="none" />
+              {/* Girly eyelashes */}
+              <path d="M19 36 Q26 31 32 35" stroke="#1c1917" strokeWidth="2.2" fill="none" />
+              <path d="M81 36 Q74 31 68 35" stroke="#1c1917" strokeWidth="2.2" fill="none" />
+              {/* Rosy blush */}
+              <circle cx="16" cy="56" r="4" fill="#f43f5e" opacity="0.45" />
+              <circle cx="84" cy="56" r="4" fill="#f43f5e" opacity="0.45" />
+              {/* Sweet rosy smile */}
+              <path d="M38 62 Q50 73 62 62" stroke="#e11d48" strokeWidth="3" strokeLinecap="round" fill="none" />
+            </svg>
+          );
+      }
+    } else {
+      // Masculine face decal matching original Roblox
+      switch (c.face) {
+        case "face-studying":
+          return (
+            <svg className="w-full h-full p-2" viewBox="0 0 100 100" fill="none">
+              <path d="M22 24 Q32 30 40 26" stroke="#1c1917" strokeWidth="4.5" strokeLinecap="round" fill="none" />
+              <path d="M78 24 Q68 30 60 26" stroke="#1c1917" strokeWidth="4.5" strokeLinecap="round" fill="none" />
+              <circle cx="28" cy="40" r="5.5" fill="#0284c7" />
+              <circle cx="72" cy="40" r="5.5" fill="#0284c7" />
+              <circle cx="27" cy="38" r="1.8" fill="#fff" />
+              <circle cx="71" cy="38" r="1.8" fill="#fff" />
+              <rect x="13" y="30" width="30" height="24" rx="5" stroke="#1c1917" strokeWidth="3.5" fill="none" />
+              <rect x="57" y="30" width="30" height="24" rx="5" stroke="#1c1917" strokeWidth="3.5" fill="none" />
+              <line x1="43" y1="40" x2="57" y2="40" stroke="#1c1917" strokeWidth="3.5" />
+              <path d="M40 70 Q50 74 60 70" stroke="#1c1917" strokeWidth="3.2" strokeLinecap="round" fill="none" />
+            </svg>
+          );
+        case "face-excited":
+          return (
+            <svg className="w-full h-full p-2" viewBox="0 0 100 100" fill="none">
+              <polygon points="28,26 31,33 39,33 33,37 35,45 28,41 21,45 23,37 17,33 25,33" fill="#eab308" stroke="#1c1917" strokeWidth="1.5" />
+              <polygon points="72,26 75,33 83,33 77,37 79,45 72,41 65,45 67,37 61,33 69,33" fill="#eab308" stroke="#1c1917" strokeWidth="1.5" />
+              <path d="M38 62 Q50 82 62 62 Z" fill="#991b1b" stroke="#1c1917" strokeWidth="3" />
+              <path d="M41 63 Q50 67 59 63" fill="#fff" />
+            </svg>
+          );
+        case "face-cool":
+          return (
+            <svg className="w-full h-full p-2" viewBox="0 0 100 100" fill="none">
+              <polygon points="12,32 46,32 42,50 16,50" fill="#1e293b" stroke="#0f172a" strokeWidth="2.5" />
+              <polygon points="54,32 88,32 84,50 58,50" fill="#1e293b" stroke="#0f172a" strokeWidth="2.5" />
+              <line x1="46" y1="38" x2="54" y2="38" stroke="#0f172a" strokeWidth="3.5" />
+              <path d="M42 68 Q53 70 59 64" stroke="#1c1917" strokeWidth="3.5" strokeLinecap="round" fill="none" />
+            </svg>
+          );
+        case "face-wink":
+          return (
+            <svg className="w-full h-full p-2" viewBox="0 0 100 100" fill="none">
+              <circle cx="28" cy="40" r="5.5" fill="#1c1917" />
+              <circle cx="26.5" cy="37.5" r="1.8" fill="#fff" />
+              <path d="M60 41 Q70 48 80 41" stroke="#1c1917" strokeWidth="4" strokeLinecap="round" fill="none" />
+              <path d="M42 66 Q50 71 58 66" stroke="#1c1917" strokeWidth="2.5" strokeLinecap="round" fill="none" />
+            </svg>
+          );
+        case "face-curious":
+          return (
+            <svg className="w-full h-full p-2" viewBox="0 0 100 100" fill="none">
+              <circle cx="28" cy="38" r="5" fill="#1c1917" />
+              <circle cx="72" cy="38" r="5" fill="#1c1917" />
+              <path d="M18 24 Q30 18 38 24" stroke="#1c1917" strokeWidth="3.5" fill="none" />
+              <path d="M78 28 Q68 26 62 30" stroke="#1c1917" strokeWidth="3.5" fill="none" />
+              <ellipse cx="50" cy="68" rx="4.5" ry="3" fill="#1c1917" />
+            </svg>
+          );
+        case "face-happy":
+        default:
+          return (
+            <svg className="w-full h-full p-2.5" viewBox="0 0 100 100" fill="none">
+              <circle cx="28" cy="42" r="5" fill="#1c1917" />
+              <circle cx="72" cy="42" r="5" fill="#1c1917" />
+              <circle cx="26.5" cy="39.5" r="1.5" fill="#fff" />
+              <circle cx="70.5" cy="39.5" r="1.5" fill="#fff" />
+              <path d="M20 28 Q30 23 38 27" stroke="#451a03" strokeWidth="3" strokeLinecap="round" fill="none" />
+              <path d="M80 28 Q70 23 62 27" stroke="#451a03" strokeWidth="3" strokeLinecap="round" fill="none" />
+              <path d="M38 62 Q50 74 62 62" stroke="#1c1917" strokeWidth="3.5" strokeLinecap="round" fill="none" />
+            </svg>
+          );
+      }
     }
   };
 
@@ -407,22 +496,15 @@ export function RobloxAvatarRenderer({
     hasLongSleeves = true;
     shirtDecal = (
       <div className="relative h-full w-full p-2 flex flex-col justify-between items-center text-center">
-        {/* Navy varsity stripes as side sleeves are painted on arms, but drawstrings & collar tie are on chest */}
-        <div className="flex justify-between w-full px-2">
-          {/* Drawstrings */}
-          <div className="w-1 h-8 bg-slate-400 rounded-b"></div>
-          <div className="w-1 h-8 bg-slate-400 rounded-b"></div>
-        </div>
-
         {/* White shirt collar V with red ribbon bow tie */}
-        <div className="absolute top-0 inset-x-4 h-4 bg-slate-100 border border-slate-200 rounded-b flex items-center justify-center">
+        <div className="absolute top-0 inset-x-2.5 h-3.5 bg-slate-100 border border-slate-200 rounded-b flex items-center justify-center">
           <div className="w-2.5 h-2 bg-red-600 rounded-full border border-red-800 flex items-center justify-center">
-            <span className="size-1 bg-red-400 rounded-full animate-pulse"></span>
+            <span className="size-1 bg-red-400 rounded-full"></span>
           </div>
         </div>
 
         {/* Academic gold shield/mortarboard crest on chest */}
-        <div className="mt-3 size-6 rounded-full bg-gradient-to-br from-yellow-400 to-amber-600 border border-yellow-300 shadow flex items-center justify-center text-[10px]">
+        <div className="mt-4.5 size-5 rounded-full bg-gradient-to-br from-yellow-400 to-amber-600 border border-yellow-300 shadow flex items-center justify-center text-[10px]">
           🎓
         </div>
       </div>
@@ -465,15 +547,15 @@ export function RobloxAvatarRenderer({
     renderHeadAcc = (
       <div style={{ transformStyle: "preserve-3d" }}>
         {/* Diamond flat top plate */}
-        <Box3D width={64} height={3} depth={64} x={0} y={headY - 24} z={0} color="#111827"
+        <Box3D width={isGirl ? 56 : 64} height={3} depth={isGirl ? 56 : 64} x={0} y={headY - (isGirl ? 20 : 24)} z={0} color="#111827"
           rightDecal={<div className="w-1.5 h-12 bg-yellow-400 absolute right-4 top-0 shadow"></div>} />
         {/* Cylinder base */}
-        <Box3D width={34} height={10} depth={34} x={0} y={headY - 18} z={0} color="#0f172a" />
+        <Box3D width={isGirl ? 30 : 34} height={10} depth={isGirl ? 30 : 34} x={0} y={headY - (isGirl ? 14 : 18)} z={0} color="#0f172a" />
       </div>
     );
   } else if (c.accessory === "acc-knowledge-crown") {
     renderHeadAcc = (
-      <Box3D width={48} height={12} depth={48} x={0} y={headY - 23} z={0} color="#fbbf24"
+      <Box3D width={isGirl ? 42 : 48} height={12} depth={isGirl ? 42 : 48} x={0} y={headY - (isGirl ? 20 : 23)} z={0} color="#fbbf24"
         frontDecal={
           <div className="w-full h-full flex justify-around items-end pb-0.5">
             <span className="size-1 bg-red-600 rounded-full" />
@@ -485,9 +567,9 @@ export function RobloxAvatarRenderer({
     );
   } else if (c.accessory === "acc-nerd-glasses") {
     renderFaceGlasses = (
-      <Box3D width={46} height={16} depth={2} x={0} y={headY + 2} z={23} color="#1f2937"
+      <Box3D width={isGirl ? 40 : 46} height={16} depth={2} x={0} y={headY + 2} z={isGirl ? 20 : 23} color="#1f2937"
         frontDecal={
-          <div className="w-full h-full flex justify-between px-2.5 bg-black/10 border border-gray-800">
+          <div className="w-full h-full flex justify-between px-2 bg-black/10 border border-gray-800">
             <div className="w-3.5 h-full bg-white/20" />
             <div className="w-3.5 h-full bg-white/20" />
           </div>
@@ -498,11 +580,11 @@ export function RobloxAvatarRenderer({
     renderHeadAcc = (
       <div style={{ transformStyle: "preserve-3d" }}>
         {/* Headphones bridge */}
-        <Box3D width={48} height={4} depth={6} x={0} y={headY - 23} z={0} color="#7c3aed" />
+        <Box3D width={isGirl ? 42 : 48} height={4} depth={6} x={0} y={headY - (isGirl ? 20 : 23)} z={0} color="#7c3aed" />
         {/* Left ear pad */}
-        <Box3D width={8} height={20} depth={16} x={-23} y={headY + 2} z={0} color="#6d28d9" />
+        <Box3D width={8} height={20} depth={16} x={isGirl ? -20 : -23} y={headY + 2} z={0} color="#6d28d9" />
         {/* Right ear pad */}
-        <Box3D width={8} height={20} depth={16} x={23} y={headY + 2} z={0} color="#6d28d9" />
+        <Box3D width={8} height={20} depth={16} x={isGirl ? 20 : 23} y={headY + 2} z={0} color="#6d28d9" />
       </div>
     );
   }
@@ -510,11 +592,11 @@ export function RobloxAvatarRenderer({
   // Backpacks
   if (c.accessory === "acc-school-backpack") {
     renderBackpack = (
-      <Box3D width={44} height={50} depth={16} x={0} y={4} z={backpackZ} color="#1e293b" // Academic dark backpack
+      <Box3D width={isGirl ? 38 : 44} height={isGirl ? 44 : 50} depth={16} x={0} y={4} z={backpackZ} color="#1e293b"
         backDecal={
           <div className="w-full h-full p-2 flex flex-col justify-between items-center bg-[#0f172a]">
-            <div className="w-8 h-4 bg-slate-800 border border-slate-900 rounded flex justify-center text-[7px] text-gray-300 font-bold">Pocket</div>
-            <div className="w-4 h-1.5 bg-black rounded" />
+            <div className="w-7 h-4 bg-slate-800 border border-slate-900 rounded flex justify-center text-[7px] text-gray-300 font-bold">Pocket</div>
+            <div className="w-3 h-1 bg-black rounded" />
           </div>
         }
       />
@@ -522,14 +604,13 @@ export function RobloxAvatarRenderer({
   } else if (c.accessory === "acc-science-backpack") {
     renderBackpack = (
       <div style={{ transformStyle: "preserve-3d" }}>
-        <Box3D width={28} height={46} depth={22} x={0} y={4} z={backpackZ + 1} color="#06b6d4"
+        <Box3D width={isGirl ? 24 : 28} height={isGirl ? 40 : 46} depth={22} x={0} y={4} z={backpackZ + 1} color="#06b6d4"
           backDecal={
             <div className="w-full h-full bg-emerald-400 shadow-[0_0_12px_#10b981] flex flex-col justify-center items-center text-[7px] font-black text-emerald-950">
               CHEM VIAL
             </div>
           }
         />
-        {/* straps */}
         <Box3D width={torsoW + 4} height={4} depth={torsoD + 2} x={0} y={-10} z={-10} color="#78350f" />
         <Box3D width={torsoW + 4} height={4} depth={torsoD + 2} x={0} y={15} z={-10} color="#78350f" />
       </div>
@@ -537,11 +618,11 @@ export function RobloxAvatarRenderer({
   } else if (c.accessory === "acc-college-backpack") {
     renderBackpack = (
       <div style={{ transformStyle: "preserve-3d" }}>
-        <Box3D width={38} height={12} depth={32} x={0} y={-5} z={backpackZ + 2} color="#dc2626"
+        <Box3D width={34} height={12} depth={28} x={0} y={-5} z={backpackZ + 2} color="#dc2626"
           backDecal={<div className="w-full h-full flex justify-end pr-1 text-[8px] font-bold text-white bg-red-900 select-none">MATH</div>} />
-        <Box3D width={36} height={12} depth={30} x={0} y={5} z={backpackZ + 2} color="#16a34a"
+        <Box3D width={32} height={12} depth={26} x={0} y={5} z={backpackZ + 2} color="#16a34a"
           backDecal={<div className="w-full h-full flex justify-end pr-1 text-[8px] font-bold text-white bg-green-900 select-none">SCI</div>} />
-        <Box3D width={40} height={12} depth={34} x={0} y={15} z={backpackZ + 2} color="#2563eb"
+        <Box3D width={36} height={12} depth={30} x={0} y={15} z={backpackZ + 2} color="#2563eb"
           backDecal={<div className="w-full h-full flex justify-end pr-1 text-[8px] font-bold text-white bg-blue-900 select-none">HIST</div>} />
       </div>
     );
@@ -551,12 +632,12 @@ export function RobloxAvatarRenderer({
   let renderHandHeld = null;
   if (c.accessory === "acc-education-globe") {
     renderHandHeld = (
-      <Box3D width={20} height={20} depth={20} x={50} y={15} z={12} color="#2563eb" className="animate-bounce"
+      <Box3D width={18} height={18} depth={18} x={isGirl ? 42 : 50} y={15} z={12} color="#2563eb" className="animate-bounce"
         frontDecal={<div className="size-full bg-emerald-500 rounded-full border border-blue-600 text-[6px] text-center font-bold text-white flex items-center justify-center">🌎</div>} />
     );
   } else if (c.accessory === "acc-floating-book") {
     renderHandHeld = (
-      <Box3D width={28} height={4} depth={22} x={-50} y={15} z={12} color="#7c3aed" className="animate-pulse"
+      <Box3D width={24} height={4} depth={18} x={isGirl ? -42 : -50} y={15} z={12} color="#7c3aed" className="animate-pulse"
         topDecal={
           <div className="w-full h-full bg-amber-50 p-0.5 text-[5px] text-amber-950 font-serif leading-none flex justify-around select-none">
             <div>A=πr²<br/>x=-b±√...</div>
@@ -572,19 +653,19 @@ export function RobloxAvatarRenderer({
   if (c.pet === "pet-owl") {
     renderPet = (
       <div className="animate-bounce" style={{ transformStyle: "preserve-3d" }}>
-        <Box3D width={18} height={22} depth={18} x={52} y={-30} z={10} color="#78350f"
+        <Box3D width={16} height={20} depth={16} x={isGirl ? 44 : 52} y={-30} z={10} color="#78350f"
           frontDecal={
             <div className="w-full h-full p-1 flex flex-col justify-between items-center bg-amber-900 rounded select-none">
               <div className="flex justify-between w-full px-1">
-                <div className="size-3 rounded-full bg-yellow-400 border border-black flex items-center justify-center"><div className="size-1 rounded-full bg-black" /></div>
-                <div className="size-3 rounded-full bg-yellow-400 border border-black flex items-center justify-center"><div className="size-1 rounded-full bg-black" /></div>
+                <div className="size-2.5 rounded-full bg-yellow-400 border border-black flex items-center justify-center"><div className="size-1 rounded-full bg-black" /></div>
+                <div className="size-2.5 rounded-full bg-yellow-400 border border-black flex items-center justify-center"><div className="size-1 rounded-full bg-black" /></div>
               </div>
-              <polygon points="9,6 6,10 12,10" fill="#f59e0b" className="mx-auto" />
+              <polygon points="8,5 5,8 11,8" fill="#f59e0b" className="mx-auto" />
             </div>
           }
         />
-        <Box3D width={22} height={1.5} depth={22} x={52} y={-44} z={10} color="#1e2937" />
-        <Box3D width={11} height={4} depth={11} x={52} y={-42} z={10} color="#0f172a" />
+        <Box3D width={20} height={1.5} depth={20} x={isGirl ? 44 : 52} y={-44} z={10} color="#1e2937" />
+        <Box3D width={10} height={4} depth={10} x={isGirl ? 44 : 52} y={-42} z={10} color="#0f172a" />
       </div>
     );
   }
@@ -626,32 +707,33 @@ export function RobloxAvatarRenderer({
     return null;
   };
 
-  // Hairstyles in boxy 3D (exactly Roblox styling)
+  // Hairstyles in boxy 3D (Cleanly scaled, fits beautifully without being oversized)
   const renderHair3D = () => {
     const style = c.hairStyle;
 
-    if (style === "hair-wavy" || style === "hair-long" || style === "hair-straight" || style === "hair-curly") {
+    if (style === "hair-wavy" || style === "hair-long" || style === "hair-straight" || style === "hair-curly" || style === "hair-braids" || style === "hair-pigtails" || style === "hair-bangs" || style === "hair-afro") {
       // Girly volumetric blocky hair cuts
       return (
         <div style={{ transformStyle: "preserve-3d" }}>
           {/* Main top crown box */}
-          <Box3D width={48} height={20} depth={48} x={0} y={headY - 14} z={2} color={activeHairHex} />
-          {/* Back lock block cascading behind shoulders */}
-          <Box3D width={48} height={52} depth={12} x={0} y={headY + 16} z={-16} color={activeHairHex} />
+          <Box3D width={headW + 4} height={14} depth={headD + 4} x={0} y={headY - (isGirl ? 13 : 15)} z={1} color={activeHairHex} />
           
-          {/* Side block locks framing the face (exactly blocky Roblox) */}
-          <Box3D width={10} height={46} depth={38} x={-20} y={headY + 12} z={8} color={activeHairHex} />
-          <Box3D width={10} height={46} depth={38} x={20} y={headY + 12} z={8} color={activeHairHex} />
+          {/* Back lock block cascading behind shoulders */}
+          <Box3D width={headW + 4} height={46} depth={10} x={0} y={headY + 14} z={-(headD / 2) + 2} color={activeHairHex} />
+          
+          {/* Side block locks framing the cheeks elegantly (blocky Roblox) */}
+          <Box3D width={8} height={40} depth={headD - 4} x={-(headW / 2) - 1.5} y={headY + 12} z={2} color={activeHairHex} />
+          <Box3D width={8} height={40} depth={headD - 4} x={(headW / 2) + 1.5} y={headY + 12} z={2} color={activeHairHex} />
 
           {/* Sweet fringe bangs over the forehead */}
-          <Box3D width={40} height={10} depth={6} x={0} y={headY - 12} z={21} color={activeHairHex} />
+          <Box3D width={headW - 4} height={8} depth={5} x={0} y={headY - 11} z={(headD / 2) - 1} color={activeHairHex} />
           
           {/* Highlight blocks if active */}
           {highlightHex && (
             <>
-              <Box3D width={26} height={2} depth={26} x={0} y={headY - 25} z={2} color={highlightHex} />
-              <Box3D width={4} height={40} depth={10} x={-20.5} y={headY + 12} z={10} color={highlightHex} />
-              <Box3D width={4} height={40} depth={10} x={20.5} y={headY + 12} z={10} color={highlightHex} />
+              <Box3D width={headW - 8} height={2} depth={headD - 8} x={0} y={headY - 21} z={1} color={highlightHex} />
+              <Box3D width={3} height={32} depth={8} x={-(headW / 2) - 2} y={headY + 12} z={3} color={highlightHex} />
+              <Box3D width={3} height={32} depth={8} x={(headW / 2) + 2} y={headY + 12} z={3} color={highlightHex} />
             </>
           )}
         </div>
@@ -661,21 +743,20 @@ export function RobloxAvatarRenderer({
       return (
         <div style={{ transformStyle: "preserve-3d" }}>
           {/* Top spiky locks */}
-          <Box3D width={46} height={14} depth={46} x={0} y={headY - 18} z={0} color={activeHairHex} />
-          <Box3D width={12} height={8} depth={12} x={-10} y={headY - 22} z={6} color={activeHairHex} />
-          <Box3D width={12} height={8} depth={12} x={10} y={headY - 22} z={6} color={activeHairHex} />
-          <Box3D width={10} height={10} depth={10} x={0} y={headY - 24} z={-2} color={activeHairHex} />
+          <Box3D width={headW + 2} height={12} depth={headD + 2} x={0} y={headY - 15} z={0} color={activeHairHex} />
+          <Box3D width={10} height={6} depth={10} x={-8} y={headY - 19} z={4} color={activeHairHex} />
+          <Box3D width={10} height={6} depth={10} x={8} y={headY - 19} z={4} color={activeHairHex} />
           {/* Side burns */}
-          <Box3D width={6} height={16} depth={10} x={-21} y={headY - 3} z={10} color={activeHairHex} />
-          <Box3D width={6} height={16} depth={10} x={21} y={headY - 3} z={10} color={activeHairHex} />
+          <Box3D width={5} height={14} depth={8} x={-(headW / 2) - 1} y={headY - 2} z={8} color={activeHairHex} />
+          <Box3D width={5} height={14} depth={8} x={(headW / 2) + 1} y={headY - 2} z={8} color={activeHairHex} />
           {/* Back cap */}
-          <Box3D width={46} height={22} depth={8} x={0} y={headY} z={-19} color={activeHairHex} />
+          <Box3D width={headW + 2} height={20} depth={6} x={0} y={headY} z={-(headD / 2) - 1} color={activeHairHex} />
 
           {/* Highlight overlay spikes */}
           {highlightHex && (
             <>
-              <Box3D width={8} height={4} depth={8} x={-8} y={-83} z={6} color={highlightHex} />
-              <Box3D width={8} height={4} depth={8} x={8} y={-83} z={6} color={highlightHex} />
+              <Box3D width={6} height={3} depth={6} x={-6} y={headY - 20} z={4} color={highlightHex} />
+              <Box3D width={6} height={3} depth={6} x={6} y={headY - 20} z={4} color={highlightHex} />
             </>
           )}
         </div>
@@ -892,8 +973,7 @@ export function RobloxAvatarRenderer({
           />
 
           {/* ==========================================
-              3D SKIRT BOX (Falda tableada escolar de la hermana)
-              Appears around the upper legs, exactly blocky
+              3D SKIRT BOX (Falda tableada escolar de la compañera)
               ========================================== */}
           {isSkirt && (
             <Box3D
@@ -907,7 +987,7 @@ export function RobloxAvatarRenderer({
               frontDecal={
                 <div className="w-full h-full bg-[#1e293b] relative">
                   {/* Tableada yellow lines check */}
-                  <div className="absolute inset-x-0 bottom-1 h-0.5 bg-yellow-500 opacity-80" />
+                  <div className="absolute inset-x-0 bottom-1.5 h-0.5 bg-yellow-500 opacity-80" />
                   <div className="absolute inset-x-0 bottom-4.5 h-0.5 bg-yellow-500 opacity-80" />
                   <div className="flex justify-around h-full w-full">
                     <div className="w-0.5 h-full bg-yellow-500 opacity-80" />
@@ -919,7 +999,7 @@ export function RobloxAvatarRenderer({
               }
               leftDecal={
                 <div className="w-full h-full bg-[#1e293b] relative">
-                  <div className="absolute inset-x-0 bottom-1 h-0.5 bg-yellow-500 opacity-80" />
+                  <div className="absolute inset-x-0 bottom-1.5 h-0.5 bg-yellow-500 opacity-80" />
                   <div className="flex justify-around h-full w-full">
                     <div className="w-0.5 h-full bg-yellow-500 opacity-80" />
                     <div className="w-0.5 h-full bg-yellow-500 opacity-80" />
@@ -928,7 +1008,7 @@ export function RobloxAvatarRenderer({
               }
               rightDecal={
                 <div className="w-full h-full bg-[#1e293b] relative">
-                  <div className="absolute inset-x-0 bottom-1 h-0.5 bg-yellow-500 opacity-80" />
+                  <div className="absolute inset-x-0 bottom-1.5 h-0.5 bg-yellow-500 opacity-80" />
                   <div className="flex justify-around h-full w-full">
                     <div className="w-0.5 h-full bg-yellow-500 opacity-80" />
                     <div className="w-0.5 h-full bg-yellow-500 opacity-80" />
@@ -937,7 +1017,7 @@ export function RobloxAvatarRenderer({
               }
               backDecal={
                 <div className="w-full h-full bg-[#1e293b] relative">
-                  <div className="absolute inset-x-0 bottom-1 h-0.5 bg-yellow-500 opacity-80" />
+                  <div className="absolute inset-x-0 bottom-1.5 h-0.5 bg-yellow-500 opacity-80" />
                   <div className="absolute inset-x-0 bottom-4.5 h-0.5 bg-yellow-500 opacity-80" />
                   <div className="flex justify-around h-full w-full">
                     <div className="w-0.5 h-full bg-yellow-500 opacity-80" />
@@ -1140,7 +1220,7 @@ export function RobloxAvatarRenderer({
       </div>
 
       {/* Small drag instructions */}
-      <span className="absolute top-2 right-2 text-[9px] font-bold tracking-wide text-purple-400 uppercase bg-slate-950/85 px-1.5 py-0.5 rounded shadow border border-slate-800/80">
+      <span className="absolute top-2 right-2 text-[9px] font-bold tracking-wide text-purple-400 uppercase bg-slate-950/85 px-1.5 py-0.5 rounded shadow border border-purple-500/20 shadow-sm animate-pulse">
         Arrastra para rotar
       </span>
     </div>
