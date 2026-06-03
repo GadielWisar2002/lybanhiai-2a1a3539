@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, useLocation, Outlet } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useTranslation } from "react-i18next";
@@ -25,8 +25,15 @@ export const Route = createFileRoute("/_authenticated/games")({
 function GamesHub() {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const location = useLocation();
   const qc = useQueryClient();
   const { tab } = Route.useSearch();
+
+  const isRootGamesPath = location.pathname === "/games" || location.pathname === "/games/";
+
+  if (!isRootGamesPath) {
+    return <Outlet />;
+  }
 
   const getDash = useServerFn(getDashboard);
   const listBlooks = useServerFn(listUnlockedBlooks);
