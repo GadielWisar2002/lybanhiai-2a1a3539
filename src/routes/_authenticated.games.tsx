@@ -5,7 +5,7 @@ import { useTranslation } from "react-i18next";
 import { useState, useEffect } from "react";
 import { z } from "zod";
 import { getDashboard } from "@/lib/quiz.functions";
-import { listUnlockedBlooks, equipBlook, BLOOKS, convertXpToCoins, unlockGame, type Blook } from "@/lib/games.functions";
+import { listUnlockedBlooks, equipBlook, BLOOKS, convertXpToCoins, unlockGame, buyBlookDirect, BLOOK_COSTS, type Blook } from "@/lib/games.functions";
 import { AppHeader } from "@/components/AppHeader";
 import { Gamepad2, Lock, Sparkles, Trophy, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
@@ -40,6 +40,7 @@ function GamesHub() {
   const equipAvatar = useServerFn(equipBlook);
   const convertXp = useServerFn(convertXpToCoins);
   const unlock = useServerFn(unlockGame);
+  const buyDirect = useServerFn(buyBlookDirect);
 
   const { data: dash, isLoading: dashLoading } = useQuery({ queryKey: ["dashboard"], queryFn: () => getDash() });
   const { data: locker, isLoading: lockerLoading } = useQuery({ queryKey: ["unlockedBlooks"], queryFn: () => listBlooks() });
@@ -47,6 +48,7 @@ function GamesHub() {
   const [activeTab, setActiveTab] = useState<"play" | "locker" | "avatar" | "bank">(tab ?? "play");
   const [amountToConvert, setAmountToConvert] = useState(1);
   const [showConfirmBankModal, setShowConfirmBankModal] = useState(false);
+  const [selectedBlookToBuy, setSelectedBlookToBuy] = useState<Blook | null>(null);
 
   useEffect(() => {
     if (tab) {
@@ -95,6 +97,18 @@ function GamesHub() {
       toast.success(t("games.activeBlook", "Active Blook") + "!");
     },
     onError: () => toast.error(t("common.error")),
+  });
+
+  const buyBlookMutation = useMutation({
+    mutationFn: (blookId: string) => buyDirect({ data: { blookId } }),
+    onSuccess: (data) => {
+      qc.invalidateQueries({ queryKey: ["unlockedBlooks"] });
+      qc.invalidateQueries({ queryKey: ["dashboard"] });
+      toast.success(`¡Desbloqueaste a ${data.blook.name}! 🎉`);
+    },
+    onError: (e) => {
+      toast.error(e instanceof Error ? e.message : t("common.error"));
+    },
   });
 
   if (dashLoading) {
@@ -308,7 +322,7 @@ function GamesHub() {
                 </p>
                 <p className="mt-2 text-[11px] text-[#3B6DE8] font-bold flex items-center gap-1">
                   <span>💡</span>
-                  <span>Se consiguen comprando paquetes en "Jugar" usando Sombreritos (intercambiados en "Convertir XP").</span>
+                  <span>Puedes conseguirlos comprando paquetes en la pestaña de Juegos, o adquirirlos directamente aquí haciendo clic sobre cualquier avatar bloqueado.</span>
                 </p>
               </div>
             </div>
@@ -342,17 +356,25 @@ function GamesHub() {
                     return (
                       <button
                         key={b.id}
-                        disabled={!isUnlocked || equipMutation.isPending}
-                        onClick={() => equipMutation.mutate(b.id)}
-                        className={`flex flex-col items-center gap-1 rounded-2xl bg-card p-3 shadow-card transition active:scale-95 disabled:scale-100 cursor-pointer disabled:cursor-not-allowed ${borderCls} ${
-                          !isUnlocked ? "opacity-40 grayscale" : "hover:bg-muted/30"
+                        disabled={equipMutation.isPending || buyBlookMutation.isPending}
+                        onClick={() => {
+                          if (isUnlocked) {
+                            equipMutation.mutate(b.id);
+                          } else {
+                            setSelectedBlookToBuy(b);
+                          }
+                        }}
+                        className={`flex flex-col items-center gap-1 rounded-2xl bg-card p-3 shadow-card transition active:scale-95 cursor-pointer border ${borderCls} ${
+                          !isUnlocked ? "hover:bg-muted/10 opacity-75" : "hover:bg-muted/30"
                         }`}
                       >
-                        <div className="text-3xl select-none">{isUnlocked ? b.emoji : "❓"}</div>
+                        <div className={`text-3xl select-none transition ${!isUnlocked ? "grayscale opacity-50" : ""}`}>
+                          {b.emoji}
+                        </div>
                         <span className="truncate w-full text-[9px] font-bold text-center leading-tight">
-                          {isUnlocked ? t(`games.blookName.${b.id}`, { defaultValue: b.name }) : t("games.locked", { defaultValue: "Locked" })}
+                          {t(`games.blookName.${b.id}`, { defaultValue: b.name })}
                         </span>
-                        {isUnlocked && (
+                        {isUnlocked ? (
                           <span className={`text-[7px] px-1 rounded-full font-bold uppercase ${
                             b.rarity === "legendary" ? "bg-amber-400/20 text-amber-600" :
                             b.rarity === "epic" ? "bg-purple-500/20 text-purple-600" :
@@ -360,6 +382,11 @@ function GamesHub() {
                             "bg-blue-400/20 text-blue-600"
                           }`}>
                             {t(`games.rarity.${b.rarity}`, { defaultValue: b.rarity })}
+                          </span>
+                        ) : (
+                          <span className="text-[8px] px-1.5 py-0.5 rounded-full font-bold bg-gold/15 text-gold-foreground flex items-center gap-0.5 mt-0.5 border border-gold/20 leading-none">
+                            <Lock className="size-1.5 shrink-0" />
+                            <span>{BLOOK_COSTS[b.rarity]}</span>
                           </span>
                         )}
                       </button>
@@ -508,6 +535,42 @@ function GamesHub() {
                 className="flex-1 h-11 rounded-xl bg-gold text-gold-foreground text-xs font-bold shadow-sm hover:opacity-95 transition active:scale-[0.95] disabled:opacity-60 cursor-pointer"
               >
                 {convertMutation.isPending ? "..." : t("common.continue", { defaultValue: "Confirmar" })}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Direct Blook Purchase Confirmation Modal */}
+      {selectedBlookToBuy && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm px-6 animate-in fade-in duration-200">
+          <div className="w-full max-w-sm rounded-3xl border border-border bg-card p-6 shadow-elegant space-y-4 animate-in zoom-in-95 duration-200">
+            <div className="size-16 rounded-2xl bg-primary/10 text-primary grid place-items-center mx-auto text-4xl select-none">
+              {selectedBlookToBuy.emoji}
+            </div>
+            <h3 className="text-center font-display text-lg font-black text-foreground">
+              Comprar {t(`games.blookName.${selectedBlookToBuy.id}`, { defaultValue: selectedBlookToBuy.name })}
+            </h3>
+            <p className="text-center text-xs text-muted-foreground max-w-xs mx-auto leading-relaxed">
+              ¿Estás seguro de que deseas desbloquear este Blook por{" "}
+              <span className="font-bold text-primary">{BLOOK_COSTS[selectedBlookToBuy.rarity]} Sombreritos</span>?
+            </p>
+            <div className="flex gap-3 pt-2">
+              <button
+                onClick={() => setSelectedBlookToBuy(null)}
+                className="flex-1 h-11 rounded-xl border border-border text-xs font-bold hover:bg-muted transition active:scale-95 cursor-pointer"
+              >
+                {t("common.back", { defaultValue: "Volver" })}
+              </button>
+              <button
+                disabled={buyBlookMutation.isPending}
+                onClick={async () => {
+                  await buyBlookMutation.mutateAsync(selectedBlookToBuy.id);
+                  setSelectedBlookToBuy(null);
+                }}
+                className="flex-1 h-11 rounded-xl bg-primary text-primary-foreground text-xs font-bold shadow-sm hover:opacity-95 transition active:scale-[0.95] disabled:opacity-60 cursor-pointer"
+              >
+                {buyBlookMutation.isPending ? "..." : t("common.continue", { defaultValue: "Confirmar" })}
               </button>
             </div>
           </div>

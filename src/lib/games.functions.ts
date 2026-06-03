@@ -198,3 +198,43 @@ export const unlockGame = createServerFn({ method: "POST" })
 
     return { totalXp: newXp, unlockedGames: newUnlocked };
   });
+
+export const BLOOK_COSTS: Record<Rarity, number> = {
+  common: 5,
+  rare: 15,
+  epic: 35,
+  legendary: 70,
+};
+
+export const buyBlookDirect = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => z.object({ blookId: z.string() }).parse(input))
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+
+    const blook = BLOOKS[data.blookId];
+    if (!blook) throw new Error("Invalid blook ID");
+
+    const cost = BLOOK_COSTS[blook.rarity];
+
+    // Get current coins
+    const { data: s, error: fErr } = await supabase.from("streaks").select("coins").eq("user_id", userId).maybeSingle();
+    if (fErr || !s) throw new Error("No streaks record found");
+    if (s.coins < cost) throw new Error(`Sombreritos insuficientes. Necesitas ${cost} sombreritos.`);
+
+    // Deduct coins
+    const remainingCoins = s.coins - cost;
+    await supabase.from("streaks").update({ coins: remainingCoins }).eq("user_id", userId);
+
+    // Unlock in DB
+    await supabase.from("user_blooks").upsert({
+      user_id: userId,
+      blook_id: blook.id,
+      unlocked_at: new Date().toISOString(),
+    });
+
+    return {
+      blook,
+      remainingCoins,
+    };
+  });
