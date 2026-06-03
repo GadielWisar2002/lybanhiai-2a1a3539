@@ -3,7 +3,7 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 export type Rarity = "common" | "rare" | "epic" | "legendary";
-export type PackType = "medieval" | "space" | "cyber" | "academic" | "exclusive";
+export type PackType = "school" | "science" | "art" | "graduation";
 
 export interface Blook {
   id: string;
@@ -14,49 +14,44 @@ export interface Blook {
 }
 
 export const BLOOKS: Record<string, Blook> = {
-  // Medieval Pack
-  knight: { id: "knight", name: "Knight", emoji: "⚔️", rarity: "common", pack: "medieval" },
-  mage: { id: "mage", name: "Mage", emoji: "🧙‍♂️", rarity: "rare", pack: "medieval" },
-  dragon: { id: "dragon", name: "Dragon", emoji: "🐉", rarity: "epic", pack: "medieval" },
-  king: { id: "king", name: "King", emoji: "👑", rarity: "legendary", pack: "medieval" },
+  // School Pack (Escolar)
+  pencil: { id: "pencil", name: "Pencil", emoji: "✏️", rarity: "common", pack: "school" },
+  notebook: { id: "notebook", name: "Notebook", emoji: "📓", rarity: "common", pack: "school" },
+  book: { id: "book", name: "Book", emoji: "📖", rarity: "common", pack: "school" },
+  backpack: { id: "backpack", name: "Backpack", emoji: "🎒", rarity: "common", pack: "school" },
+  ruler: { id: "ruler", name: "Ruler", emoji: "📐", rarity: "rare", pack: "school" },
+  apple: { id: "apple", name: "Teacher's Apple", emoji: "🍎", rarity: "rare", pack: "school" },
 
-  // Space Pack
-  astronaut: { id: "astronaut", name: "Astronaut", emoji: "👨‍🚀", rarity: "common", pack: "space" },
-  alien: { id: "alien", name: "Alien", emoji: "👽", rarity: "rare", pack: "space" },
-  rocket: { id: "rocket", name: "Rocket", emoji: "🚀", rarity: "epic", pack: "space" },
-  ufo: { id: "ufo", name: "UFO", emoji: "🛸", rarity: "legendary", pack: "space" },
+  // Science Pack (Ciencias)
+  test_tube: { id: "test_tube", name: "Test Tube", emoji: "🧪", rarity: "common", pack: "science" },
+  magnet: { id: "magnet", name: "Magnet", emoji: "🧲", rarity: "common", pack: "science" },
+  atom: { id: "atom", name: "Atom", emoji: "⚛️", rarity: "rare", pack: "science" },
+  microscope: { id: "microscope", name: "Microscope", emoji: "🔬", rarity: "epic", pack: "science" },
+  telescope: { id: "telescope", name: "Telescope", emoji: "🔭", rarity: "epic", pack: "science" },
+  dna: { id: "dna", name: "DNA", emoji: "🧬", rarity: "legendary", pack: "science" },
 
-  // Cyber Pack
-  robot: { id: "robot", name: "Robot", emoji: "🤖", rarity: "common", pack: "cyber" },
-  hacker: { id: "hacker", name: "Hacker", emoji: "💻", rarity: "rare", pack: "cyber" },
-  cyborg: { id: "cyborg", name: "Cyborg", emoji: "🦾", rarity: "epic", pack: "cyber" },
-  ai: { id: "ai", name: "Super AI", emoji: "🧠", rarity: "legendary", pack: "cyber" },
+  // Art & Culture Pack (Arte y Cultura)
+  palette: { id: "palette", name: "Painter's Palette", emoji: "🎨", rarity: "common", pack: "art" },
+  globe: { id: "globe", name: "Globe", emoji: "🌍", rarity: "common", pack: "art" },
+  drama_mask: { id: "drama_mask", name: "Drama Mask", emoji: "🎭", rarity: "rare", pack: "art" },
+  music_notes: { id: "music_notes", name: "Music Notes", emoji: "🎶", rarity: "rare", pack: "art" },
+  feather: { id: "feather", name: "Quill", emoji: "✒️", rarity: "epic", pack: "art" },
+  brain: { id: "brain", name: "Wise Brain", emoji: "🧠", rarity: "legendary", pack: "art" },
 
-  // Academic Pack
-  pencil: { id: "pencil", name: "Pencil", emoji: "✏️", rarity: "common", pack: "academic" },
-  notebook: { id: "notebook", name: "Notebook", emoji: "📓", rarity: "common", pack: "academic" },
-  book: { id: "book", name: "Book", emoji: "📖", rarity: "common", pack: "academic" },
-  feather: { id: "feather", name: "Quill", emoji: "✒️", rarity: "rare", pack: "academic" },
-  backpack: { id: "backpack", name: "Backpack", emoji: "🎒", rarity: "rare", pack: "academic" },
-  diploma: { id: "diploma", name: "Diploma", emoji: "📜", rarity: "epic", pack: "academic" },
-  microscope: { id: "microscope", name: "Microscope", emoji: "🔬", rarity: "epic", pack: "academic" },
-  mortarboard: { id: "mortarboard", name: "Graduation Cap", emoji: "🎓", rarity: "legendary", pack: "academic" },
-
-  // Exclusive Personalization Items Pack
-  punk_hair: { id: "punk_hair", name: "Punk Hairstyle", emoji: "💇‍♂️", rarity: "rare", pack: "exclusive" },
-  royal_robe: { id: "royal_robe", name: "Golden Robe", emoji: "🧥", rarity: "epic", pack: "exclusive" },
-  cyber_sneakers: { id: "cyber_sneakers", name: "Cyber Sneakers", emoji: "👟", rarity: "rare", pack: "exclusive" },
-  vr_glasses: { id: "vr_glasses", name: "VR Goggles", emoji: "🕶️", rarity: "epic", pack: "exclusive" },
-  phoenix_pet: { id: "phoenix_pet", name: "Fire Phoenix", emoji: "🐦", rarity: "legendary", pack: "exclusive" },
-  crystal_crown: { id: "crystal_crown", name: "Crystal Crown", emoji: "👑", rarity: "legendary", pack: "exclusive" },
+  // Graduation Pack (Graduación)
+  school_bus: { id: "school_bus", name: "School Bus", emoji: "🚌", rarity: "common", pack: "graduation" },
+  hourglass: { id: "hourglass", name: "Hourglass", emoji: "⏳", rarity: "common", pack: "graduation" },
+  medal: { id: "medal", name: "Gold Medal", emoji: "🥇", rarity: "rare", pack: "graduation" },
+  trophy: { id: "trophy", name: "Championship Trophy", emoji: "🏆", rarity: "epic", pack: "graduation" },
+  diploma: { id: "diploma", name: "Diploma", emoji: "📜", rarity: "epic", pack: "graduation" },
+  mortarboard: { id: "mortarboard", name: "Graduation Cap", emoji: "🎓", rarity: "legendary", pack: "graduation" },
 };
 
 export const PACK_COSTS: Record<PackType, number> = {
-  medieval: 5,
-  space: 10,
-  academic: 12,
-  cyber: 20,
-  exclusive: 30,
+  school: 5,
+  science: 15,
+  art: 25,
+  graduation: 35,
 };
 
 export const listUnlockedBlooks = createServerFn({ method: "GET" })
@@ -74,7 +69,7 @@ export const listUnlockedBlooks = createServerFn({ method: "GET" })
 
 export const buyBlookPack = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) => z.object({ pack: z.enum(["medieval", "space", "cyber", "academic", "exclusive"]) }).parse(input))
+  .inputValidator((input: unknown) => z.object({ pack: z.enum(["school", "science", "art", "graduation"]) }).parse(input))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     const cost = PACK_COSTS[data.pack];

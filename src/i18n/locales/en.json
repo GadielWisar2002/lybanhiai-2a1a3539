@@ -180,40 +180,37 @@
         "legendary": "Legendary"
       },
       "packName": {
-        "medieval": "Medieval",
-        "space": "Space",
-        "academic": "Academic",
-        "cyber": "Cyber",
-        "exclusive": "Exclusive"
+        "school": "School",
+        "science": "Science",
+        "art": "Art & Culture",
+        "graduation": "Graduation"
       }
     },
     "blookName": {
-      "knight": "Knight",
-      "mage": "Mage",
-      "dragon": "Dragon",
-      "king": "King",
-      "astronaut": "Astronaut",
-      "alien": "Alien",
-      "rocket": "Rocket",
-      "ufo": "UFO",
-      "robot": "Robot",
-      "hacker": "Hacker",
-      "cyborg": "Cyborg",
-      "ai": "Super AI",
       "pencil": "Pencil",
       "notebook": "Notebook",
       "book": "Book",
-      "feather": "Quill",
       "backpack": "Backpack",
-      "diploma": "Diploma",
+      "ruler": "Ruler",
+      "apple": "Teacher's Apple",
+      "test_tube": "Test Tube",
+      "magnet": "Magnet",
+      "atom": "Atom",
       "microscope": "Microscope",
-      "mortarboard": "Graduation Cap",
-      "punk_hair": "Punk Hairstyle",
-      "royal_robe": "Golden Robe",
-      "cyber_sneakers": "Cyber Sneakers",
-      "vr_glasses": "VR Goggles",
-      "phoenix_pet": "Fire Phoenix",
-      "crystal_crown": "Crystal Crown"
+      "telescope": "Telescope",
+      "dna": "DNA",
+      "palette": "Painter's Palette",
+      "globe": "Globe",
+      "drama_mask": "Drama Mask",
+      "music_notes": "Music Notes",
+      "feather": "Quill",
+      "brain": "Wise Brain",
+      "school_bus": "School Bus",
+      "hourglass": "Hourglass",
+      "medal": "Gold Medal",
+      "trophy": "Championship Trophy",
+      "diploma": "Diploma",
+      "mortarboard": "Graduation Cap"
     }
   }
 }

@@ -187,40 +187,37 @@
         "legendary": "Legendario"
       },
       "packName": {
-        "medieval": "Medieval",
-        "space": "Espacial",
-        "academic": "Académico",
-        "cyber": "Cyber",
-        "exclusive": "Exclusivo"
+        "school": "Escolar",
+        "science": "Ciencias",
+        "art": "Arte y Cultura",
+        "graduation": "Graduación"
       }
     },
     "blookName": {
-      "knight": "Caballero",
-      "mage": "Mago",
-      "dragon": "Dragón",
-      "king": "Rey",
-      "astronaut": "Astronauta",
-      "alien": "Alienígena",
-      "rocket": "Cohete",
-      "ufo": "OVNI",
-      "robot": "Robot",
-      "hacker": "Hacker",
-      "cyborg": "Cíborg",
-      "ai": "Súper IA",
       "pencil": "Lápiz",
       "notebook": "Libreta",
       "book": "Libro",
-      "feather": "Pluma Tintero",
       "backpack": "Mochila",
-      "diploma": "Título",
+      "ruler": "Regla",
+      "apple": "Manzana",
+      "test_tube": "Tubo de Ensayo",
+      "magnet": "Imán",
+      "atom": "Átomo",
       "microscope": "Microscopio",
-      "mortarboard": "Birrete de Graduado",
-      "punk_hair": "Corte Punk",
-      "royal_robe": "Toga de Oro",
-      "cyber_sneakers": "Tenis Cyber",
-      "vr_glasses": "Lentes VR",
-      "phoenix_pet": "Fénix de Fuego",
-      "crystal_crown": "Corona de Cristal"
+      "telescope": "Telescopio",
+      "dna": "ADN",
+      "palette": "Paleta de Pintor",
+      "globe": "Globo Terráqueo",
+      "drama_mask": "Máscara de Teatro",
+      "music_notes": "Notas Musicales",
+      "feather": "Pluma Tintero",
+      "brain": "Cerebro de Sabio",
+      "school_bus": "Autobús Escolar",
+      "hourglass": "Reloj de Arena",
+      "medal": "Medalla de Oro",
+      "trophy": "Trofeo de Campeón",
+      "diploma": "Título / Diploma",
+      "mortarboard": "Birrete de Graduado"
     }
   }
 }

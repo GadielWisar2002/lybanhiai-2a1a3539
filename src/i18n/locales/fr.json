@@ -180,40 +180,37 @@
         "legendary": "Légendaire"
       },
       "packName": {
-        "medieval": "Médiéval",
-        "space": "Spatial",
-        "academic": "Académique",
-        "cyber": "Cyber",
-        "exclusive": "Exclusif"
+        "school": "École",
+        "science": "Science",
+        "art": "Art et Culture",
+        "graduation": "Remise des Diplômes"
       }
     },
     "blookName": {
-      "knight": "Chevalier",
-      "mage": "Mage",
-      "dragon": "Dragon",
-      "king": "Roi",
-      "astronaut": "Astronaute",
-      "alien": "Extraterrestre",
-      "rocket": "Fusée",
-      "ufo": "OVNI",
-      "robot": "Robot",
-      "hacker": "Hacker",
-      "cyborg": "Cyborg",
-      "ai": "Super IA",
       "pencil": "Crayon",
       "notebook": "Cahier",
       "book": "Livre",
-      "feather": "Plume",
       "backpack": "Sac à dos",
-      "diploma": "Diplôme",
+      "ruler": "Règle",
+      "apple": "Pomme de l'Enseignant",
+      "test_tube": "Éprouvette",
+      "magnet": "Aimant",
+      "atom": "Atome",
       "microscope": "Microscope",
-      "mortarboard": "Diplôme de Gradué",
-      "punk_hair": "Coupe Punk",
-      "royal_robe": "Robe Dorée",
-      "cyber_sneakers": "Cyber Sneakers",
-      "vr_glasses": "Lunettes VR",
-      "phoenix_pet": "Phénix de Feu",
-      "crystal_crown": "Couronne de Cristal"
+      "telescope": "Télescope",
+      "dna": "ADN",
+      "palette": "Palette de Peintre",
+      "globe": "Globe terrestre",
+      "drama_mask": "Masque de Théâtre",
+      "music_notes": "Notes de Musique",
+      "feather": "Plume",
+      "brain": "Cerveau Sage",
+      "school_bus": "Autobus Scolaire",
+      "hourglass": "Sablier",
+      "medal": "Médaille d'Or",
+      "trophy": "Trophée de Champion",
+      "diploma": "Diplôme",
+      "mortarboard": "Chapeau de Diplômé"
     }
   }
 }
