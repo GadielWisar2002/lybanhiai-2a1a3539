@@ -94,7 +94,7 @@ function GamesHub() {
     return (
       <>
         <AppHeader />
-        <div className="mx-auto max-w-md px-5 pt-4 space-y-6">
+        <div className="mx-auto max-w-6xl px-5 pt-4 space-y-6">
           <div className="flex items-center justify-between">
             <div className="space-y-2">
               <div className="h-8 w-32 animate-pulse rounded-lg bg-muted" />
@@ -105,7 +105,9 @@ function GamesHub() {
           
           <div className="h-10 animate-pulse rounded-lg bg-muted" />
           
-          <div className="space-y-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="h-44 animate-pulse rounded-3xl bg-muted animate-in fade-in" />
+            <div className="h-44 animate-pulse rounded-3xl bg-muted animate-in fade-in" />
             <div className="h-44 animate-pulse rounded-3xl bg-muted animate-in fade-in" />
             <div className="h-44 animate-pulse rounded-3xl bg-muted animate-in fade-in" />
           </div>
@@ -131,7 +133,7 @@ function GamesHub() {
   return (
     <>
       <AppHeader />
-      <div className="mx-auto max-w-3xl px-5 pt-4 pb-24">
+      <div className="mx-auto max-w-6xl px-5 pt-4 pb-24">
         {/* Hub Header */}
         <div className="flex items-center justify-between">
           <div>
@@ -165,7 +167,7 @@ function GamesHub() {
 
         {/* Play Tab */}
         {activeTab === "play" && (
-          <section className="mt-5 grid grid-rows-4 grid-flow-col gap-4 overflow-x-auto pb-4 scrollbar-thin">
+          <section className="mt-5 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
             {[
               {
                 id: "wordle",
