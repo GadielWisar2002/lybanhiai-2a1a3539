@@ -169,6 +169,12 @@ export const unlockGame = createServerFn({ method: "POST" })
     const costs: Record<string, number> = {
       "gold-quest": 500,
       "space-rush": 1000,
+      "wordle": 100,
+      "complete-concept": 200,
+      "hangman": 300,
+      "order-idea": 400,
+      "connect-area": 500,
+      "dictation": 600,
     };
     
     const cost = costs[data.gameId];

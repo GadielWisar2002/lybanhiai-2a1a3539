@@ -166,85 +166,123 @@ function GamesHub() {
         {/* Play Tab */}
         {activeTab === "play" && (
           <section className="mt-5 space-y-4">
-            <div className="relative rounded-3xl border border-border bg-card p-5 shadow-[var(--shadow-card)] flex flex-col justify-between overflow-hidden">
-              <div>
-                <span className="inline-block rounded-full bg-primary/10 px-2.5 py-0.5 text-[10px] font-bold text-primary uppercase tracking-wider">
-                  {t("games.goldQuest.style", { defaultValue: "Blooket Style" })}
-                </span>
-                <h3 className="mt-2 font-display text-xl font-bold">{t("games.goldQuest.title", { defaultValue: "Gold Quest" })}</h3>
-                <p className="mt-1 text-xs text-muted-foreground">
-                  {t("games.goldQuest.desc", { defaultValue: "Answer fast-paced trivia questions correctly to open mystery chests. Steal or double your gold against AI players!" })}
-                </p>
-                <div className="mt-3 flex items-center gap-4 text-xs font-semibold">
-                  <span className="text-gold-foreground flex items-center gap-1">
-                    <img src={streakCap} alt="" className="size-3.5 select-none" />
-                    {isGoldQuestUnlocked ? t("games.goldQuest.free", { defaultValue: "Free Entry" }) : "500 XP"}
-                  </span>
-                  <span className="text-success">🏆 {t("games.goldQuest.bonus", { defaultValue: "Win bonus coins" })}</span>
+            {[
+              {
+                id: "wordle",
+                title: "Wordle de carreras",
+                style: "Léxico / Vocabulario",
+                desc: "Adivina palabras relacionadas con carreras universitarias y áreas de estudio en 6 intentos. Incluye retroalimentación por color y tarjeta de carrera.",
+                cost: 100,
+                path: "/games/wordle",
+                styleColor: "bg-blue-500/10 text-blue-500 border-blue-500/20",
+              },
+              {
+                id: "complete-concept",
+                title: "Completa el concepto",
+                style: "Drag & Drop / Conceptos",
+                desc: "Arrastra la palabra correcta al espacio en blanco para completar la definición académica antes de que se agote el tiempo (60s).",
+                cost: 200,
+                path: "/games/complete-concept",
+                styleColor: "bg-emerald-500/15 text-emerald-500 border-emerald-500/25",
+              },
+              {
+                id: "hangman",
+                title: "Ahorcado universitario",
+                style: "Ahorcado / Términos",
+                desc: "Salva al personaje con estados de ánimo adivinando términos técnicos y académicos reales. Obtén pistas de carreras universitarias.",
+                cost: 300,
+                path: "/games/hangman",
+                styleColor: "bg-purple-500/10 text-purple-500 border-purple-500/20",
+              },
+              {
+                id: "order-idea",
+                title: "Ordena la idea",
+                style: "Reconstrucción de ideas",
+                desc: "Ordena fragmentos de definiciones, hipótesis o conceptos académicos mezclados aleatoriamente en el menor tiempo posible.",
+                cost: 400,
+                path: "/games/order-idea",
+                styleColor: "bg-amber-500/10 text-amber-500 border-amber-500/20",
+              },
+              {
+                id: "connect-area",
+                title: "Conecta tu área",
+                style: "Asociación de pares",
+                desc: "Conecta términos con áreas de estudio, herramientas con carreras, o conceptos con su definición bajo un límite de 60 segundos.",
+                cost: 500,
+                path: "/games/connect-area",
+                styleColor: "bg-cyan-500/10 text-cyan-500 border-cyan-500/20",
+              },
+              {
+                id: "dictation",
+                title: "Dictado académico con IA",
+                style: "Dictado / Ortografía",
+                desc: "Escucha términos universitarios reales en audio y escríbelos. El análisis ortográfico detecta errores y te enseña las reglas.",
+                cost: 600,
+                path: "/games/dictation",
+                styleColor: "bg-rose-500/10 text-rose-500 border-rose-500/20",
+              },
+              {
+                id: "gold-quest",
+                title: "Gold Quest",
+                style: "Blooket Style",
+                desc: "Answer fast-paced trivia questions correctly to open mystery chests. Steal or double your gold against AI players!",
+                cost: 500,
+                path: "/games/gold-quest",
+                styleColor: "bg-primary/10 text-primary border-primary/20",
+              },
+              {
+                id: "space-rush",
+                title: "Space Rush",
+                style: "Quizizz Style",
+                desc: "Blast off into orbit! Answer questions correctly to accelerate your rocket ship and beat simulated competitors.",
+                cost: 1000,
+                path: "/games/space-rush",
+                styleColor: "bg-success/15 text-success border-success/20",
+              }
+            ].map((game) => {
+              const isUnlocked = unlockedGames.includes(game.id);
+              return (
+                <div key={game.id} className="relative rounded-3xl border border-border bg-card p-5 shadow-[var(--shadow-card)] flex flex-col justify-between overflow-hidden">
+                  <div>
+                    <span className={`inline-block rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider ${game.styleColor}`}>
+                      {game.style}
+                    </span>
+                    <h3 className="mt-2 font-display text-xl font-bold">{game.title}</h3>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      {game.desc}
+                    </p>
+                    <div className="mt-3 flex items-center gap-4 text-xs font-semibold">
+                      <span className="text-gold-foreground flex items-center gap-1">
+                        <img src={streakCap} alt="" className="size-3.5 select-none" />
+                        {isUnlocked ? "Acceso Libre" : `${game.cost} XP`}
+                      </span>
+                      <span className="text-success">🏆 Gana sombreritos</span>
+                    </div>
+                  </div>
+                  
+                  {isUnlocked ? (
+                    <button
+                      onClick={() => navigate({ to: game.path as any })}
+                      className="mt-4 flex h-11 items-center justify-center gap-2 rounded-2xl bg-primary font-semibold text-primary-foreground transition active:scale-95 cursor-pointer border-none"
+                    >
+                      <Gamepad2 className="size-4" /> Empezar juego
+                    </button>
+                  ) : (
+                    <button
+                      disabled={unlockMutation.isPending || totalXp < game.cost}
+                      onClick={() => {
+                        if (confirm(`¿Estás seguro de que deseas desbloquear ${game.title} por ${game.cost} XP?`)) {
+                          unlockMutation.mutate(game.id);
+                        }
+                      }}
+                      className="mt-4 flex h-11 items-center justify-center gap-2 rounded-2xl bg-muted border border-border text-muted-foreground hover:bg-primary/15 hover:text-primary hover:border-primary/40 font-semibold transition active:scale-95 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <Lock className="size-4 text-muted-foreground" /> Desbloquear por {game.cost} XP
+                    </button>
+                  )}
                 </div>
-              </div>
-              
-              {isGoldQuestUnlocked ? (
-                <button
-                  onClick={() => navigate({ to: "/games/gold-quest" })}
-                  className="mt-4 flex h-11 items-center justify-center gap-2 rounded-2xl bg-primary font-semibold text-primary-foreground transition active:scale-95 cursor-pointer"
-                >
-                  <Gamepad2 className="size-4" /> {t("games.goldQuest.start", { defaultValue: "Start Quest" })}
-                </button>
-              ) : (
-                <button
-                  disabled={unlockMutation.isPending || totalXp < 500}
-                  onClick={() => {
-                    if (confirm(t("games.confirmUnlockGoldQuest", { defaultValue: "¿Estás seguro de que deseas desbloquear Gold Quest por 500 XP?" }))) {
-                      unlockMutation.mutate("gold-quest");
-                    }
-                  }}
-                  className="mt-4 flex h-11 items-center justify-center gap-2 rounded-2xl bg-muted border border-border text-muted-foreground hover:bg-primary/15 hover:text-primary hover:border-primary/40 font-semibold transition active:scale-95 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  <Lock className="size-4 text-muted-foreground" /> {t("games.unlockForXp", { xp: 500, defaultValue: "Unlock for 500 XP" })}
-                </button>
-              )}
-            </div>
-
-            <div className="relative rounded-3xl border border-border bg-card p-5 shadow-[var(--shadow-card)] flex flex-col justify-between overflow-hidden">
-              <div>
-                <span className="inline-block rounded-full bg-success/15 px-2.5 py-0.5 text-[10px] font-bold text-success uppercase tracking-wider">
-                  {t("games.spaceRush.style", { defaultValue: "Quizizz Style" })}
-                </span>
-                <h3 className="mt-2 font-display text-xl font-bold">{t("games.spaceRush.title", { defaultValue: "Space Rush" })}</h3>
-                <p className="mt-1 text-xs text-muted-foreground">
-                  {t("games.spaceRush.desc", { defaultValue: "Blast off into orbit! Answer questions correctly to accelerate your rocket ship and beat simulated competitors." })}
-                </p>
-                <div className="mt-3 flex items-center gap-4 text-xs font-semibold">
-                  <span className="text-gold-foreground flex items-center gap-1">
-                    <img src={streakCap} alt="" className="size-3.5 select-none" />
-                    {isSpaceRushUnlocked ? t("games.spaceRush.free", { defaultValue: "Free Entry" }) : "1000 XP"}
-                  </span>
-                  <span className="text-success">🏆 {t("games.spaceRush.bonus", { defaultValue: "Earn speed boosts" })}</span>
-                </div>
-              </div>
-
-              {isSpaceRushUnlocked ? (
-                <button
-                  onClick={() => navigate({ to: "/games/space-rush" })}
-                  className="mt-4 flex h-11 items-center justify-center gap-2 rounded-2xl bg-success font-semibold text-success-foreground transition active:scale-95 cursor-pointer"
-                >
-                  <Sparkles className="size-4" /> {t("games.spaceRush.start", { defaultValue: "Blast Off" })}
-                </button>
-              ) : (
-                <button
-                  disabled={unlockMutation.isPending || totalXp < 1000}
-                  onClick={() => {
-                    if (confirm(t("games.confirmUnlockSpaceRush", { defaultValue: "¿Estás seguro de que deseas desbloquear Space Rush por 1000 XP?" }))) {
-                      unlockMutation.mutate("space-rush");
-                    }
-                  }}
-                  className="mt-4 flex h-11 items-center justify-center gap-2 rounded-2xl bg-muted border border-border text-muted-foreground hover:bg-success/15 hover:text-success hover:border-success/40 font-semibold transition active:scale-95 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  <Lock className="size-4 text-muted-foreground" /> {t("games.unlockForXp", { xp: 1000, defaultValue: "Unlock for 1000 XP" })}
-                </button>
-              )}
-            </div>
+              );
+            })}
           </section>
         )}
 
