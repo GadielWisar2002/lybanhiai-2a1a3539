@@ -131,7 +131,7 @@ function GamesHub() {
   return (
     <>
       <AppHeader />
-      <div className="mx-auto max-w-md px-5 pt-4 pb-24">
+      <div className="mx-auto max-w-3xl px-5 pt-4 pb-24">
         {/* Hub Header */}
         <div className="flex items-center justify-between">
           <div>
@@ -165,7 +165,7 @@ function GamesHub() {
 
         {/* Play Tab */}
         {activeTab === "play" && (
-          <section className="mt-5 space-y-4">
+          <section className="mt-5 grid grid-cols-1 sm:grid-cols-2 gap-4">
             {[
               {
                 id: "wordle",
