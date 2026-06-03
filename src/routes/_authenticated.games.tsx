@@ -165,7 +165,7 @@ function GamesHub() {
 
         {/* Play Tab */}
         {activeTab === "play" && (
-          <section className="mt-5 grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <section className="mt-5 grid grid-rows-4 grid-flow-col gap-4 overflow-x-auto pb-4 scrollbar-thin">
             {[
               {
                 id: "wordle",
