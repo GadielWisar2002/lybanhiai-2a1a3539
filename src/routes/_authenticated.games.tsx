@@ -251,6 +251,21 @@ function GamesHub() {
         {/* Locker Tab */}
         {activeTab === "locker" && (
           <section className="mt-5">
+            {/* Info Card explaining Blooks & Locker */}
+            <div className="mb-5 bg-[#3B6DE8]/5 border border-[#3B6DE8]/15 rounded-2xl p-4 flex gap-3 items-start text-left">
+              <span className="text-2xl shrink-0">🎒</span>
+              <div>
+                <h4 className="font-display font-bold text-sm text-foreground">¿Qué es el Locker?</h4>
+                <p className="mt-1 text-xs text-muted-foreground leading-relaxed">
+                  Aquí se guardan tus <strong>Blooks</strong> (avatares coleccionables). Puedes hacer clic sobre cualquiera que hayas desbloqueado para equiparlo como insignia activa junto a tu nombre de perfil.
+                </p>
+                <p className="mt-2 text-[11px] text-[#3B6DE8] font-bold flex items-center gap-1">
+                  <span>💡</span>
+                  <span>Se consiguen comprando paquetes en "Jugar" usando Sombreritos (intercambiados en "Convertir XP").</span>
+                </p>
+              </div>
+            </div>
+
             {lockerLoading ? (
               <div className="h-40 animate-pulse rounded-2xl bg-muted" />
             ) : (
