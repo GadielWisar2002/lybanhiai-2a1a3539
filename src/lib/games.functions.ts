@@ -302,9 +302,7 @@ export const devResetProgress = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const { supabase, userId } = context;
-    const { data: profile } = await supabase.from("profiles").select("role").eq("id", userId).maybeSingle();
-    const email = (context.claims as any)?.email?.toLowerCase() ?? "";
-    const isDeveloper = email === "debanhivillanueva@colegiomaranatha.edu.mx" || profile?.role === "developer";
+    const isDeveloper = isDeveloperClaim(context.claims);
     if (!isDeveloper) throw new Error("Unauthorized: Developer role required.");
 
     await supabase.from("streaks").update({
@@ -326,9 +324,7 @@ export const devToggleUnlockGame = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => z.object({ gameId: z.string(), unlocked: z.boolean() }).parse(input))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
-    const { data: profile } = await supabase.from("profiles").select("role").eq("id", userId).maybeSingle();
-    const email = (context.claims as any)?.email?.toLowerCase() ?? "";
-    const isDeveloper = email === "debanhivillanueva@colegiomaranatha.edu.mx" || profile?.role === "developer";
+    const isDeveloper = isDeveloperClaim(context.claims);
     if (!isDeveloper) throw new Error("Unauthorized: Developer role required.");
 
     const { data: s } = await supabase.from("streaks").select("unlocked_games").eq("user_id", userId).maybeSingle();
@@ -348,9 +344,7 @@ export const devSetLevel = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => z.object({ level: z.number().int().min(1) }).parse(input))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
-    const { data: profile } = await supabase.from("profiles").select("role").eq("id", userId).maybeSingle();
-    const email = (context.claims as any)?.email?.toLowerCase() ?? "";
-    const isDeveloper = email === "debanhivillanueva@colegiomaranatha.edu.mx" || profile?.role === "developer";
+    const isDeveloper = isDeveloperClaim(context.claims);
     if (!isDeveloper) throw new Error("Unauthorized: Developer role required.");
 
     // Scaling level: level 1 is 0 XP, level 2 is 300 XP, level 3 is 600 XP, etc.
