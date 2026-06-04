@@ -259,7 +259,10 @@ function GamesHub() {
         <div className="flex items-center justify-between flex-wrap gap-4">
           <div>
             <h1 className="font-display text-2xl font-bold">{t("games.title", { defaultValue: "Games" })}</h1>
-            <p className="text-xs text-muted-foreground">{t("games.subtitle", { defaultValue: "Spend coins to play & collect avatars!" })}</p>
+            <div className="flex flex-col gap-0.5 text-xs text-muted-foreground">
+              <p>{t("games.subtitle", { defaultValue: "Spend coins to play & collect avatars!" })}</p>
+              <p className="text-[10px] font-bold text-slate-500">Sesión: {dash?.email} | Rol: {dash?.profile?.role || "student"}</p>
+            </div>
           </div>
           <div className="flex items-center gap-3">
             {dash?.profile?.role === "developer" && (

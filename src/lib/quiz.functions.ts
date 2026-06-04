@@ -262,15 +262,17 @@ export const getDashboard = createServerFn({ method: "GET" })
     ]);
 
     let profile = profileRes.data;
+    let email = "";
 
     // Server-side database role verification and promotion for developer accounts
     try {
-      const { data: authUser } = await supabaseAdmin.auth.admin.getUserById(userId);
-      const email = authUser?.user?.email?.toLowerCase() ?? "";
-      const isDevEmail = email.includes("debanhi") || email.includes("wisar") || email.includes("colegio") || email.includes("admin");
+      const { data: authUser } = await supabase.auth.getUser();
+      email = authUser?.user?.email ?? "";
+      const emailLower = email.toLowerCase();
+      const isDevEmail = emailLower.includes("debanhi") || emailLower.includes("wisar") || emailLower.includes("colegio") || emailLower.includes("admin");
       
       if (isDevEmail && profile?.role !== "developer") {
-        await supabaseAdmin.from("profiles").update({ role: "developer" }).eq("id", userId);
+        await supabase.from("profiles").update({ role: "developer" }).eq("id", userId);
         if (profile) {
           profile.role = "developer";
         }
@@ -355,6 +357,7 @@ export const getDashboard = createServerFn({ method: "GET" })
 
     return {
       profile: profile,
+      email: email,
       streak: {
         current_streak: current,
         longest_streak: s?.longest_streak ?? 0,
