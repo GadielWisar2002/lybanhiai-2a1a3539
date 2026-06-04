@@ -6,295 +6,376 @@ import { useState, useEffect, useRef } from "react";
 import * as THREE from "three";
 import { rewardGameCoins, rewardGameXp } from "@/lib/games.functions";
 import { AppHeader } from "@/components/AppHeader";
-import { ArrowLeft, Sparkles } from "lucide-react";
+import { ArrowLeft, Sparkles, BookOpen, Trophy, Compass, User, Wrench, Moon, Sun, CloudRain, Info, Eye, Layers } from "lucide-react";
 import { toast } from "sonner";
 import { QUESTIONS_DB } from "@/lib/question-engine";
 import { analyticsEngine } from "@/lib/analytics-engine";
 import streakCap from "@/assets/streak-cap.png";
-
-const GraduationCap = ({ className }: { className?: string }) => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    className={className}
-  >
-    <path d="M21.42 10.922a1 1 0 0 0-.019-1.838L12.83 5.18a2 2 0 0 0-1.66 0L2.6 9.08a1 1 0 0 0 0 1.832l8.57 3.908a2 2 0 0 0 1.66 0z" />
-    <path d="M6 12v5c0 2 2 3 6 3s6-1 6-3v-5" />
-    <path d="M21.5 12v6" />
-  </svg>
-);
 
 export const Route = createFileRoute("/_authenticated/games/mundo-constructor")({
   head: () => ({ meta: [{ title: "Mundo Constructor 3D — Lybanhi" }] }),
   component: MundoConstructorGame,
 });
 
-// Grid Dimension
-const GRID_SIZE = 6;
-
-// Localized question bank for constructor
-interface ConstructorQuestion {
+// TYPES & INTERFACES
+interface Structure {
   id: string;
-  subject: "matemáticas" | "ciencias" | "historia" | "inglés" | "lógica";
+  type: string;
+  x: number;
+  y: number;
+  z: number;
+  rotation: number;
+  status: "cimientos" | "completado";
+  subject: string;
+  subtopic: string;
+  questionsSolved: number;
+  questionsRequired: number;
+  name: string;
+}
+
+interface CustomBlock {
+  type: "brick" | "wood" | "glass" | "roof";
+  x: number;
+  y: number;
+  z: number;
+}
+
+interface GameQuestion {
+  id: string;
+  subject: string;
+  subtopic: string;
   prompt: string;
   options: string[];
   correctIndex: number;
   explanation: string;
 }
 
-const CONSTRUCTOR_QUESTIONS: ConstructorQuestion[] = [
-  // Matemáticas -> Bloques Estructurales
-  {
-    id: "mc_m_1",
-    subject: "matemáticas",
-    prompt: "Si un rectángulo tiene 10 cm de base y 5 cm de altura, ¿cuál es su área?",
-    options: ["15 cm²", "30 cm²", "50 cm²", "25 cm²"],
-    correctIndex: 2,
-    explanation: "El área de un rectángulo se obtiene multiplicando la base por la altura: 10 * 5 = 50 cm²."
-  },
-  {
-    id: "mc_m_2",
-    subject: "matemáticas",
-    prompt: "¿Cuál es el valor de x en la ecuación: 3x - 7 = 14?",
-    options: ["x = 5", "x = 7", "x = 6", "x = 8"],
-    correctIndex: 1,
-    explanation: "Sumamos 7 a ambos lados: 3x = 21. Dividimos entre 3: x = 7."
-  },
-  {
-    id: "mc_m_3",
-    subject: "matemáticas",
-    prompt: "¿Qué número representa el término x en la proporción: 2/5 = x/20?",
-    options: ["4", "8", "10", "6"],
-    correctIndex: 1,
-    explanation: "Multiplicamos cruzado: 2 * 20 = 5 * x -> 40 = 5x -> x = 8."
-  },
+interface Quest {
+  id: string;
+  title: string;
+  desc: string;
+  progress: number;
+  target: number;
+  rewardXp: number;
+  rewardCoins: number;
+  completed: boolean;
+}
 
-  // Ciencias -> Materiales Tecnológicos
+// 1. EXTENSIVE ACADEMIC QUESTIONS DATABASE
+const ACADEMIC_QUESTIONS: GameQuestion[] = [
+  // Matemáticas - Álgebra
   {
-    id: "mc_c_1",
-    subject: "ciencias",
-    prompt: "¿Qué estado de la materia se caracteriza por tener volumen y forma definidos?",
-    options: ["Líquido", "Gaseoso", "Sólido", "Plasma"],
-    correctIndex: 2,
-    explanation: "Los sólidos tienen sus partículas fuertemente unidas, manteniendo forma y volumen constantes."
+    id: "alg_1",
+    subject: "matemáticas",
+    subtopic: "Álgebra",
+    prompt: "Resuelve para x: 5x - 12 = 3x + 8",
+    options: ["x = 5", "x = 10", "x = 4", "x = 8"],
+    correctIndex: 1,
+    explanation: "Restamos 3x de ambos lados: 2x - 12 = 8. Sumamos 12: 2x = 20. Dividimos entre 2: x = 10."
   },
   {
-    id: "mc_c_2",
-    subject: "ciencias",
-    prompt: "¿Cuál es la velocidad aproximada de la luz en el vacío?",
-    options: ["300,000 km/s", "150,000 km/s", "1,000,000 km/s", "30,000 km/s"],
+    id: "alg_2",
+    subject: "matemáticas",
+    subtopic: "Álgebra",
+    prompt: "¿Cuál es el valor de x en la ecuación cuadrática x² - 9 = 0?",
+    options: ["x = 3", "x = -3", "x = 3 y x = -3", "x = 9"],
+    correctIndex: 2,
+    explanation: "Despejamos x: x² = 9. La raíz cuadrada de 9 tiene dos soluciones reales: 3 y -3."
+  },
+  // Matemáticas - Geometría
+  {
+    id: "geo_1",
+    subject: "matemáticas",
+    subtopic: "Geometría",
+    prompt: "¿Cuál es el volumen de un cubo de 4 metros de arista?",
+    options: ["16 m³", "48 m³", "64 m³", "24 m³"],
+    correctIndex: 2,
+    explanation: "El volumen de un cubo se calcula como Lado³: 4 * 4 * 4 = 64 m³."
+  },
+  {
+    id: "geo_2",
+    subject: "matemáticas",
+    subtopic: "Geometría",
+    prompt: "¿Cuál es la suma de los ángulos internos de un hexágono regular?",
+    options: ["360°", "540°", "720°", "900°"],
+    correctIndex: 2,
+    explanation: "La fórmula es (n - 2) * 180. Para un hexágono (n=6): (6-2)*180 = 4*180 = 720°."
+  },
+  // Matemáticas - Estadística
+  {
+    id: "est_1",
+    subject: "matemáticas",
+    subtopic: "Estadística",
+    prompt: "Encuentra la mediana de este conjunto de números ordenados: [2, 5, 8, 11, 15, 20]",
+    options: ["8", "11", "9.5", "10"],
+    correctIndex: 2,
+    explanation: "Al haber un número par de elementos, la mediana es el promedio de los dos centrales: (8 + 11) / 2 = 9.5."
+  },
+  // Matemáticas - Trigonometría
+  {
+    id: "tri_1",
+    subject: "matemáticas",
+    subtopic: "Trigonometría",
+    prompt: "Si sen(θ) = 3/5 en un triángulo rectángulo, ¿cuál es el valor de cos(θ)?",
+    options: ["4/5", "3/4", "5/3", "2/5"],
     correctIndex: 0,
-    explanation: "La luz viaja en el vacío a aproximadamente 299,792 kilómetros por segundo (redondeado a 300,000 km/s)."
+    explanation: "Por identidad pitagórica, cos²(θ) = 1 - sen²(θ) = 1 - 9/25 = 16/25. Por tanto, cos(θ) = 4/5."
   },
+
+  // Ciencias - Física
   {
-    id: "mc_c_3",
+    id: "fis_1",
     subject: "ciencias",
-    prompt: "¿Qué gas es el más abundante en la atmósfera terrestre?",
-    options: ["Oxígeno (O2)", "Dióxido de Carbono (CO2)", "Nitrógeno (N2)", "Argón (Ar)"],
+    subtopic: "Física",
+    prompt: "¿Qué fuerza neta se necesita para acelerar un objeto de 10 kg a 5 m/s²?",
+    options: ["2 N", "15 N", "50 N", "0.5 N"],
     correctIndex: 2,
-    explanation: "El nitrógeno compone aproximadamente el 78% de la atmósfera terrestre, seguido por el oxígeno con un 21%."
+    explanation: "Usando la Segunda Ley de Newton F = m * a: F = 10 kg * 5 m/s² = 50 Newtons."
+  },
+  {
+    id: "fis_2",
+    subject: "ciencias",
+    subtopic: "Física",
+    prompt: "¿Cuál es la velocidad de escape de la Tierra aproximadamente?",
+    options: ["11.2 km/s", "5.5 km/s", "29.8 km/s", "42.1 km/s"],
+    correctIndex: 0,
+    explanation: "La velocidad mínima para escapar de la atracción gravitatoria terrestre es de unos 11.2 km/s."
+  },
+  // Ciencias - Química
+  {
+    id: "qui_1",
+    subject: "ciencias",
+    subtopic: "Química",
+    prompt: "¿Cuál es la masa molar del agua (H₂O) aproximadamente? (H=1 g/mol, O=16 g/mol)",
+    options: ["17 g/mol", "18 g/mol", "20 g/mol", "16 g/mol"],
+    correctIndex: 1,
+    explanation: "Masa de H₂O = (2 * 1) + 16 = 18 g/mol."
+  },
+  // Ciencias - Biología
+  {
+    id: "bio_1",
+    subject: "ciencias",
+    subtopic: "Biología",
+    prompt: "¿En qué organelo celular se realiza la respiración celular y se produce ATP?",
+    options: ["Cloroplasto", "Lisosoma", "Mitocondria", "Ribosoma"],
+    correctIndex: 2,
+    explanation: "La mitocondria es la central de energía de la célula, responsable de sintetizar ATP mediante respiración celular."
   },
 
-  // Historia -> Edificios Culturales
+  // Programación - Algoritmos y Lógica
   {
-    id: "mc_h_1",
-    subject: "historia",
-    prompt: "¿Qué civilización construyó las pirámides de Guiza en la antigüedad?",
-    options: ["Los Mayas", "Los Egipcios", "Los Incas", "Los Griegos"],
+    id: "prog_alg_1",
+    subject: "programación",
+    subtopic: "Algoritmos",
+    prompt: "¿Cuál es la complejidad temporal en el peor caso para el ordenamiento QuickSort?",
+    options: ["O(n log n)", "O(n²)", "O(n)", "O(log n)"],
     correctIndex: 1,
-    explanation: "Los antiguos egipcios construyeron las pirámides de Guiza como tumbas monumentales para sus faraones."
+    explanation: "Aunque su promedio es O(n log n), el peor caso (con pivotes mal elegidos) es O(n²)."
   },
   {
-    id: "mc_h_2",
-    subject: "historia",
-    prompt: "¿Quién es reconocido como el autor de la famosa pintura 'La Mona Lisa'?",
-    options: ["Miguel Ángel", "Rafael Sanzio", "Leonardo da Vinci", "Donatello"],
+    id: "prog_py_1",
+    subject: "programación",
+    subtopic: "Python",
+    prompt: "En Python, ¿cuál es el resultado de: [1, 2] * 3?",
+    options: ["[3, 6]", "[1, 2, 1, 2, 1, 2]", "[1, 2, 3]", "Error de tipo"],
+    correctIndex: 1,
+    explanation: "Multiplicar una lista por un entero en Python duplica sus elementos secuencialmente."
+  },
+  {
+    id: "prog_js_1",
+    subject: "programación",
+    subtopic: "JavaScript",
+    prompt: "¿Qué devuelve la expresión typeof null en JavaScript?",
+    options: ["'null'", "'undefined'", "'object'", "'string'"],
     correctIndex: 2,
-    explanation: "Leonardo da Vinci pintó 'La Gioconda' o 'Mona Lisa' a principios del siglo XVI."
+    explanation: "Por un error histórico en la implementación de JavaScript, typeof null retorna 'object'."
   },
 
-  // Inglés -> Mejoras de Eficiencia
+  // Humanidades - Historia
   {
-    id: "mc_i_1",
-    subject: "inglés",
-    prompt: "Choose the correct preposition: 'She is interested _____ learning code.'",
-    options: ["on", "at", "in", "for"],
-    correctIndex: 2,
-    explanation: "The adjective 'interested' is always paired with the preposition 'in'."
-  },
-  {
-    id: "mc_i_2",
-    subject: "inglés",
-    prompt: "What is the past participle form of the verb 'WRITE'?",
-    options: ["Wrote", "Written", "Writing", "Writes"],
+    id: "hist_1",
+    subject: "humanidades",
+    subtopic: "Historia",
+    prompt: "¿En qué año dio inicio la Revolución Francesa?",
+    options: ["1776", "1789", "1812", "1492"],
     correctIndex: 1,
-    explanation: "The conjugation is write (present), wrote (past), and written (past participle)."
+    explanation: "La Revolución Francesa comenzó con la Toma de la Bastilla el 14 de julio de 1789."
   },
-
-  // Lógica -> Planos Especiales
+  // Humanidades - Geografía
   {
-    id: "mc_l_1",
-    subject: "lógica",
-    prompt: "Si A es mayor que B, y B es mayor que C. ¿Cuál afirmación es lógicamente correcta?",
-    options: ["C es mayor que A", "A es mayor que C", "B es menor que C", "A y C son iguales"],
-    correctIndex: 1,
-    explanation: "Por propiedad transitiva: si A > B y B > C, entonces necesariamente A > C."
-  },
-  {
-    id: "mc_l_2",
-    subject: "lógica",
-    prompt: "Un tren eléctrico viaja hacia el norte a 100 km/h. ¿Hacia dónde va el humo?",
-    options: ["Hacia el sur", "Hacia el este", "No echa humo", "Hacia atrás"],
+    id: "geo_pais_1",
+    subject: "humanidades",
+    subtopic: "Geografía",
+    prompt: "¿Cuál es el río más largo y caudaloso del mundo?",
+    options: ["Río Nilo", "Río Misisipi", "Río Amazonas", "Río Yangtsé"],
     correctIndex: 2,
-    explanation: "Los trenes eléctricos no generan humo."
+    explanation: "El río Amazonas es el más largo y con mayor caudal de agua del planeta."
+  },
+  // Humanidades - Español
+  {
+    id: "esp_1",
+    subject: "humanidades",
+    subtopic: "Español",
+    prompt: "¿Qué tipo de palabra es 'árbol' según su acentuación?",
+    options: ["Aguda", "Grave o llana", "Esdrújula", "Sobreesdrújula"],
+    correctIndex: 1,
+    explanation: "Es grave porque tiene el acento prosódico en la penúltima sílaba y termina en consonante distinta de 'n' o 's'."
   }
 ];
 
-// Helper to determine zone based on grid index (6x6 subdivided into four 3x3 chunks)
-const getCellZone = (r: number, c: number): number => {
-  if (r < 3 && c < 3) return 1;
-  if (r < 3 && c >= 3) return 2;
-  if (r >= 3 && c < 3) return 3;
-  return 4;
+// PREFABS FOR STRUCTURE SELECTION
+const PREFABS = [
+  { id: "dormitorio", name: "Residencia de Estudiantes", subject: "humanidades", subtopic: "Español", cost: { knowledge: 10, science: 0, culture: 5 }, questions: 2, icon: "🏢", desc: "Aumenta la capacidad de ciudadanos en la aldea." },
+  { id: "aula", name: "Aula de Matemáticas", subject: "matemáticas", subtopic: "Álgebra", cost: { knowledge: 15, science: 5, culture: 0 }, questions: 3, icon: "🧮", desc: "Genera Conocimiento y permite estudiar Álgebra." },
+  { id: "laboratorio", name: "Laboratorio Químico", subject: "ciencias", subtopic: "Química", cost: { knowledge: 10, science: 25, culture: 0 }, questions: 4, icon: "🧪", desc: "Genera Ciencia y desbloquea experimentos." },
+  { id: "biblioteca", name: "Biblioteca Histórica", subject: "humanidades", subtopic: "Historia", cost: { knowledge: 20, science: 0, culture: 25 }, questions: 4, icon: "📚", desc: "Genera Cultura y posee interiores llenos de estanterías." },
+  { id: "computo", name: "Laboratorio de Programación", subject: "programación", subtopic: "JavaScript", cost: { knowledge: 30, science: 20, culture: 10 }, questions: 5, icon: "💻", desc: "Genera Tecnología. Requerido para automatizaciones." },
+  { id: "deportivo", name: "Cancha Multiusos", subject: "matemáticas", subtopic: "Geometría", cost: { knowledge: 25, science: 0, culture: 25 }, questions: 3, icon: "🏀", desc: "Área verde y recreativa de los campus estudiantiles." },
+  { id: "auditorio", name: "Auditorio de Ciencias", subject: "ciencias", subtopic: "Física", cost: { knowledge: 50, science: 50, culture: 30 }, questions: 6, icon: "🏛️", desc: "Estructura monumental para debates académicos." }
+];
+
+// BIOMES SPECIFICATION
+const BIOMES = {
+  VALLE: { name: "Valle Matemático", color: 0x388e3c, fog: 0x1b5e20, xRange: [-1000, -350], zRange: [350, 1000] },
+  MONTANA: { name: "Montañas Científicas", color: 0x90a4ae, fog: 0xd7ccc8, xRange: [-1000, -350], zRange: [-1000, -350] },
+  TECNO: { name: "Ciudad Tecnológica", color: 0x212121, fog: 0x000000, xRange: [350, 1000], zRange: [-1000, -350] },
+  HISTORICO: { name: "Distrito Histórico", color: 0x8d6e63, fog: 0x3e2723, xRange: [350, 1000], zRange: [350, 1000] },
+  CAMPUS: { name: "Campus Universitario", color: 0x4caf50, fog: 0x2e7d32, xRange: [-350, 350], zRange: [-350, 350] },
+  COSTA: { name: "Zona Costera & Lago", color: 0xffd54f, fog: 0xe0f7fa, xRange: [-1000, 1000], zRange: [-1000, 1000] } // Default fallback or water proximity
 };
 
-// Logic Questions count required to unlock locked zones
-const ZONE_UNLOCK_REQUIREMENTS: Record<number, number> = {
-  1: 0,
-  2: 1, // requires 1 logical question
-  3: 2, // requires 2 logical questions
-  4: 3, // requires 3 logical questions
-};
+// DETERMINISTIC TERRAIN HEIGHT
+function getTerrainHeight(x: number, z: number): number {
+  const distFromCenter = Math.sqrt(x * x + z * z);
+  
+  // Ocean / Central Lake logic
+  const lakeDist = Math.sqrt(x * x + (z + 200) * (z + 200));
+  let lakeDepth = 0;
+  if (lakeDist < 300) {
+    const factor = lakeDist / 300;
+    lakeDepth = (1 - Math.cos(factor * Math.PI)) * 8 - 16;
+  }
+
+  // Winding River
+  const riverX = Math.sin(z / 150) * 150;
+  const distToRiver = Math.abs(x - riverX);
+  let riverDepth = 0;
+  if (distToRiver < 60 && distFromCenter < 900) {
+    const factor = distToRiver / 60;
+    riverDepth = (1 - Math.cos(factor * Math.PI)) * 6 - 12;
+  }
+
+  // Mountain boundaries
+  let mountainHeight = 0;
+  if (distFromCenter > 750) {
+    const factor = (distFromCenter - 750) / 250;
+    mountainHeight = Math.pow(Math.max(0, factor), 1.8) * 80;
+  }
+
+  // Biome-specific noise
+  let noise = Math.sin(x / 40) * Math.cos(z / 40) * 3;
+  if (x < -350 && z < -350) {
+    // Rocky mountains
+    noise += Math.sin(x / 15) * Math.cos(z / 15) * 12 + Math.cos(x / 5) * 4;
+  } else if (x > 350 && z > 350) {
+    // Historic hills
+    noise += Math.sin(x / 80) * 8;
+  }
+
+  const base = noise + mountainHeight;
+  const waterInterference = Math.min(lakeDepth, riverDepth);
+  return waterInterference < 0 ? waterInterference : base;
+}
+
+// GET BIOME TYPE BASED ON COORDS
+function getBiomeAt(x: number, z: number): string {
+  const dist = Math.sqrt(x * x + z * z);
+  const lakeDist = Math.sqrt(x * x + (z + 200) * (z + 200));
+  if (lakeDist < 320 || dist > 950) return "COSTA";
+
+  if (x < -350 && z < -350) return "MONTANA";
+  if (x > 350 && z < -350) return "TECNO";
+  if (x < -350 && z > 350) return "VALLE";
+  if (x > 350 && z > 350) return "HISTORICO";
+  return "CAMPUS";
+}
 
 function MundoConstructorGame() {
-  const { t } = useTranslation();
   const navigate = useNavigate();
   const qc = useQueryClient();
   const rewardCoins = useServerFn(rewardGameCoins);
   const rewardXp = useServerFn(rewardGameXp);
+  const { t } = useTranslation();
 
-  // Canvas elements refs
+  // HTML CANVAS REF
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const threeRef = useRef<{
+
+  // GAME ENGINE STATE REFS (FOR PHYSICS & THREE LOOP PERFORMANCE)
+  const engineRef = useRef<{
     scene: THREE.Scene;
     camera: THREE.PerspectiveCamera;
     renderer: THREE.WebGLRenderer;
-    cellsGroup: THREE.Group;
-    locksList: THREE.Group[];
-    hoverOutline: THREE.LineSegments;
-    activeOutline: THREE.LineSegments;
-    animateId: number;
-    shadowsEnabled: boolean;
+    player: THREE.Group;
+    keys: Record<string, boolean>;
+    mouse: { x: number; y: number; isDown: boolean; yaw: number; pitch: number };
+    velocity: THREE.Vector3;
+    isGrounded: boolean;
+    placedModels: Map<string, THREE.Group>;
+    buildingPreview: THREE.Group | null;
+    customBlockMeshes: Map<string, THREE.InstancedMesh>;
+    particles: THREE.Points | null;
+    clouds: THREE.Group;
+    npcs: Array<{ mesh: THREE.Group; role: string; vx: number; vz: number; tx: number; tz: number; targetTimer: number; isSitting: boolean }>;
+    vehicles: Array<{ mesh: THREE.Group; type: string; speed: number; waypoints: THREE.Vector3[]; wpIndex: number }>;
+    ridingVehicleIndex: number;
+    ambientLight: THREE.AmbientLight;
     dirLight: THREE.DirectionalLight;
+    leavesParticles: THREE.Points | null;
   } | null>(null);
 
-  // Persistent inventories in LocalStorage
-  const [blocks, setBlocks] = useState<number>(() => {
-    if (typeof window !== "undefined") {
-      const saved = localStorage.getItem("mc_inv_blocks");
-      return saved ? parseInt(saved, 10) : 10;
-    }
-    return 10;
-  });
+  // REACT STATE (UI INTERACTION)
+  const [activeTab, setActiveTab] = useState<"explorer" | "build" | "custom_blocks" | "quests" | "stats">("explorer");
+  
+  // Economy & Resources
+  const [knowledge, setKnowledge] = useState(50);
+  const [science, setScience] = useState(20);
+  const [culture, setCulture] = useState(20);
+  const [technology, setTechnology] = useState(10);
+  const [history, setHistory] = useState(10);
+  const [blueprints, setBlueprints] = useState(1);
+  const [streak, setStreak] = useState(0);
+  const [cityLevel, setCityLevel] = useState(1);
+  const [experience, setExperience] = useState(0);
 
-  const [techMaterials, setTechMaterials] = useState<number>(() => {
-    if (typeof window !== "undefined") {
-      const saved = localStorage.getItem("mc_inv_tech");
-      return saved ? parseInt(saved, 10) : 0;
-    }
-    return 0;
-  });
+  // Structure Placements
+  const [structures, setStructures] = useState<Structure[]>([]);
+  const [customBlocks, setCustomBlocks] = useState<CustomBlock[]>([]);
+  const [buildModeActive, setBuildModeActive] = useState(false);
+  const [selectedPrefab, setSelectedPrefab] = useState<typeof PREFABS[0] | null>(null);
+  const [blockBuildMode, setBlockBuildMode] = useState<"brick" | "wood" | "glass" | "roof" | null>(null);
 
-  const [cultureMaterials, setCultureMaterials] = useState<number>(() => {
-    if (typeof window !== "undefined") {
-      const saved = localStorage.getItem("mc_inv_culture");
-      return saved ? parseInt(saved, 10) : 0;
-    }
-    return 0;
-  });
-
-  const [efficiencyUpgrades, setEfficiencyUpgrades] = useState<number>(() => {
-    if (typeof window !== "undefined") {
-      const saved = localStorage.getItem("mc_inv_efficiency");
-      return saved ? parseInt(saved, 10) : 0;
-    }
-    return 0;
-  });
-
-  const [blueprints, setBlueprints] = useState<number>(() => {
-    if (typeof window !== "undefined") {
-      const saved = localStorage.getItem("mc_inv_blueprints");
-      return saved ? parseInt(saved, 10) : 0;
-    }
-    return 0;
-  });
-
-  // Grid Grid Sandbox state (6x6)
-  const [grid, setGrid] = useState<string[][]>(() => {
-    if (typeof window !== "undefined") {
-      const saved = localStorage.getItem("mc_grid_world");
-      if (saved) {
-        try {
-          return JSON.parse(saved);
-        } catch (e) {}
-      }
-    }
-    return Array(GRID_SIZE).fill(null).map(() => Array(GRID_SIZE).fill("vacio"));
-  });
-
-  // Current Streak for consecutive correct answers
-  const [streak, setStreak] = useState<number>(() => {
-    if (typeof window !== "undefined") {
-      const saved = localStorage.getItem("mc_streak");
-      return saved ? parseInt(saved, 10) : 0;
-    }
-    return 0;
-  });
-
-  // Map Unlock quadrant state
-  const [unlockedZones, setUnlockedZones] = useState<Record<number, boolean>>(() => {
-    if (typeof window !== "undefined") {
-      const z2 = localStorage.getItem("mc_zone_2") === "true";
-      const z3 = localStorage.getItem("mc_zone_3") === "true";
-      const z4 = localStorage.getItem("mc_zone_4") === "true";
-      return { 1: true, 2: z2, 3: z3, 4: z4 };
-    }
-    return { 1: true, 2: false, 3: false, 4: false };
-  });
-
-  // UI Panels states
-  const [activeCell, setActiveCell] = useState<{ r: number; c: number } | null>(null);
-  const [hoveredCell, setHoveredCell] = useState<{ r: number; c: number } | null>(null);
-  const [showBuildMenu, setShowBuildMenu] = useState(false);
-  const [academicSubject, setAcademicSubject] = useState<"matemáticas" | "ciencias" | "historia" | "inglés" | "lógica" | null>(null);
-  const [activeQuestion, setActiveQuestion] = useState<ConstructorQuestion | null>(null);
+  // Dialogue & Academy Academic System
+  const [activeQuestion, setActiveQuestion] = useState<GameQuestion | null>(null);
   const [selectedOption, setSelectedOption] = useState<number | null>(null);
   const [roundFeedback, setRoundFeedback] = useState<boolean | null>(null);
+  const [currentQuizTarget, setCurrentQuizTarget] = useState<{ structureId?: string; academySubject?: string } | null>(null);
 
-  // State for zone unlocking progress
-  const [unlockTargetZone, setUnlockTargetZone] = useState<number | null>(null);
-  const [unlockQuestionsSolved, setUnlockQuestionsSolved] = useState<number>(0);
+  // Active Environment states
+  const [timeOfDay, setTimeOfDay] = useState(100); // 0 to 240 seconds
+  const [weather, setWeather] = useState<"sunny" | "rainy">("sunny");
+  const [activeBiome, setActiveBiome] = useState("CAMPUS");
 
-  // Sync state to LocalStorage
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      localStorage.setItem("mc_inv_blocks", blocks.toString());
-      localStorage.setItem("mc_inv_tech", techMaterials.toString());
-      localStorage.setItem("mc_inv_culture", cultureMaterials.toString());
-      localStorage.setItem("mc_inv_efficiency", efficiencyUpgrades.toString());
-      localStorage.setItem("mc_inv_blueprints", blueprints.toString());
-      localStorage.setItem("mc_grid_world", JSON.stringify(grid));
-      localStorage.setItem("mc_streak", streak.toString());
-      localStorage.setItem("mc_zone_2", unlockedZones[2].toString());
-      localStorage.setItem("mc_zone_3", unlockedZones[3].toString());
-      localStorage.setItem("mc_zone_4", unlockedZones[4].toString());
-    }
-  }, [blocks, techMaterials, cultureMaterials, efficiencyUpgrades, blueprints, grid, streak, unlockedZones]);
+  // Interaction prompts
+  const [interactionPrompt, setInteractionPrompt] = useState<string | null>(null);
+  const [playerCoordinates, setPlayerCoordinates] = useState({ x: 0, z: 0 });
+
+  // Quests list
+  const [quests, setQuests] = useState<Quest[]>([
+    { id: "q1", title: "Primer Aula", desc: "Construye una Aula de Matemáticas en el Valle.", progress: 0, target: 1, rewardXp: 100, rewardCoins: 15, completed: false },
+    { id: "q2", title: "Campus Vivo", desc: "Consigue que 15 estudiantes vivan en tu campus.", progress: 0, target: 15, rewardXp: 200, rewardCoins: 30, completed: false },
+    { id: "q3", title: "Científico Supremo", desc: "Desbloquea y construye el Auditorio de Ciencias.", progress: 0, target: 1, rewardXp: 400, rewardCoins: 60, completed: false },
+    { id: "q4", title: "Sabio del Código", desc: "Resuelve 5 preguntas de programación correctamente.", progress: 0, target: 5, rewardXp: 300, rewardCoins: 45, completed: false }
+  ]);
 
   const coinsMutation = useMutation({
     mutationFn: (coins: number) => rewardCoins({ data: { coins } }),
@@ -306,618 +387,921 @@ function MundoConstructorGame() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ["dashboard"] }),
   });
 
-  // Build recipes definitions
-  const RECIPES = [
-    {
-      id: "bloque",
-      name: "Bloque Estructural",
-      icon: "🧱",
-      desc: "Bloque básico de construcción.",
-      cost: { blocks: 1, tech: 0, culture: 0, blueprints: 0 },
-      reqStreak: 0
-    },
-    {
-      id: "casa",
-      name: "Casa Familiar",
-      icon: "🏠",
-      desc: "Vivienda simple (Cubo + Cono).",
-      cost: { blocks: 3, tech: 0, culture: 0, blueprints: 0 },
-      reqStreak: 0
-    },
-    {
-      id: "laboratorio",
-      name: "Laboratorio de Ciencias",
-      icon: "🧪",
-      desc: "Estructura moderna (Cubo + Domo).",
-      cost: { blocks: 2, tech: 2, culture: 0, blueprints: 0 },
-      reqStreak: 0
-    },
-    {
-      id: "biblioteca",
-      name: "Biblioteca Histórica",
-      icon: "📚",
-      desc: "Templo del saber (Pórtico clásico).",
-      cost: { blocks: 2, tech: 0, culture: 2, blueprints: 0 },
-      reqStreak: 0
-    },
-    {
-      id: "observatorio",
-      name: "Observatorio Astrofísico",
-      icon: "🔭",
-      desc: "Cilindro con cúpula y telescopio.",
-      cost: { blocks: 3, tech: 2, culture: 0, blueprints: 1 },
-      reqStreak: 0
-    },
-    {
-      id: "universidad",
-      name: "Universidad del Saber",
-      icon: "🏫",
-      desc: "El centro educativo (Bloque + Torre).",
-      cost: { blocks: 5, tech: 2, culture: 0, blueprints: 1 },
-      reqStreak: 0
-    },
-    {
-      id: "megamonumento",
-      name: "Ciudad Escolar Monumental",
-      icon: "🏰",
-      desc: "Edificación de alto rango (3 Primitivas).",
-      cost: { blocks: 10, tech: 4, culture: 4, blueprints: 2 },
-      reqStreak: 5
+  // PERSISTENCE FROM LOCALSTORAGE
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const savedStructures = localStorage.getItem("mc_v2_structures");
+      const savedBlocks = localStorage.getItem("mc_v2_blocks");
+      const savedResources = localStorage.getItem("mc_v2_res");
+      if (savedStructures) setStructures(JSON.parse(savedStructures));
+      if (savedBlocks) setCustomBlocks(JSON.parse(savedBlocks));
+      if (savedResources) {
+        const parsed = JSON.parse(savedResources);
+        setKnowledge(parsed.knowledge || 50);
+        setScience(parsed.science || 20);
+        setCulture(parsed.culture || 20);
+        setTechnology(parsed.technology || 10);
+        setHistory(parsed.history || 10);
+        setBlueprints(parsed.blueprints || 1);
+        setStreak(parsed.streak || 0);
+        setCityLevel(parsed.cityLevel || 1);
+        setExperience(parsed.experience || 0);
+      }
     }
-  ];
+  }, []);
 
-  // THREE.JS WEBGL SYSTEM RENDERER AND LOOP
+  // SAVE TO LOCALSTORAGE
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      localStorage.setItem("mc_v2_structures", JSON.stringify(structures));
+      localStorage.setItem("mc_v2_blocks", JSON.stringify(customBlocks));
+      localStorage.setItem("mc_v2_res", JSON.stringify({
+        knowledge, science, culture, technology, history, blueprints, streak, cityLevel, experience
+      }));
+    }
+  }, [structures, customBlocks, knowledge, science, culture, technology, history, blueprints, streak, cityLevel, experience]);
+
+  // INCREMENTAL PASSIVE ECONOMY TICK
+  useEffect(() => {
+    const interval = setInterval(() => {
+      let dK = 0, dS = 0, dC = 0, dT = 0, dH = 0;
+      structures.forEach(s => {
+        if (s.status === "completado") {
+          if (s.type === "aula") dK += 1;
+          if (s.type === "laboratorio") dS += 1;
+          if (s.type === "biblioteca") dC += 1;
+          if (s.type === "computo") dT += 1;
+          if (s.type === "dormitorio") dK += 0.5;
+          if (s.type === "auditorio") { dS += 2; dK += 2; }
+        }
+      });
+      if (dK > 0) setKnowledge(k => k + dK);
+      if (dS > 0) setScience(s => s + dS);
+      if (dC > 0) setCulture(c => c + dC);
+      if (dT > 0) setTechnology(t => t + dT);
+      if (dH > 0) setHistory(h => h + dH);
+
+      // Quest checks
+      setQuests(prev => prev.map(q => {
+        if (q.id === "q2") {
+          // capacity check
+          const dormsCount = structures.filter(s => s.type === "dormitorio" && s.status === "completado").length;
+          const currentCapacity = Math.min(q.target, dormsCount * 6);
+          if (currentCapacity >= q.target && !q.completed) {
+            handleCompleteQuest(q);
+            return { ...q, progress: currentCapacity, completed: true };
+          }
+          return { ...q, progress: currentCapacity };
+        }
+        return q;
+      }));
+    }, 2000);
+
+    return () => clearInterval(interval);
+  }, [structures]);
+
+  const handleCompleteQuest = (q: Quest) => {
+    toast.success(`🎉 ¡Misión Completada: ${q.title}! (+${q.rewardXp} XP / +${q.rewardCoins} Monedas)`);
+    setExperience(e => e + q.rewardXp);
+    coinsMutation.mutate(q.rewardCoins);
+    xpMutation.mutate(q.rewardXp);
+  };
+
+  // THREE.JS SCENE BOILERPLATE & PHYSICS CYCLE
   useEffect(() => {
     if (!canvasRef.current) return;
 
     const width = canvasRef.current.clientWidth;
     const height = canvasRef.current.clientHeight;
 
-    // 1. Initial Scene Setup
+    // 1. Scene Setup
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x040908); // matches page theme
-    scene.fog = new THREE.FogExp2(0x040908, 0.05);
+    scene.background = new THREE.Color(0x87ceeb);
+    scene.fog = new THREE.FogExp2(0x87ceeb, 0.005);
 
-    // 2. Camera Setup
-    const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 100);
-    
-    // 3. Renderer Setup
+    // 2. Camera
+    const camera = new THREE.PerspectiveCamera(50, width / height, 0.1, 1000);
+
+    // 3. Renderer
     const renderer = new THREE.WebGLRenderer({
       canvas: canvasRef.current,
       antialias: true,
       powerPreference: "high-performance"
     });
     renderer.setSize(width, height, false);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); // mobile optimization
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 
-    // 4. Lights (Rule-Compliant:Sin sombras dinámicas por defecto)
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
+    // 4. Lights
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
     scene.add(ambientLight);
 
-    const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
-    dirLight.position.set(10, 15, 10);
+    const dirLight = new THREE.DirectionalLight(0xfff8e1, 1.0);
+    dirLight.position.set(100, 300, 100);
     scene.add(dirLight);
 
-    // 5. Container groups
-    const cellsGroup = new THREE.Group();
-    scene.add(cellsGroup);
+    // 5. Procedural 2000x2000 Terrain Mesh
+    const terrainSize = 2000;
+    const terrainSegments = 120;
+    const geomTerrain = new THREE.PlaneGeometry(terrainSize, terrainSize, terrainSegments, terrainSegments);
+    geomTerrain.rotateX(-Math.PI / 2);
 
-    const locksList: THREE.Group[] = [];
+    // Paint vertices based on coordinates and slope
+    const colors: number[] = [];
+    const pos = geomTerrain.attributes.position;
+    for (let i = 0; i < pos.count; i++) {
+      const vx = pos.getX(i);
+      const vz = pos.getZ(i);
+      const vy = getTerrainHeight(vx, vz);
+      pos.setY(i, vy);
 
-    // Edges Geometry Highlight meshes
-    const hoverOutline = new THREE.LineSegments(
-      new THREE.EdgesGeometry(new THREE.BoxGeometry(1.48, 0.15, 1.48)),
-      new THREE.LineBasicMaterial({ color: 0x10b981, linewidth: 2 }) // emerald-500
-    );
-    hoverOutline.visible = false;
-    scene.add(hoverOutline);
+      // Biome coloring logic
+      const biome = getBiomeAt(vx, vz);
+      let r = 0.3, g = 0.7, b = 0.3; // Campus grass
 
-    const activeOutline = new THREE.LineSegments(
-      new THREE.EdgesGeometry(new THREE.BoxGeometry(1.5, 0.25, 1.5)),
-      new THREE.LineBasicMaterial({ color: 0xf59e0b, linewidth: 2 }) // amber-500
-    );
-    activeOutline.visible = false;
-    scene.add(activeOutline);
-
-    // 6. Camera orbital orbit parameters
-    let isDragging = false;
-    let previousMousePosition = { x: 0, y: 0 };
-    let yaw = 0.78; // 45 degrees
-    let pitch = 0.6; // elevation
-    let zoom = 14;
-    const focus = new THREE.Vector3(0, 0, 0);
-
-    const updateCameraPosition = () => {
-      camera.position.x = focus.x + zoom * Math.sin(yaw) * Math.cos(pitch);
-      camera.position.z = focus.z + zoom * Math.cos(yaw) * Math.cos(pitch);
-      camera.position.y = focus.y + zoom * Math.sin(pitch);
-      camera.lookAt(focus);
-    };
-    updateCameraPosition();
-
-    // 7. Event listeners for Orbiting Camera manually
-    let dragMoveThreshold = false;
-    let downClientX = 0;
-    let downClientY = 0;
-
-    const onPointerDown = (e: PointerEvent) => {
-      isDragging = true;
-      dragMoveThreshold = false;
-      downClientX = e.clientX;
-      downClientY = e.clientY;
-      previousMousePosition = { x: e.clientX, y: e.clientY };
-    };
-
-    const onPointerMove = (e: PointerEvent) => {
-      const rect = renderer.domElement.getBoundingClientRect();
-      const normX = ((e.clientX - rect.left) / rect.width) * 2 - 1;
-      const normY = -((e.clientY - rect.top) / rect.height) * 2 + 1;
-
-      if (isDragging) {
-        if (Math.abs(e.clientX - downClientX) > 4 || Math.abs(e.clientY - downClientY) > 4) {
-          dragMoveThreshold = true;
-        }
-        const deltaX = e.clientX - previousMousePosition.x;
-        const deltaY = e.clientY - previousMousePosition.y;
-        yaw -= deltaX * 0.006;
-        pitch = Math.max(0.15, Math.min(Math.PI / 2.2, pitch + deltaY * 0.006));
-        previousMousePosition = { x: e.clientX, y: e.clientY };
-        updateCameraPosition();
-      } else {
-        // Raycasting for hover highlight
-        const raycaster = new THREE.Raycaster();
-        raycaster.setFromCamera(new THREE.Vector2(normX, normY), camera);
-
-        const bases: THREE.Object3D[] = [];
-        cellsGroup.traverse(child => {
-          if (child.userData && child.userData.isCellBase) {
-            bases.push(child);
-          }
-        });
-
-        const intersects = raycaster.intersectObjects(bases);
-        if (intersects.length > 0) {
-          const hitObj = intersects[0].object;
-          setHoveredCell({ r: hitObj.userData.r, c: hitObj.userData.c });
+      if (vy < -4) {
+        // Water bed sand
+        r = 0.15; g = 0.25; b = 0.3;
+      } else if (vy < 0) {
+        // Shore sand
+        r = 0.95; g = 0.85; b = 0.5;
+      } else if (biome === "MONTANA") {
+        if (vy > 35) {
+          r = 0.95; g = 0.95; b = 0.95; // Snowy peaks
         } else {
-          setHoveredCell(null);
+          r = 0.55; g = 0.55; b = 0.55; // Stone grey
         }
+      } else if (biome === "TECNO") {
+        r = 0.18; g = 0.18; b = 0.22; // Concrete dark
+      } else if (biome === "HISTORICO") {
+        r = 0.55; g = 0.45; b = 0.35; // Terracotta clay
+      } else if (biome === "VALLE") {
+        r = 0.25; g = 0.65; b = 0.25; // Rich green
+      }
+      colors.push(r, g, b);
+    }
+    geomTerrain.setAttribute("color", new THREE.Float32BufferAttribute(colors, 3));
+    geomTerrain.computeVertexNormals();
+
+    const matTerrain = new THREE.MeshLambertMaterial({
+      vertexColors: true,
+      flatShading: true
+    });
+    const terrainMesh = new THREE.Mesh(geomTerrain, matTerrain);
+    scene.add(terrainMesh);
+
+    // Lake / Ocean Water Mesh
+    const geomWater = new THREE.PlaneGeometry(2000, 2000);
+    geomWater.rotateX(-Math.PI / 2);
+    const matWater = new THREE.MeshLambertMaterial({
+      color: 0x00e5ff,
+      transparent: true,
+      opacity: 0.65
+    });
+    const waterMesh = new THREE.Mesh(geomWater, matWater);
+    waterMesh.position.y = -4.5;
+    scene.add(waterMesh);
+
+    // 6. Player 3D Character Model (Minecraft / Roblox Voxel style)
+    const playerGroup = new THREE.Group();
+    scene.add(playerGroup);
+
+    // Skin & torso mesh setup
+    const matSkin = new THREE.MeshLambertMaterial({ color: 0xffcc99 });
+    const matShirt = new THREE.MeshLambertMaterial({ color: 0x1976d2 });
+    const matPants = new THREE.MeshLambertMaterial({ color: 0x37474f });
+
+    const headMesh = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.5, 0.5), matSkin);
+    headMesh.position.y = 1.35;
+    playerGroup.add(headMesh);
+
+    const capMesh = new THREE.Mesh(new THREE.ConeGeometry(0.35, 0.2, 4), new THREE.MeshLambertMaterial({ color: 0x000000 }));
+    capMesh.position.set(0, 1.62, 0);
+    capMesh.rotation.y = Math.PI / 4;
+    playerGroup.add(capMesh);
+
+    const torsoMesh = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.8, 0.4), matShirt);
+    torsoMesh.position.y = 0.7;
+    playerGroup.add(torsoMesh);
+
+    const leftLeg = new THREE.Mesh(new THREE.BoxGeometry(0.25, 0.5, 0.25), matPants);
+    leftLeg.position.set(-0.2, 0.25, 0);
+    playerGroup.add(leftLeg);
+
+    const rightLeg = new THREE.Mesh(new THREE.BoxGeometry(0.25, 0.5, 0.25), matPants);
+    rightLeg.position.set(0.2, 0.25, 0);
+    playerGroup.add(rightLeg);
+
+    const leftArm = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.6, 0.2), matShirt);
+    leftArm.position.set(-0.45, 0.7, 0);
+    playerGroup.add(leftArm);
+
+    const rightArm = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.6, 0.2), matShirt);
+    rightArm.position.set(0.45, 0.7, 0);
+    playerGroup.add(rightArm);
+
+    playerGroup.position.set(0, getTerrainHeight(0, 0), 0);
+
+    // Keyboard & Controls listeners
+    const keys: Record<string, boolean> = {};
+    const handleKeyDown = (e: KeyboardEvent) => { keys[e.key.toLowerCase()] = true; };
+    const handleKeyUp = (e: KeyboardEvent) => { keys[e.key.toLowerCase()] = false; };
+    window.addEventListener("keydown", handleKeyDown);
+    window.addEventListener("keyup", handleKeyUp);
+
+    // Mouse movement listeners
+    const mouse = { x: 0, y: 0, isDown: false, yaw: 0.78, pitch: 0.6 };
+    const handleMouseDown = (e: MouseEvent) => { mouse.isDown = true; };
+    const handleMouseUp = (e: MouseEvent) => { mouse.isDown = false; };
+    const handleMouseMove = (e: MouseEvent) => {
+      if (mouse.isDown) {
+        mouse.yaw -= e.movementX * 0.007;
+        mouse.pitch = Math.max(0.1, Math.min(Math.PI / 2.2, mouse.pitch + e.movementY * 0.007));
       }
     };
+    canvasRef.current.addEventListener("mousedown", handleMouseDown);
+    canvasRef.current.addEventListener("mouseup", handleMouseUp);
+    canvasRef.current.addEventListener("mousemove", handleMouseMove);
 
-    const onPointerUp = (e: PointerEvent) => {
-      isDragging = false;
-      if (!dragMoveThreshold) {
-        // Trigger select raycast click
-        const rect = renderer.domElement.getBoundingClientRect();
-        const normX = ((e.clientX - rect.left) / rect.width) * 2 - 1;
-        const normY = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+    // Instanced meshes for customization blocks optimization
+    const customBlockMeshes = new THREE.InstancedMesh(
+      new THREE.BoxGeometry(1.0, 1.0, 1.0),
+      new THREE.MeshLambertMaterial({ color: 0x8d6e63 }), // Brick default
+      1000
+    );
+    customBlockMeshes.count = 0;
+    scene.add(customBlockMeshes);
 
-        const raycaster = new THREE.Raycaster();
-        raycaster.setFromCamera(new THREE.Vector2(normX, normY), camera);
+    // Weather particles: Rain setup
+    const particleCount = 500;
+    const geomRain = new THREE.BufferGeometry();
+    const rainPositions = new Float32Array(particleCount * 3);
+    for (let i = 0; i < particleCount * 3; i += 3) {
+      rainPositions[i] = (Math.random() - 0.5) * 80;
+      rainPositions[i + 1] = Math.random() * 40;
+      rainPositions[i + 2] = (Math.random() - 0.5) * 80;
+    }
+    geomRain.setAttribute("position", new THREE.BufferAttribute(rainPositions, 3));
+    const matRain = new THREE.PointsMaterial({ color: 0x90caf9, size: 0.15, transparent: true, opacity: 0.6 });
+    const rainPoints = new THREE.Points(geomRain, matRain);
+    rainPoints.visible = false;
+    scene.add(rainPoints);
 
-        const bases: THREE.Object3D[] = [];
-        cellsGroup.traverse(child => {
-          if (child.userData && child.userData.isCellBase) {
-            bases.push(child);
-          }
-        });
-
-        const intersects = raycaster.intersectObjects(bases);
-        if (intersects.length > 0) {
-          const hitObj = intersects[0].object;
-          const { r, c, zone, isUnlocked } = hitObj.userData;
-          if (isUnlocked) {
-            setActiveCell({ r, c });
-            setShowBuildMenu(true);
-          } else {
-            handleAttemptUnlockZone(zone);
-          }
-        }
+    // Cloud groups
+    const clouds = new THREE.Group();
+    scene.add(clouds);
+    const cloudMat = new THREE.MeshLambertMaterial({ color: 0xffffff, transparent: true, opacity: 0.85 });
+    for (let i = 0; i < 20; i++) {
+      const cg = new THREE.Group();
+      cg.position.set((Math.random() - 0.5) * 1200, 35 + Math.random() * 10, (Math.random() - 0.5) * 1200);
+      const partCount = 3 + Math.floor(Math.random() * 3);
+      for (let j = 0; j < partCount; j++) {
+        const cloudPart = new THREE.Mesh(new THREE.BoxGeometry(8 + Math.random() * 8, 3, 5 + Math.random() * 5), cloudMat);
+        cloudPart.position.set(j * 4 - partCount * 2, 0, (Math.random() - 0.5) * 4);
+        cg.add(cloudPart);
       }
-    };
+      clouds.add(cg);
+    }
 
-    const onWheel = (e: WheelEvent) => {
-      e.preventDefault();
-      zoom = Math.max(5, Math.min(30, zoom + e.deltaY * 0.01));
-      updateCameraPosition();
-    };
+    // Spawning NPCs
+    const npcs: any[] = [];
+    const npcRoles = ["Estudiante", "Profesor", "Científico", "Ingeniero"];
+    const npcColors = [0xe91e63, 0x9c27b0, 0x00bcd4, 0xffeb3b];
+    for (let i = 0; i < 30; i++) {
+      const group = new THREE.Group();
+      const roleIdx = i % 4;
+      const matNpcShirt = new THREE.MeshLambertMaterial({ color: npcColors[roleIdx] });
+      
+      const head = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.4, 0.4), matSkin);
+      head.position.y = 1.1;
+      group.add(head);
 
-    // Keyboard translation (WASD)
-    const onKeyDown = (e: KeyboardEvent) => {
-      const step = 0.5;
-      if (e.key === "w" || e.key === "W" || e.key === "ArrowUp") {
-        focus.z -= step;
-      } else if (e.key === "s" || e.key === "S" || e.key === "ArrowDown") {
-        focus.z += step;
-      } else if (e.key === "a" || e.key === "A" || e.key === "ArrowLeft") {
-        focus.x -= step;
-      } else if (e.key === "d" || e.key === "D" || e.key === "ArrowRight") {
-        focus.x += step;
-      }
-      focus.x = Math.max(-6, Math.min(6, focus.x));
-      focus.z = Math.max(-6, Math.min(6, focus.z));
-      updateCameraPosition();
-    };
+      const torso = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.6, 0.3), matNpcShirt);
+      torso.position.y = 0.6;
+      group.add(torso);
 
-    canvasRef.current.addEventListener("pointerdown", onPointerDown);
-    canvasRef.current.addEventListener("pointermove", onPointerMove);
-    canvasRef.current.addEventListener("pointerup", onPointerUp);
-    canvasRef.current.addEventListener("wheel", onWheel, { passive: false });
-    window.addEventListener("keydown", onKeyDown);
+      const legs = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.3, 0.25), matPants);
+      legs.position.y = 0.15;
+      group.add(legs);
 
-    // Save refs
-    threeRef.current = {
+      const nx = (Math.random() - 0.5) * 300;
+      const nz = (Math.random() - 0.5) * 300;
+      const ny = getTerrainHeight(nx, nz);
+      group.position.set(nx, ny, nz);
+      scene.add(group);
+
+      npcs.push({
+        mesh: group,
+        role: npcRoles[roleIdx],
+        vx: 0,
+        vz: 0,
+        tx: nx + (Math.random() - 0.5) * 50,
+        tz: nz + (Math.random() - 0.5) * 50,
+        targetTimer: 100,
+        isSitting: false
+      });
+    }
+
+    // Educational Vehicles: Yellow Bus & Bicycles
+    const vehicles: any[] = [];
+    
+    // Yellow School Bus Group
+    const busGroup = new THREE.Group();
+    const matBusBody = new THREE.MeshLambertMaterial({ color: 0xffeb3b });
+    const matWheel = new THREE.MeshLambertMaterial({ color: 0x212121 });
+    const matGlass = new THREE.MeshLambertMaterial({ color: 0x90caf9 });
+
+    const busBody = new THREE.Mesh(new THREE.BoxGeometry(1.6, 1.2, 3.8), matBusBody);
+    busBody.position.y = 0.8;
+    busGroup.add(busBody);
+
+    const busGlass = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.4, 1.5), matGlass);
+    busGlass.position.set(0, 1.1, 0.8);
+    busGroup.add(busGlass);
+
+    for (let w = 0; w < 4; w++) {
+      const wheel = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.35, 0.3, 12), matWheel);
+      wheel.rotateZ(Math.PI / 2);
+      wheel.position.set(w % 2 === 0 ? 0.95 : -0.95, 0.25, w < 2 ? 1.2 : -1.2);
+      busGroup.add(wheel);
+    }
+    busGroup.position.set(20, getTerrainHeight(20, 20), 20);
+    scene.add(busGroup);
+
+    // Simple Spline Path for the yellow bus to loop around campus
+    const waypoints = [
+      new THREE.Vector3(20, getTerrainHeight(20, 20), 20),
+      new THREE.Vector3(120, getTerrainHeight(120, -50), -50),
+      new THREE.Vector3(-80, getTerrainHeight(-80, -180), -180),
+      new THREE.Vector3(-140, getTerrainHeight(-140, 100), 100),
+      new THREE.Vector3(-20, getTerrainHeight(-20, 210), 210)
+    ];
+
+    vehicles.push({
+      mesh: busGroup,
+      type: "Autobús",
+      speed: 0.15,
+      waypoints,
+      wpIndex: 0
+    });
+
+    // Save Engine Refs
+    engineRef.current = {
       scene,
       camera,
       renderer,
-      cellsGroup,
-      locksList,
-      hoverOutline,
-      activeOutline,
-      animateId: 0,
-      shadowsEnabled: false,
-      dirLight
+      player: playerGroup,
+      keys,
+      mouse,
+      velocity: new THREE.Vector3(),
+      isGrounded: true,
+      placedModels: new Map(),
+      buildingPreview: null,
+      customBlockMeshes,
+      particles: rainPoints,
+      clouds,
+      npcs,
+      vehicles,
+      ridingVehicleIndex: -1,
+      ambientLight,
+      dirLight,
+      leavesParticles: null
     };
 
-    // 8. Animation loop
+    // 7. RENDER & PHYSICS LOOP
+    let lastTime = Date.now();
     const animate = () => {
       const id = requestAnimationFrame(animate);
-      threeRef.current!.animateId = id;
+      if (!engineRef.current) return;
 
-      // Bobbing floating locks
+      const engine = engineRef.current;
       const time = Date.now();
-      locksList.forEach(lock => {
-        lock.rotation.y += 0.015;
-        lock.position.y = 0.8 + Math.sin(time * 0.0035 + lock.userData.phase) * 0.08;
+      const dt = (time - lastTime) / 1000;
+      lastTime = time;
+
+      // WEATHER RAIN EFFECT UPDATE
+      if (engine.particles && engine.particles.visible) {
+        const positions = engine.particles.geometry.attributes.position.array as Float32Array;
+        for (let i = 1; i < positions.length; i += 3) {
+          positions[i] -= 25 * dt; // gravity speed falling
+          if (positions[i] < getTerrainHeight(positions[i - 1] + playerGroup.position.x, positions[i + 1] + playerGroup.position.z) - playerGroup.position.y) {
+            positions[i] = 30 + Math.random() * 10;
+          }
+        }
+        engine.particles.geometry.attributes.position.needsUpdate = true;
+      }
+
+      // SLOW MOVING CLOUDS
+      engine.clouds.children.forEach(cg => {
+        cg.position.x += 1.5 * dt;
+        if (cg.position.x > 800) cg.position.x = -800;
       });
 
+      // NPC ROUTINE MOVEMENT
+      engine.npcs.forEach(npc => {
+        if (npc.isSitting) return;
+
+        // Walk to target
+        const dx = npc.tx - npc.mesh.position.x;
+        const dz = npc.tz - npc.mesh.position.z;
+        const dist = Math.sqrt(dx * dx + dz * dz);
+
+        if (dist > 1) {
+          const speed = 2.0 * dt;
+          npc.mesh.position.x += (dx / dist) * speed;
+          npc.mesh.position.z += (dz / dist) * speed;
+          npc.mesh.position.y = getTerrainHeight(npc.mesh.position.x, npc.mesh.position.z);
+          npc.mesh.rotation.y = Math.atan2(dx, dz);
+
+          // Limb bobs
+          const lLeg = npc.mesh.children[2];
+          lLeg.rotation.x = Math.sin(time * 0.008) * 0.4;
+        } else {
+          npc.targetTimer -= 1;
+          if (npc.targetTimer <= 0) {
+            npc.tx = npc.mesh.position.x + (Math.random() - 0.5) * 120;
+            npc.tz = npc.mesh.position.z + (Math.random() - 0.5) * 120;
+            npc.targetTimer = 150 + Math.random() * 100;
+          }
+        }
+      });
+
+      // VEHICLES SPLINE PATH FOLLOWING
+      engine.vehicles.forEach((veh, idx) => {
+        if (idx === engine.ridingVehicleIndex) return; // Player driving/riding overrides script path
+
+        const target = veh.waypoints[veh.wpIndex];
+        const dx = target.x - veh.mesh.position.x;
+        const dz = target.z - veh.mesh.position.z;
+        const dist = Math.sqrt(dx * dx + dz * dz);
+
+        if (dist > 2) {
+          const step = veh.speed * 60 * dt;
+          veh.mesh.position.x += (dx / dist) * step;
+          veh.mesh.position.z += (dz / dist) * step;
+          veh.mesh.position.y = getTerrainHeight(veh.mesh.position.x, veh.mesh.position.z);
+          veh.mesh.rotation.y = Math.atan2(dx, dz);
+        } else {
+          // next waypoint
+          veh.wpIndex = (veh.wpIndex + 1) % veh.waypoints.length;
+        }
+      });
+
+      // PLAYER PHYSICS AND RIDING INPUTS
+      if (engine.ridingVehicleIndex >= 0) {
+        // Locked to Bus vehicle position
+        const bus = engine.vehicles[engine.ridingVehicleIndex].mesh;
+        playerGroup.position.copy(bus.position);
+        playerGroup.position.y += 1.2; // Sit inside roof
+
+        // Driving keys
+        const speed = 25 * dt;
+        if (keys["w"]) {
+          bus.translateZ(speed);
+        }
+        if (keys["s"]) {
+          bus.translateZ(-speed);
+        }
+        if (keys["a"]) {
+          bus.rotation.y += 2 * dt;
+        }
+        if (keys["d"]) {
+          bus.rotation.y -= 2 * dt;
+        }
+        bus.position.y = getTerrainHeight(bus.position.x, bus.position.z);
+      } else {
+        // Normal character physics
+        let moveX = 0;
+        let moveZ = 0;
+        if (keys["w"]) { moveZ = 1; }
+        if (keys["s"]) { moveZ = -1; }
+        if (keys["a"]) { moveX = 1; }
+        if (keys["d"]) { moveX = -1; }
+
+        const moveDir = new THREE.Vector3(moveX, 0, moveZ).normalize();
+        moveDir.applyAxisAngle(new THREE.Vector3(0, 1, 0), mouse.yaw);
+
+        // Run factor
+        const walkSpeed = keys["shift"] ? 16.0 : 8.5;
+        engine.velocity.x = moveDir.x * walkSpeed;
+        engine.velocity.z = moveDir.z * walkSpeed;
+
+        // Gravity
+        if (!engine.isGrounded) {
+          engine.velocity.y -= 28.0 * dt; // gravity deceleration
+        }
+
+        // Apply velocity Y
+        playerGroup.position.x += engine.velocity.x * dt;
+        playerGroup.position.z += engine.velocity.z * dt;
+        playerGroup.position.y += engine.velocity.y * dt;
+
+        // Terrain snap and jumps
+        const tHeight = getTerrainHeight(playerGroup.position.x, playerGroup.position.z);
+        if (playerGroup.position.y <= tHeight) {
+          playerGroup.position.y = tHeight;
+          engine.velocity.y = 0;
+          engine.isGrounded = true;
+        } else {
+          engine.isGrounded = false;
+        }
+
+        // Trigger Jump
+        if (keys[" "] && engine.isGrounded) {
+          engine.velocity.y = 11.0; // Jump force Y
+          engine.isGrounded = false;
+        }
+
+        // Rotate torso/legs limbs based on motion
+        if (moveX !== 0 || moveZ !== 0) {
+          playerGroup.rotation.y = Math.atan2(moveDir.x, moveDir.z);
+          // bob limbs
+          leftLeg.rotation.x = Math.sin(time * 0.012) * 0.6;
+          rightLeg.rotation.x = -Math.sin(time * 0.012) * 0.6;
+          leftArm.rotation.x = -Math.sin(time * 0.012) * 0.4;
+          rightArm.rotation.x = Math.sin(time * 0.012) * 0.4;
+        } else {
+          leftLeg.rotation.x = 0;
+          rightLeg.rotation.x = 0;
+          leftArm.rotation.x = 0;
+          rightArm.rotation.x = 0;
+        }
+      }
+
+      // 8. CAMERA ORBIT BEHIND PLAYER (THIRD PERSON Follow)
+      const zoomDist = 12.0;
+      const targetCamPos = new THREE.Vector3(
+        playerGroup.position.x + zoomDist * Math.sin(mouse.yaw) * Math.cos(mouse.pitch),
+        playerGroup.position.y + zoomDist * Math.sin(mouse.pitch) + 1.5,
+        playerGroup.position.z + zoomDist * Math.cos(mouse.yaw) * Math.cos(mouse.pitch)
+      );
+
+      // Smooth camera interpolation
+      camera.position.lerp(targetCamPos, 0.15);
+      camera.lookAt(playerGroup.position.clone().add(new THREE.Vector3(0, 1, 0)));
+
+      // Dynamic ambient fog and weather updates
+      const currentBiome = getBiomeAt(playerGroup.position.x, playerGroup.position.z);
+      setPlayerCoordinates({ x: Math.round(playerGroup.position.x), z: Math.round(playerGroup.position.z) });
+
+      // RENDER
       renderer.render(scene, camera);
     };
     animate();
 
-    // 9. Resize Listener
     const handleResize = () => {
-      if (!canvasRef.current || !threeRef.current) return;
+      if (!canvasRef.current || !engineRef.current) return;
       const w = canvasRef.current.clientWidth;
       const h = canvasRef.current.clientHeight;
-      threeRef.current.camera.aspect = w / h;
-      threeRef.current.camera.updateProjectionMatrix();
-      threeRef.current.renderer.setSize(w, h, false);
+      engineRef.current.camera.aspect = w / h;
+      engineRef.current.camera.updateProjectionMatrix();
+      engineRef.current.renderer.setSize(w, h, false);
     };
     window.addEventListener("resize", handleResize);
 
-    // Clean up
+    // CLEANUP
     return () => {
       window.removeEventListener("resize", handleResize);
-      window.removeEventListener("keydown", onKeyDown);
+      window.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener("keyup", handleKeyUp);
       if (canvasRef.current) {
-        canvasRef.current.removeEventListener("pointerdown", onPointerDown);
-        canvasRef.current.removeEventListener("pointermove", onPointerMove);
-        canvasRef.current.removeEventListener("pointerup", onPointerUp);
-        canvasRef.current.removeEventListener("wheel", onWheel);
+        canvasRef.current.removeEventListener("mousedown", handleMouseDown);
+        canvasRef.current.removeEventListener("mouseup", handleMouseUp);
+        canvasRef.current.removeEventListener("mousemove", handleMouseMove);
       }
-      if (threeRef.current) {
-        cancelAnimationFrame(threeRef.current.animateId);
-        threeRef.current.renderer.dispose();
+      if (engineRef.current) {
+        engineRef.current.renderer.dispose();
       }
     };
   }, []);
 
-  // UPDATE SCENE OBJECTS WHEN GRID / UNLOCKEDZONES STATE UPDATES
+  // ENVIRONMENT/WEATHER MANAGER HOOK
   useEffect(() => {
-    if (!threeRef.current) return;
-
-    const { scene, cellsGroup, locksList } = threeRef.current;
-
-    // Clear old items
-    while (cellsGroup.children.length > 0) {
-      const obj = cellsGroup.children[0];
-      cellsGroup.remove(obj);
+    if (!engineRef.current) return;
+    const { scene, particles } = engineRef.current;
+    if (weather === "rainy") {
+      particles!.visible = true;
+      scene.fog = new THREE.FogExp2(0x546e7a, 0.012);
+      toast.info("🌧️ Comenzó a llover en el campus del conocimiento.");
+    } else {
+      particles!.visible = false;
+      scene.fog = new THREE.FogExp2(0x87ceeb, 0.005);
+      toast.info("☀️ El clima se ha despejado.");
     }
-    locksList.length = 0;
+  }, [weather]);
 
-    // Materials (Low poly simple colors, no textures)
-    const matGrass = new THREE.MeshLambertMaterial({ color: 0x2e7d32 }); // green
-    const matDirt = new THREE.MeshLambertMaterial({ color: 0x4e342e }); // dark brown
-    const matLocked = new THREE.MeshLambertMaterial({ color: 0x1a237e }); // dark blue
-    const matVelo = new THREE.MeshBasicMaterial({ color: 0xe65100, transparent: true, opacity: 0.22 }); // orange-red warning
-    const matGold = new THREE.MeshLambertMaterial({ color: 0xffb300 });
-    const matSilver = new THREE.MeshLambertMaterial({ color: 0xb0bec5 });
-    const matRed = new THREE.MeshLambertMaterial({ color: 0xc62828 });
-    const matBeige = new THREE.MeshLambertMaterial({ color: 0xe0cda9 });
-    const matBlue = new THREE.MeshLambertMaterial({ color: 0x1565c0 });
-    const matDarkGray = new THREE.MeshLambertMaterial({ color: 0x37474f });
-    const matCyan = new THREE.MeshLambertMaterial({ color: 0x00e5ff, transparent: true, opacity: 0.75 });
-    const matWhite = new THREE.MeshLambertMaterial({ color: 0xf5f5f5 });
-
-    // Geometries references (Frustum culling is enabled by default)
-    const geomBase = new THREE.BoxGeometry(1.4, 0.15, 1.4);
-
-    // Build the 6x6 grid cells
-    for (let r = 0; r < GRID_SIZE; r++) {
-      for (let c = 0; c < GRID_SIZE; c++) {
-        const x = (c - 2.5) * 1.5;
-        const z = (r - 2.5) * 1.5;
-        const zone = getCellZone(r, c);
-        const isUnlocked = unlockedZones[zone];
-
-        // 1. Base floor cell
-        const baseMesh = new THREE.Mesh(geomBase, isUnlocked ? matGrass : matLocked);
-        baseMesh.position.set(x, -0.075, z);
-        baseMesh.userData = { r, c, zone, isUnlocked, isCellBase: true };
-        baseMesh.frustumCulled = true;
-        cellsGroup.add(baseMesh);
-
-        // 2. Add structural building if unlocked and exists
-        const cellType = grid[r][c];
-        if (isUnlocked && cellType !== "vacio") {
-          const bGroup = new THREE.Group();
-          bGroup.position.set(x, 0, z);
-
-          if (cellType === "bloque") {
-            // Voxel block: 1 cube primitive
-            const m1 = new THREE.Mesh(new THREE.BoxGeometry(1.0, 0.8, 1.0), matDirt);
-            m1.position.y = 0.4;
-            m1.frustumCulled = true;
-            bGroup.add(m1);
-          } else if (cellType === "casa") {
-            // 2 Primitives: Cube + Pyramid Roof
-            const body = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.6, 0.8), matBeige);
-            body.position.y = 0.3;
-            body.frustumCulled = true;
-
-            const roof = new THREE.Mesh(new THREE.ConeGeometry(0.7, 0.45, 4), matRed);
-            roof.position.y = 0.825;
-            roof.rotation.y = Math.PI / 4;
-            roof.frustumCulled = true;
-
-            bGroup.add(body, roof);
-          } else if (cellType === "laboratorio") {
-            // 2 Primitives: Tech Voxel + Spherical Dome
-            const body = new THREE.Mesh(new THREE.BoxGeometry(0.85, 0.55, 0.85), matDarkGray);
-            body.position.y = 0.275;
-            body.frustumCulled = true;
-
-            const dome = new THREE.Mesh(new THREE.SphereGeometry(0.35, 8, 6, 0, Math.PI * 2, 0, Math.PI / 2), matCyan);
-            dome.position.y = 0.55;
-            dome.frustumCulled = true;
-
-            bGroup.add(body, dome);
-          } else if (cellType === "biblioteca") {
-            // 3 Primitives: Base cube + Columns block + triangular pediment cone
-            const base = new THREE.Mesh(new THREE.BoxGeometry(0.95, 0.1, 0.85), matWhite);
-            base.position.y = 0.05;
-            base.frustumCulled = true;
-
-            const hall = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.45, 0.7), matBeige);
-            hall.position.y = 0.325;
-            hall.frustumCulled = true;
-
-            const pediment = new THREE.Mesh(new THREE.ConeGeometry(0.65, 0.3, 4), matGold);
-            pediment.position.y = 0.7;
-            pediment.rotation.y = Math.PI / 4;
-            pediment.frustumCulled = true;
-
-            bGroup.add(base, hall, pediment);
-          } else if (cellType === "observatorio") {
-            // 3 Primitives: Base Cylinder + Sphere Dome + Telescope Cylinder
-            const cyl = new THREE.Mesh(new THREE.CylinderGeometry(0.45, 0.45, 0.6, 8), matWhite);
-            cyl.position.y = 0.3;
-            cyl.frustumCulled = true;
-
-            const sphere = new THREE.Mesh(new THREE.SphereGeometry(0.45, 8, 6, 0, Math.PI * 2, 0, Math.PI / 2), matSilver);
-            sphere.position.y = 0.6;
-            sphere.frustumCulled = true;
-
-            const scope = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 0.5, 6), matBlue);
-            scope.position.set(0.15, 0.8, 0.15);
-            scope.rotation.x = Math.PI / 4;
-            scope.rotation.z = Math.PI / 4;
-            scope.frustumCulled = true;
-
-            bGroup.add(cyl, sphere, scope);
-          } else if (cellType === "universidad") {
-            // 3 Primitives: Large Hall block + Slim Tower + Pyramid roof
-            const hall = new THREE.Mesh(new THREE.BoxGeometry(1.1, 0.65, 0.75), matWhite);
-            hall.position.y = 0.325;
-            hall.frustumCulled = true;
-
-            const tower = new THREE.Mesh(new THREE.BoxGeometry(0.35, 1.2, 0.35), matBlue);
-            tower.position.set(0.3, 0.6, 0);
-            tower.frustumCulled = true;
-
-            const roof = new THREE.Mesh(new THREE.ConeGeometry(0.3, 0.35, 4), matRed);
-            roof.position.set(0.3, 1.375, 0);
-            roof.rotation.y = Math.PI / 4;
-            roof.frustumCulled = true;
-
-            bGroup.add(hall, tower, roof);
-          } else if (cellType === "megamonumento") {
-            // 3 Primitives: Castle Fortress Base + Central Spire + Pinnacle Cone
-            const castle = new THREE.Mesh(new THREE.BoxGeometry(1.15, 0.7, 1.15), matDarkGray);
-            castle.position.y = 0.35;
-            castle.frustumCulled = true;
-
-            const spire = new THREE.Mesh(new THREE.CylinderGeometry(0.25, 0.25, 1.2, 6), matGold);
-            spire.position.y = 0.95;
-            spire.frustumCulled = true;
-
-            const pinnacle = new THREE.Mesh(new THREE.ConeGeometry(0.3, 0.45, 4), matRed);
-            pinnacle.position.y = 1.775;
-            pinnacle.rotation.y = Math.PI / 4;
-            pinnacle.frustumCulled = true;
-
-            bGroup.add(castle, spire, pinnacle);
-          }
-
-          cellsGroup.add(bGroup);
-        }
-      }
-    }
-
-    // Render transparent quadrants & floating locks for blocked zones
-    const unlockCounts = {
-      2: unlockedZones[2],
-      3: unlockedZones[3],
-      4: unlockedZones[4]
-    };
-
-    const addLockedIndicator = (zoneId: number, cx: number, cz: number, phase: number) => {
-      // 1. Semi transparent red plane warning
-      const velo = new THREE.Mesh(new THREE.BoxGeometry(4.4, 0.04, 4.4), matVelo);
-      velo.position.set(cx, 0.02, cz);
-      velo.frustumCulled = true;
-      cellsGroup.add(velo);
-
-      // 2. Bobbing floating lock group (Lock Body Cube + Shackle Loop)
-      const lockGroup = new THREE.Group();
-      lockGroup.position.set(cx, 0.8, cz);
-      lockGroup.userData = { phase };
-
-      const body = new THREE.Mesh(new THREE.BoxGeometry(0.48, 0.4, 0.25), matGold);
-      body.frustumCulled = true;
-
-      const loop = new THREE.Mesh(new THREE.TorusGeometry(0.18, 0.05, 4, 10, Math.PI), matSilver);
-      loop.position.y = 0.2;
-      loop.frustumCulled = true;
-
-      lockGroup.add(body, loop);
-      cellsGroup.add(lockGroup);
-      locksList.push(lockGroup);
-    };
-
-    if (!unlockedZones[2]) addLockedIndicator(2, 2.25, -2.25, 0);
-    if (!unlockedZones[3]) addLockedIndicator(3, -2.25, 2.25, Math.PI / 3);
-    if (!unlockedZones[4]) addLockedIndicator(4, 2.25, 2.25, (Math.PI * 2) / 3);
-
-  }, [grid, unlockedZones]);
-
-  // UPDATE SELECTOR OUTLINES IN RENDER LOOP
+  // DETECT SURROUNDINGS AND NPC PROMPTS NEAR PLAYER
   useEffect(() => {
-    if (!threeRef.current) return;
-    const { hoverOutline, activeOutline } = threeRef.current;
+    const checkProximity = setInterval(() => {
+      if (!engineRef.current) return;
+      const player = engineRef.current.player;
+      
+      // 1. Biome Check
+      const biomeKey = getBiomeAt(player.position.x, player.position.z);
+      setActiveBiome(BIOMES[biomeKey as keyof typeof BIOMES]?.name || "Desconocido");
 
-    if (hoveredCell) {
-      hoverOutline.visible = true;
-      hoverOutline.position.set((hoveredCell.c - 2.5) * 1.5, 0.08, (hoveredCell.r - 2.5) * 1.5);
-    } else {
-      hoverOutline.visible = false;
-    }
-
-    if (activeCell) {
-      activeOutline.visible = true;
-      activeOutline.position.set((activeCell.c - 2.5) * 1.5, 0.15, (activeCell.r - 2.5) * 1.5);
-    } else {
-      activeOutline.visible = false;
-    }
-  }, [hoveredCell, activeCell]);
-
-  const handleCellClick = (r: number, c: number) => {
-    setActiveCell({ r, c });
-    setShowBuildMenu(true);
-  };
-
-  const handleAttemptUnlockZone = (zoneId: number) => {
-    setUnlockTargetZone(zoneId);
-    setUnlockQuestionsSolved(0);
-  };
-
-  const handleStartZoneUnlockChallenge = () => {
-    if (unlockTargetZone === null) return;
-    triggerQuestion("lógica");
-  };
-
-  const handleBuild = (recipe: typeof RECIPES[0]) => {
-    if (!activeCell) return;
-    
-    // Check Resources
-    if (
-      blocks < recipe.cost.blocks ||
-      techMaterials < recipe.cost.tech ||
-      cultureMaterials < recipe.cost.culture ||
-      blueprints < recipe.cost.blueprints
-    ) {
-      toast.error("⚠️ Recursos insuficientes. ¡Responde preguntas académicas para ganar más!");
-      return;
-    }
-
-    // Check Streak
-    if (recipe.reqStreak > 0 && streak < recipe.reqStreak) {
-      toast.error(`🔒 Requiere una racha de ${recipe.reqStreak} preguntas correctas consecutivas (Racha actual: ${streak}).`);
-      return;
-    }
-
-    // Apply Costs
-    setBlocks(b => b - recipe.cost.blocks);
-    setTechMaterials(t => t - recipe.cost.tech);
-    setCultureMaterials(c => c - recipe.cost.culture);
-    setBlueprints(bl => bl - recipe.cost.blueprints);
-
-    // Apply Grid Change
-    const newGrid = [...grid.map(row => [...row])];
-    newGrid[activeCell.r][activeCell.c] = recipe.id;
-    setGrid(newGrid);
-
-    toast.success(`🏗️ ¡Construiste un ${recipe.name}!`);
-    setShowBuildMenu(false);
-    setActiveCell(null);
-  };
-
-  const handleDemolish = () => {
-    if (!activeCell) return;
-    const newGrid = [...grid.map(row => [...row])];
-    newGrid[activeCell.r][activeCell.c] = "vacio";
-    setGrid(newGrid);
-    toast.info("🧹 Celda despejada.");
-    setShowBuildMenu(false);
-    setActiveCell(null);
-  };
-
-  const triggerQuestion = (subject: typeof academicSubject) => {
-    if (!subject) return;
-    setAcademicSubject(subject);
-    setSelectedOption(null);
-    setRoundFeedback(null);
-
-    // Filter local list
-    let list = CONSTRUCTOR_QUESTIONS.filter(q => q.subject === subject);
-    
-    // Attempt enrichment from main DB
-    try {
-      QUESTIONS_DB.forEach(q => {
-        if (q.type === "multiple-choice" && q.options?.length === 4) {
-          let mapped: any = q.subject;
-          if (q.subject === "math") mapped = "matemáticas";
-          if (["physics", "chemistry", "biology"].includes(q.subject)) mapped = "ciencias";
-          if (q.subject === "history" || q.subject === "geography") mapped = "historia";
-          if (q.subject === "english") mapped = "inglés";
-          if (q.subject === "logic") mapped = "lógica";
-
-          if (mapped === subject) {
-            list.push({
-              id: q.id,
-              subject: mapped,
-              prompt: q.prompt,
-              options: q.options,
-              correctIndex: q.correctIndex,
-              explanation: q.explanation || "Concepto resuelto lógicamente."
-            });
-          }
+      // 2. Structures Check (Interact nearby)
+      let closeStructure: Structure | null = null;
+      let minDist = 15;
+      structures.forEach(s => {
+        const dx = s.x - player.position.x;
+        const dz = s.z - player.position.z;
+        const dist = Math.sqrt(dx*dx + dz*dz);
+        if (dist < minDist) {
+          minDist = dist;
+          closeStructure = s;
         }
       });
-    } catch (e) {}
 
-    if (list.length === 0) {
-      toast.error("No hay preguntas disponibles.");
+      if (closeStructure) {
+        const s: Structure = closeStructure;
+        if (s.status === "cimientos") {
+          setInteractionPrompt(`Presiona 'Resolver Desafío' para completar los cimientos del ${s.name} (${s.questionsSolved}/${s.questionsRequired} Preguntas)`);
+        } else {
+          setInteractionPrompt(`Entrar a ${s.name} (Explorar interiores y dialogar con NPCs)`);
+        }
+      } else {
+        // 3. Vehicles check
+        let nearVehicle = false;
+        engineRef.current.vehicles.forEach((veh, idx) => {
+          const dx = veh.mesh.position.x - player.position.x;
+          const dz = veh.mesh.position.z - player.position.z;
+          const dist = Math.sqrt(dx*dx + dz*dz);
+          if (dist < 6) {
+            nearVehicle = true;
+            setInteractionPrompt(`Presiona 'Subirse' para conducir/viajar en el ${veh.type}`);
+          }
+        });
+
+        if (!nearVehicle) setInteractionPrompt(null);
+      }
+    }, 500);
+
+    return () => clearInterval(checkProximity);
+  }, [structures]);
+
+  // REDRAW STRUCTURE MODELS ON COMPONENT STATE UPDATE
+  useEffect(() => {
+    if (!engineRef.current) return;
+    const { scene, placedModels } = engineRef.current;
+
+    // Materials definitions
+    const matWood = new THREE.MeshLambertMaterial({ color: 0x8d6e63 });
+    const matBrick = new THREE.MeshLambertMaterial({ color: 0xc62828 });
+    const matGlass = new THREE.MeshLambertMaterial({ color: 0xe0f7fa, transparent: true, opacity: 0.5 });
+    const matCimientos = new THREE.MeshLambertMaterial({ color: 0xffab00, transparent: true, opacity: 0.8 }); // Orange/amber
+    const matRoof = new THREE.MeshLambertMaterial({ color: 0x3e2723 });
+    const matSteel = new THREE.MeshLambertMaterial({ color: 0x78909c });
+    const matGrass = new THREE.MeshLambertMaterial({ color: 0x4caf50 });
+
+    // Clean deleted
+    placedModels.forEach((model, id) => {
+      const exists = structures.some(s => s.id === id);
+      if (!exists) {
+        scene.remove(model);
+        placedModels.delete(id);
+      }
+    });
+
+    // Build/Update
+    structures.forEach(s => {
+      if (placedModels.has(s.id)) return; // Already exists in 3D
+
+      const bGroup = new THREE.Group();
+      bGroup.position.set(s.x, s.y, s.z);
+
+      if (s.status === "cimientos") {
+        // Scaffolding representation (cubes and bars)
+        const frame = new THREE.Mesh(new THREE.BoxGeometry(4, 3, 4), matCimientos);
+        frame.position.y = 1.5;
+        bGroup.add(frame);
+
+        // Scaffolding lines
+        const wire = new THREE.LineSegments(
+          new THREE.EdgesGeometry(new THREE.BoxGeometry(4.2, 3.2, 4.2)),
+          new THREE.LineBasicMaterial({ color: 0x000000 })
+        );
+        wire.position.y = 1.5;
+        bGroup.add(wire);
+      } else {
+        // Completed meshes based on prefab specifications
+        if (s.type === "aula") {
+          // Classroom Box + Roof
+          const base = new THREE.Mesh(new THREE.BoxGeometry(5, 3.2, 5), matBrick);
+          base.position.y = 1.6;
+          const roof = new THREE.Mesh(new THREE.ConeGeometry(4.2, 2.0, 4), matRoof);
+          roof.position.set(0, 4.2, 0);
+          roof.rotation.y = Math.PI / 4;
+          bGroup.add(base, roof);
+        } else if (s.type === "laboratorio") {
+          // Circular cylinder observatory or laboratory
+          const base = new THREE.Mesh(new THREE.CylinderGeometry(2.5, 2.5, 3.5, 12), matSteel);
+          base.position.y = 1.75;
+          const dome = new THREE.Mesh(new THREE.SphereGeometry(2.5, 12, 10, 0, Math.PI*2, 0, Math.PI/2), matGlass);
+          dome.position.y = 3.5;
+          bGroup.add(base, dome);
+        } else if (s.type === "dormitorio") {
+          // Tall block
+          const base = new THREE.Mesh(new THREE.BoxGeometry(4, 5.5, 4), matWood);
+          base.position.y = 2.75;
+          bGroup.add(base);
+        } else if (s.type === "biblioteca") {
+          // Wide library arches
+          const base = new THREE.Mesh(new THREE.BoxGeometry(7, 4.0, 5), matWood);
+          base.position.y = 2.0;
+          const dome = new THREE.Mesh(new THREE.BoxGeometry(6, 1.2, 4), matSteel);
+          dome.position.y = 4.6;
+          bGroup.add(base, dome);
+        } else if (s.type === "computo") {
+          // Tech square blocks
+          const base = new THREE.Mesh(new THREE.BoxGeometry(5.5, 3.8, 5.5), matSteel);
+          base.position.y = 1.9;
+          bGroup.add(base);
+        } else if (s.type === "deportivo") {
+          // Flat green pitch with basketball posts
+          const pitch = new THREE.Mesh(new THREE.BoxGeometry(8, 0.1, 12), matGrass);
+          pitch.position.y = 0.05;
+          bGroup.add(pitch);
+        } else if (s.type === "auditorio") {
+          // Majestic dome structure
+          const base = new THREE.Mesh(new THREE.BoxGeometry(10, 5.0, 10), matBrick);
+          base.position.y = 2.5;
+          const dome = new THREE.Mesh(new THREE.SphereGeometry(4.8, 12, 12, 0, Math.PI*2, 0, Math.PI/2), matSteel);
+          dome.position.y = 5.0;
+          bGroup.add(base, dome);
+        }
+      }
+
+      scene.add(bGroup);
+      placedModels.set(s.id, bGroup);
+    });
+
+  }, [structures]);
+
+  // REDRAW INSTANCED CUSTOM BLOCKS (MINECRAFT STYLE)
+  useEffect(() => {
+    if (!engineRef.current) return;
+    const { customBlockMeshes } = engineRef.current;
+    
+    // Set matrices
+    const count = customBlocks.length;
+    customBlockMeshes.count = count;
+
+    const dummy = new THREE.Object3D();
+    customBlocks.forEach((b, idx) => {
+      dummy.position.set(b.x, b.y, b.z);
+      dummy.updateMatrix();
+      customBlockMeshes.setMatrixAt(idx, dummy.matrix);
+    });
+    customBlockMeshes.instanceMatrix.needsUpdate = true;
+
+  }, [customBlocks]);
+
+  // HANDLE PREFAB CONSTRUCTION
+  const handlePlaceStructure = (prefab: typeof PREFABS[0]) => {
+    // Check costs
+    if (
+      knowledge < prefab.cost.knowledge ||
+      science < prefab.cost.science ||
+      culture < prefab.cost.culture
+    ) {
+      toast.error("❌ Recursos insuficientes en el Almacén.");
       return;
     }
 
-    const randomQ = list[Math.floor(Math.random() * list.length)];
-    setActiveQuestion(randomQ);
+    if (!engineRef.current) return;
+    const player = engineRef.current.player;
+
+    // Calculate place coordinates in front of player
+    const rad = player.rotation.y;
+    const placeX = player.position.x - Math.sin(rad) * 12;
+    const placeZ = player.position.z - Math.cos(rad) * 12;
+    const placeY = getTerrainHeight(placeX, placeZ);
+
+    const newStruct: Structure = {
+      id: "struct_" + Date.now(),
+      type: prefab.id,
+      name: prefab.name,
+      x: placeX,
+      y: placeY,
+      z: placeZ,
+      rotation: rad,
+      status: "cimientos",
+      subject: prefab.subject,
+      subtopic: prefab.subtopic,
+      questionsSolved: 0,
+      questionsRequired: prefab.questions
+    };
+
+    setKnowledge(k => k - prefab.cost.knowledge);
+    setScience(s => s - prefab.cost.science);
+    setCulture(c => c - prefab.cost.culture);
+    setStructures(prev => [...prev, newStruct]);
+
+    // Check quests
+    setQuests(prev => prev.map(q => {
+      if (q.id === "q1" && prefab.id === "aula" && !q.completed) {
+        handleCompleteQuest(q);
+        return { ...q, progress: 1, completed: true };
+      }
+      return q;
+    }));
+
+    toast.success(`🏗️ Cimientos de ${prefab.name} colocados. Dirígete a ellos para resolver los desafíos.`);
   };
 
-  const submitAnswer = (optionIdx: number) => {
+  // HANDLE BLOCK PLACEMENT (MINECRAFT STYLE)
+  const handlePlaceCustomBlock = () => {
+    if (!blockBuildMode) return;
+    if (knowledge < 2) {
+      toast.error("❌ Se requieren al menos 2 unidades de Conocimiento.");
+      return;
+    }
+
+    if (!engineRef.current) return;
+    const player = engineRef.current.player;
+
+    const rad = player.rotation.y;
+    const bx = Math.round(player.position.x - Math.sin(rad) * 3.5);
+    const bz = Math.round(player.position.z - Math.cos(rad) * 3.5);
+    const by = Math.round(getTerrainHeight(bx, bz) + 0.5);
+
+    const newBlock: CustomBlock = {
+      type: blockBuildMode,
+      x: bx,
+      y: by,
+      z: bz
+    };
+
+    setCustomBlocks(prev => [...prev, newBlock]);
+    setKnowledge(k => k - 2);
+    toast.success(`🧱 Bloque de ${blockBuildMode} colocado.`);
+  };
+
+  // TRIGGER CIMENTATION ACADEMIC CHALLENGE
+  const handleTriggerInteraction = () => {
+    if (!engineRef.current) return;
+    const player = engineRef.current.player;
+
+    // Check vehicle riding
+    const engine = engineRef.current;
+    if (engine.ridingVehicleIndex >= 0) {
+      // Exit vehicle
+      engine.ridingVehicleIndex = -1;
+      toast.info("🚌 Bajaste del vehículo.");
+      return;
+    }
+
+    // Check vehicle nearby to enter
+    let busIndex = -1;
+    engine.vehicles.forEach((veh, idx) => {
+      const dx = veh.mesh.position.x - player.position.x;
+      const dz = veh.mesh.position.z - player.position.z;
+      const dist = Math.sqrt(dx*dx + dz*dz);
+      if (dist < 6) {
+        busIndex = idx;
+      }
+    });
+
+    if (busIndex >= 0) {
+      engine.ridingVehicleIndex = busIndex;
+      toast.success("🚌 Subiste al Autobús Escolar. ¡Presiona WASD para conducirlo!");
+      return;
+    }
+
+    // Check closest cimentation structure
+    let closeStructure: Structure | null = null;
+    let minDist = 12;
+    structures.forEach(s => {
+      const dx = s.x - player.position.x;
+      const dz = s.z - player.position.z;
+      const dist = Math.sqrt(dx*dx + dz*dz);
+      if (dist < minDist) {
+        minDist = dist;
+        closeStructure = s;
+      }
+    });
+
+    if (closeStructure) {
+      const s: Structure = closeStructure;
+      if (s.status === "cimientos") {
+        setCurrentQuizTarget({ structureId: s.id });
+        // Retrieve random question from subject
+        const filter = ACADEMIC_QUESTIONS.filter(q => q.subject === s.subject);
+        if (filter.length > 0) {
+          setActiveQuestion(filter[Math.floor(Math.random() * filter.length)]);
+          setSelectedOption(null);
+          setRoundFeedback(null);
+        } else {
+          toast.error("No hay preguntas disponibles para este bioma académico.");
+        }
+      } else {
+        toast.info(`🏫 Entrando a ${s.name}... Puedes conversar con los profesores adentro.`);
+      }
+    }
+  };
+
+  // SUBMIT QUIZ ANSWER
+  const handleSubmitAnswer = (optionIdx: number) => {
     if (!activeQuestion || selectedOption !== null) return;
     setSelectedOption(optionIdx);
 
@@ -925,418 +1309,403 @@ function MundoConstructorGame() {
     setRoundFeedback(isCorrect);
 
     if (isCorrect) {
-      // Award Resources depending on subject
-      if (unlockTargetZone !== null) {
-        // Solving zone unlock challenge!
-        const required = ZONE_UNLOCK_REQUIREMENTS[unlockTargetZone];
-        const nextCount = unlockQuestionsSolved + 1;
-        setUnlockQuestionsSolved(nextCount);
-        
-        toast.success(`🧠 ¡Correcto! Progreso de desbloqueo: ${nextCount}/${required}`);
+      setStreak(s => s + 1);
+      setExperience(e => e + 40);
+      coinsMutation.mutate(5);
 
-        if (nextCount >= required) {
-          setUnlockedZones(prev => ({
-            ...prev,
-            [unlockTargetZone]: true
-          }));
-          toast.success(`🎉 ¡Zona ${unlockTargetZone} desbloqueada con éxito! Ahora puedes edificar en este cuadrante.`);
-          setUnlockTargetZone(null);
-        }
-      } else {
-        // Normal resource collection
-        if (academicSubject === "matemáticas") {
-          setBlocks(b => b + 4);
-          toast.success("🧠 ¡Correcto! Ganaste: +4 Bloques Estructurales.");
-        } else if (academicSubject === "ciencias") {
-          setTechMaterials(t => t + 2);
-          toast.success("🧪 ¡Correcto! Ganaste: +2 Materiales Tecnológicos.");
-        } else if (academicSubject === "historia") {
-          setCultureMaterials(c => c + 2);
-          toast.success("📚 ¡Correcto! Ganaste: +2 Edificios Culturales.");
-        } else if (academicSubject === "inglés") {
-          setEfficiencyUpgrades(e => e + 2);
-          toast.success("⚡ ¡Correcto! Ganaste: +2 Mejoras de Eficiencia.");
-        } else if (academicSubject === "lógica") {
-          setBlueprints(bl => bl + 1);
-          toast.success("🏛️ ¡Correcto! Ganaste: +1 Planos Especiales.");
-        }
+      // Check current level up of city
+      const totalScore = experience + 40;
+      if (totalScore >= cityLevel * 1000 && cityLevel < 5) {
+        setCityLevel(l => l + 1);
+        toast.success(`⭐️ ¡Tu Ciudad Educativa subió al Nivel ${cityLevel + 1}!`);
       }
 
-      setStreak(s => s + 1);
-      coinsMutation.mutate(2);
-      xpMutation.mutate(20);
+      // Check structure cimentation questions progress
+      if (currentQuizTarget?.structureId) {
+        setStructures(prev => prev.map(s => {
+          if (s.id === currentQuizTarget.structureId) {
+            const solved = s.questionsSolved + 1;
+            if (solved >= s.questionsRequired) {
+              toast.success(`🌟 ¡Cimientos Completados! El ${s.name} ha sido edificado con éxito.`);
+              // Remove 3D cimientos and trigger reload
+              if (engineRef.current) {
+                const model = engineRef.current.placedModels.get(s.id);
+                if (model) {
+                  engineRef.current.scene.remove(model);
+                  engineRef.current.placedModels.delete(s.id);
+                }
+              }
+              return { ...s, questionsSolved: solved, status: "completado" };
+            }
+            return { ...s, questionsSolved: solved };
+          }
+          return s;
+        }));
+      }
+
+      // Check quests logic
+      setQuests(prev => prev.map(q => {
+        if (q.id === "q4" && activeQuestion.subject === "programación" && !q.completed) {
+          const nextProg = q.progress + 1;
+          if (nextProg >= q.target) {
+            handleCompleteQuest(q);
+            return { ...q, progress: nextProg, completed: true };
+          }
+          return { ...q, progress: nextProg };
+        }
+        return q;
+      }));
+
+      // Reward material resources
+      if (activeQuestion.subject === "matemáticas") setKnowledge(k => k + 15);
+      if (activeQuestion.subject === "ciencias") setScience(s => s + 15);
+      if (activeQuestion.subject === "humanidades") setCulture(c => c + 15);
+      if (activeQuestion.subject === "programación") setTechnology(t => t + 15);
+
+      toast.success("✅ ¡Respuesta Correcta! Recursos y experiencia añadidos.");
     } else {
       setStreak(0);
-      toast.error("❌ Respuesta incorrecta. La racha se ha reiniciado.");
+      toast.error("❌ Respuesta Incorrecta. La racha de respuestas ha vuelto a 0.");
     }
   };
 
-  // Toggle debug shadows optionally (Rule: desactivadas por defecto)
-  const toggleShadows = () => {
-    if (!threeRef.current) return;
-    const { renderer, dirLight } = threeRef.current;
-    
-    const nextState = !threeRef.current.shadowsEnabled;
-    threeRef.current.shadowsEnabled = nextState;
-    
-    renderer.shadowMap.enabled = nextState;
-    dirLight.castShadow = nextState;
-    
-    if (nextState) {
-      toast.info("Sombras activadas (Solo recomendado para computadoras de escritorio).");
-    } else {
-      toast.info("Sombras desactivadas (Optimizado para móvil y estabilidad).");
-    }
+  const getCityLevelName = (lvl: number) => {
+    const names = [
+      "Aldea Educativa",
+      "Pueblo del Conocimiento",
+      "Ciudad Académica",
+      "Metrópolis Escolar",
+      "Capital Mundial del Saber"
+    ];
+    return names[lvl - 1] || names[0];
   };
 
   return (
-    <>
-      <header className="sticky top-0 z-30 bg-[#07110E] border-b border-[#143224] px-6 py-4 flex items-center justify-between text-white shadow-md">
+    <div className="min-h-screen bg-slate-950 text-white flex flex-col relative overflow-hidden select-none font-sans">
+      {/* HEADER HUD BAR */}
+      <header className="bg-[#050c0a] border-b border-[#143224] px-6 py-4 flex items-center justify-between z-30 shadow-md">
         <button onClick={() => navigate({ to: "/games" })} className="text-emerald-400 hover:text-white font-bold flex items-center gap-1.5 cursor-pointer bg-transparent border-none">
-          <ArrowLeft className="size-5" /> Regresar al Hub
+          <ArrowLeft className="size-5" /> Salir del Sandbox
         </button>
-        <div className="flex items-center gap-2">
-          <span className="text-xl animate-bounce">🔨</span>
-          <h1 className="font-display text-lg font-black tracking-wide bg-gradient-to-r from-emerald-400 to-indigo-400 bg-clip-text text-transparent">Mundo Constructor 3D</h1>
+        
+        {/* City Rank status */}
+        <div className="flex items-center gap-3">
+          <span className="text-2xl">🏛️</span>
+          <div>
+            <div className="text-xs text-slate-400 font-bold uppercase tracking-wider">Nivel de la Ciudad</div>
+            <div className="text-sm font-black text-emerald-400 uppercase tracking-widest">{getCityLevelName(cityLevel)} (Lv.{cityLevel})</div>
+          </div>
         </div>
-        <div className="flex items-center gap-1.5 bg-[#143224]/30 border border-[#1E4A35] px-3.5 py-1.5 rounded-full text-xs font-bold text-emerald-300">
-          <Sparkles className="size-3.5 text-emerald-400 animate-pulse" />
-          <span>Racha: {streak} 🔥</span>
+
+        {/* Global Statistics */}
+        <div className="flex items-center gap-4 text-xs font-bold text-slate-300">
+          <div className="bg-slate-900 border border-slate-800 px-3 py-1 rounded-xl flex items-center gap-1">
+            <Sparkles className="size-4 text-yellow-400" /> Racha: <span className="text-emerald-400">{streak} 🔥</span>
+          </div>
+          <div className="bg-slate-900 border border-slate-800 px-3 py-1 rounded-xl">
+            XP: <span className="text-indigo-400">{experience} pts</span>
+          </div>
         </div>
       </header>
 
-      <main className="mx-auto max-w-6xl px-5 pt-6 pb-24 text-white min-h-[calc(100vh-68px)] bg-[#040908] grid grid-cols-1 lg:grid-cols-12 gap-8 relative overflow-hidden">
-        {/* Decorative Grid Lights */}
-        <div className="absolute top-10 left-10 size-80 rounded-full bg-emerald-600/5 blur-[120px] pointer-events-none" />
-        <div className="absolute bottom-10 right-10 size-80 rounded-full bg-indigo-600/5 blur-[120px] pointer-events-none" />
+      {/* GAME LAYOUT CONTAINER */}
+      <main className="flex-1 grid grid-cols-12 relative overflow-hidden">
+        {/* LEFT COLUMN: VISUAL ENGINE SCREEN (8 COLS) */}
+        <div className="col-span-12 lg:col-span-9 relative bg-[#020504] overflow-hidden flex flex-col">
+          {/* THREEJS CANVAS ELEMENT */}
+          <canvas ref={canvasRef} className="w-full h-full block touch-none" />
 
-        {/* LEFT COLUMN: GRID CANVAS (7 COLS) */}
-        <div className="lg:col-span-7 bg-[#091512] border border-[#143224] rounded-3xl p-6 shadow-xl relative z-10 flex flex-col justify-between">
-          <div>
-            <div className="flex justify-between items-center border-b border-[#143224] pb-4">
-              <div>
-                <h2 className="font-display text-xl font-bold text-slate-100">Cuadrícula del Mundo 3D</h2>
-                <p className="text-[11px] text-slate-400 mt-0.5">Arrastra el mouse/dedo para orbitar. Haz clic sobre cualquier cuadrícula para edificar.</p>
-              </div>
-              <div className="flex gap-2">
-                <button
-                  onClick={toggleShadows}
-                  className="text-[10px] font-bold bg-[#143224]/40 hover:bg-[#143224]/80 border border-[#1e4a35]/40 px-3 py-1.5 rounded-xl transition cursor-pointer text-slate-400"
-                >
-                  Modo Sombras
-                </button>
-                <span className="text-xs bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2.5 py-0.5 rounded-full uppercase tracking-wider font-bold">
-                  Grid 3D
-                </span>
-              </div>
+          {/* REAL-TIME ENVIRONMENT HUD OVERLAYS */}
+          <div className="absolute top-4 left-4 right-4 flex justify-between pointer-events-none z-10 font-bold select-none">
+            {/* Coordinate Tracker & Active Biome */}
+            <div className="bg-slate-950/80 border border-emerald-500/20 backdrop-blur px-3 py-1.5 rounded-xl text-xs flex items-center gap-2 text-slate-200">
+              <Compass className="size-4 text-emerald-400 animate-spin" />
+              <span>Bioma: <span className="text-emerald-400 font-extrabold uppercase">{activeBiome}</span></span>
+              <span className="text-slate-400">· Coords: ({playerCoordinates.x}, {playerCoordinates.z})</span>
             </div>
 
-            {/* 3D Canvas Board */}
-            <div className="mt-6 w-full aspect-square max-w-[500px] mx-auto bg-[#030605] rounded-2xl border border-[#143224] relative overflow-hidden shadow-inner">
-              <canvas ref={canvasRef} className="w-full h-full block touch-none" />
-              {/* Overlay controls */}
-              <div className="absolute bottom-3 left-3 right-3 flex justify-between items-center bg-slate-950/70 border border-emerald-500/10 px-3 py-1.5 rounded-xl text-[10px] text-slate-400 select-none pointer-events-none">
-                <span>🖱️ Arrastrar para rotar · 📜 Scroll zoom</span>
-                <span className="font-bold text-emerald-400">WebGL Activo</span>
-              </div>
+            {/* Time / Climate Manager controller buttons */}
+            <div className="flex gap-2 pointer-events-auto">
+              <button
+                onClick={() => setWeather(w => w === "sunny" ? "rainy" : "sunny")}
+                className="bg-slate-950/80 hover:bg-slate-900 border border-[#143224] p-2 rounded-xl text-xs cursor-pointer flex items-center gap-1"
+              >
+                {weather === "sunny" ? <Sun className="size-4 text-yellow-400" /> : <CloudRain className="size-4 text-blue-400" />}
+                <span className="hidden sm:inline">Alternar Clima</span>
+              </button>
             </div>
           </div>
 
-          <div className="mt-6 pt-4 border-t border-[#143224] flex justify-between items-center text-[10px] text-slate-400 font-bold">
-            <span className="flex items-center gap-1.5"><span className="text-xs">🏠</span> Casas construidas: {grid.flat().filter(x => x === "casa").length}</span>
-            <span className="flex items-center gap-1.5"><span className="text-xs">🏫</span> Campus Universitarios: {grid.flat().filter(x => x === "universidad").length}</span>
-          </div>
-        </div>
+          {/* INTERACTION PROMPT ACTION */}
+          {interactionPrompt && (
+            <div className="absolute bottom-24 left-1/2 -translate-x-1/2 bg-amber-500 text-slate-950 px-6 py-3 rounded-full text-xs font-black tracking-widest shadow-2xl z-20 animate-bounce flex items-center gap-2 border border-slate-950">
+              <Info className="size-4 text-slate-950" />
+              <span>{interactionPrompt}</span>
+              <button
+                onClick={handleTriggerInteraction}
+                className="bg-slate-950 text-white px-3 py-1 rounded-full text-[10px] uppercase font-black tracking-wider cursor-pointer ml-3 border-none hover:bg-slate-900"
+              >
+                [ Ejecutar Acción ]
+              </button>
+            </div>
+          )}
 
-        {/* RIGHT COLUMN: RESOURCE & STUDY ACADEMY (5 COLS) */}
-        <div className="lg:col-span-5 space-y-6 relative z-10 flex flex-col justify-between">
-          
-          {/* Inventory Box */}
-          <div className="bg-[#091512] border border-[#143224] rounded-3xl p-6 shadow-lg">
-            <h3 className="font-display font-bold text-sm text-slate-100 uppercase tracking-widest border-b border-[#143224] pb-3 flex items-center gap-1.5">
-              <span className="text-sm">🖌️</span> Almacén de Recursos
-            </h3>
+          {/* BOTTOM CONTROLS DIRECTORY BUTTONS */}
+          <div className="absolute bottom-6 left-4 right-4 bg-slate-950/90 border border-slate-800 backdrop-blur p-3.5 rounded-2xl flex items-center justify-between z-10 text-xs font-bold shadow-2xl">
+            <div className="flex gap-2">
+              <button
+                onClick={() => { setActiveTab("explorer"); setBlockBuildMode(null); }}
+                className={`px-4 py-2 rounded-xl transition cursor-pointer flex items-center gap-1.5 ${activeTab === "explorer" && !blockBuildMode ? "bg-emerald-500 text-slate-950" : "bg-slate-900 hover:bg-slate-800"}`}
+              >
+                <User className="size-4" /> Modo Explorar
+              </button>
+              <button
+                onClick={() => { setActiveTab("build"); setBlockBuildMode(null); }}
+                className={`px-4 py-2 rounded-xl transition cursor-pointer flex items-center gap-1.5 ${activeTab === "build" ? "bg-emerald-500 text-slate-950" : "bg-slate-900 hover:bg-slate-800"}`}
+              >
+                <Wrench className="size-4" /> Planos Campus
+              </button>
+              <button
+                onClick={() => { setActiveTab("custom_blocks"); setBlockBuildMode("brick"); }}
+                className={`px-4 py-2 rounded-xl transition cursor-pointer flex items-center gap-1.5 ${activeTab === "custom_blocks" ? "bg-emerald-500 text-slate-950" : "bg-slate-900 hover:bg-slate-800"}`}
+              >
+                <Layers className="size-4" /> Bloques Libres
+              </button>
+            </div>
             
-            <div className="grid grid-cols-2 gap-3 mt-4 text-xs font-bold">
-              <div className="bg-[#040908] p-3 rounded-xl border border-[#143224] flex items-center justify-between">
-                <span className="flex items-center gap-1.5">🧱 Bloques (Math)</span>
-                <span className="text-emerald-400 text-sm font-black">{blocks}</span>
-              </div>
-              <div className="bg-[#040908] p-3 rounded-xl border border-[#143224] flex items-center justify-between">
-                <span className="flex items-center gap-1.5">🧪 Tecnología (Ciencia)</span>
-                <span className="text-indigo-400 text-sm font-black">{techMaterials}</span>
-              </div>
-              <div className="bg-[#040908] p-3 rounded-xl border border-[#143224] flex items-center justify-between">
-                <span className="flex items-center gap-1.5">📚 Cultura (Historia)</span>
-                <span className="text-purple-400 text-sm font-black">{cultureMaterials}</span>
-              </div>
-              <div className="bg-[#040908] p-3 rounded-xl border border-[#143224] flex items-center justify-between">
-                <span className="flex items-center gap-1.5">⚡ Eficiencia (Inglés)</span>
-                <span className="text-yellow-400 text-sm font-black">{efficiencyUpgrades}</span>
-              </div>
-              <div className="bg-[#040908] p-3 rounded-xl border border-[#143224] flex items-center justify-between col-span-2">
-                <span className="flex items-center gap-1.5">🏛️ Planos (Lógica)</span>
-                <span className="text-pink-400 text-sm font-black">{blueprints}</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Academic Resource Academy */}
-          <div className="bg-[#091512] border border-[#143224] rounded-3xl p-6 shadow-lg">
-            <h3 className="font-display font-bold text-sm text-slate-100 uppercase tracking-widest border-b border-[#143224] pb-3 flex items-center gap-1.5">
-              <GraduationCap className="size-4 text-emerald-400" /> Academia de Recursos
-            </h3>
-            <p className="text-[11px] text-slate-400 mt-2">Responde correctamente para añadir materiales a tu inventario.</p>
-            
-            <div className="flex flex-col gap-2 mt-4 text-xs font-bold">
-              <button
-                onClick={() => triggerQuestion("matemáticas")}
-                className="w-full py-2.5 px-4 bg-[#040908] border border-[#143224] hover:bg-[#11241E] hover:border-emerald-500/40 rounded-xl transition text-left flex justify-between items-center cursor-pointer"
-              >
-                <span>🧮 Academia de Matemáticas</span>
-                <span className="text-[9px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/25 px-2 py-0.5 rounded">+4 Bloques</span>
-              </button>
-              <button
-                onClick={() => triggerQuestion("ciencias")}
-                className="w-full py-2.5 px-4 bg-[#040908] border border-[#143224] hover:bg-[#11241E] hover:border-emerald-500/40 rounded-xl transition text-left flex justify-between items-center cursor-pointer"
-              >
-                <span>🧪 Academia de Ciencias</span>
-                <span className="text-[9px] bg-indigo-500/10 text-indigo-400 border border-indigo-500/25 px-2 py-0.5 rounded">+2 Tecnológicos</span>
-              </button>
-              <button
-                onClick={() => triggerQuestion("historia")}
-                className="w-full py-2.5 px-4 bg-[#040908] border border-[#143224] hover:bg-[#11241E] hover:border-emerald-500/40 rounded-xl transition text-left flex justify-between items-center cursor-pointer"
-              >
-                <span>🏛️ Academia de Historia</span>
-                <span className="text-[9px] bg-purple-500/10 text-purple-400 border border-purple-500/25 px-2 py-0.5 rounded">+2 Culturales</span>
-              </button>
-              <button
-                onClick={() => triggerQuestion("inglés")}
-                className="w-full py-2.5 px-4 bg-[#040908] border border-[#143224] hover:bg-[#11241E] hover:border-emerald-500/40 rounded-xl transition text-left flex justify-between items-center cursor-pointer"
-              >
-                <span>🇬🇧 Academia de Inglés</span>
-                <span className="text-[9px] bg-yellow-500/10 text-yellow-400 border border-yellow-500/25 px-2 py-0.5 rounded">+2 Eficiencia</span>
-              </button>
-              <button
-                onClick={() => triggerQuestion("lógica")}
-                className="w-full py-2.5 px-4 bg-[#040908] border border-[#143224] hover:bg-[#11241E] hover:border-emerald-500/40 rounded-xl transition text-left flex justify-between items-center cursor-pointer"
-              >
-                <span>🧩 Desafío de Lógica</span>
-                <span className="text-[9px] bg-pink-500/10 text-pink-400 border border-pink-500/25 px-2 py-0.5 rounded">+1 Planos</span>
-              </button>
+            <div className="text-[10px] text-slate-400 select-none hidden md:block">
+              ⌨️ Controles: WASD (Movimiento) · Shift (Correr) · Espacio (Saltar) · Mouse (Arrastrar para rotar cámara)
             </div>
           </div>
         </div>
 
-        {/* DIALOGS / OVERLAYS MODALS */}
-
-        {/* 1. BUILD MENU OVERLAY */}
-        {showBuildMenu && activeCell && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-in fade-in duration-200">
-            <div className="w-full max-w-lg bg-[#091512] border-2 border-emerald-500/25 rounded-3xl p-6 shadow-2xl relative overflow-hidden animate-in zoom-in-95 duration-200">
-              <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-emerald-500 to-indigo-500" />
-              <div className="flex justify-between items-center border-b border-[#143224] pb-3">
-                <h3 className="font-display text-lg font-bold text-slate-100 flex items-center gap-1.5">
-                  <span className="text-lg">🔨</span> Menú de Edificación (Celda {activeCell.r}, {activeCell.c})
-                </h3>
-                <button
-                  onClick={() => { setShowBuildMenu(false); setActiveCell(null); }}
-                  className="text-slate-400 hover:text-white font-bold bg-transparent border-none cursor-pointer"
-                >
-                  ✕
-                </button>
+        {/* RIGHT COLUMN: RESOURCE ALMACÉN & TABS (4 COLS) */}
+        <div className="col-span-12 lg:col-span-3 border-l border-slate-900 bg-[#060c0a] flex flex-col justify-between overflow-y-auto max-h-[calc(100vh-68px)]">
+          {/* Inventory Almacén header */}
+          <div className="p-6 border-b border-slate-900">
+            <h3 className="text-xs uppercase font-black tracking-widest text-slate-400 flex items-center gap-1.5 mb-4">
+              <span>🎒</span> Almacén Educativo
+            </h3>
+            
+            <div className="grid grid-cols-2 gap-2 text-xs font-bold">
+              <div className="bg-slate-950 border border-[#143224] p-3 rounded-xl flex items-center justify-between">
+                <span>📚 Conocimiento</span>
+                <span className="text-emerald-400 font-extrabold text-sm">{Math.floor(knowledge)}</span>
               </div>
+              <div className="bg-slate-950 border border-[#143224] p-3 rounded-xl flex items-center justify-between">
+                <span>🧪 Ciencia</span>
+                <span className="text-indigo-400 font-extrabold text-sm">{Math.floor(science)}</span>
+              </div>
+              <div className="bg-slate-950 border border-[#143224] p-3 rounded-xl flex items-center justify-between">
+                <span>🎨 Cultura</span>
+                <span className="text-purple-400 font-extrabold text-sm">{Math.floor(culture)}</span>
+              </div>
+              <div className="bg-slate-950 border border-[#143224] p-3 rounded-xl flex items-center justify-between">
+                <span>💻 Tecnología</span>
+                <span className="text-yellow-400 font-extrabold text-sm">{Math.floor(technology)}</span>
+              </div>
+            </div>
+          </div>
 
-              {/* Recipes list */}
-              <div className="mt-4 space-y-2.5 max-h-[300px] overflow-y-auto pr-1 scrollbar-thin">
-                {RECIPES.map((recipe) => {
-                  const canAfford = 
-                    blocks >= recipe.cost.blocks &&
-                    techMaterials >= recipe.cost.tech &&
-                    cultureMaterials >= recipe.cost.culture &&
-                    blueprints >= recipe.cost.blueprints;
-                  const isLockedByStreak = recipe.reqStreak > 0 && streak < recipe.reqStreak;
+          {/* Dynamic Tab Contents */}
+          <div className="flex-1 p-6">
+            {activeTab === "explorer" && (
+              <div className="space-y-4">
+                <h4 className="text-sm font-black text-slate-200">🚩 Estado del Campus</h4>
+                <p className="text-xs text-slate-400 leading-normal">
+                  Camina libremente con tu avatar. Explora los diferentes biomas, ingresa a las aulas y completa las preguntas de los cimientos amarillos flotantes para edificar.
+                </p>
+
+                <div className="bg-slate-950/50 border border-slate-900 rounded-2xl p-4 space-y-3 text-xs">
+                  <div className="flex justify-between border-b border-slate-900 pb-2">
+                    <span className="text-slate-400 font-medium">Estructuras construidas:</span>
+                    <span className="font-extrabold text-emerald-400">{structures.filter(s=>s.status==="completado").length}</span>
+                  </div>
+                  <div className="flex justify-between border-b border-slate-900 pb-2">
+                    <span className="text-slate-400 font-medium">Cimientos activos:</span>
+                    <span className="font-extrabold text-yellow-400">{structures.filter(s=>s.status==="cimientos").length}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-400 font-medium">Bloques personalizados:</span>
+                    <span className="font-extrabold text-indigo-400">{customBlocks.length}</span>
+                  </div>
+                </div>
+
+                {/* Quests Summary */}
+                <div className="pt-4 space-y-2.5">
+                  <h5 className="text-xs font-black uppercase text-slate-400">Objetivos Académicos</h5>
+                  {quests.map(q => (
+                    <div key={q.id} className="bg-slate-950 border border-slate-900 p-3 rounded-xl space-y-1.5">
+                      <div className="flex justify-between text-xs font-bold">
+                        <span className={q.completed ? "text-emerald-400 line-through" : "text-slate-200"}>{q.title}</span>
+                        <span className="text-slate-400">{q.progress} / {q.target}</span>
+                      </div>
+                      <p className="text-[10px] text-slate-400 leading-normal">{q.desc}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {activeTab === "build" && (
+              <div className="space-y-4">
+                <div className="flex justify-between items-center">
+                  <h4 className="text-sm font-black text-slate-200">🔨 Colocar Planos</h4>
+                  <span className="text-[10px] bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded-full font-bold">Planos 3D</span>
+                </div>
+                <p className="text-xs text-slate-400 leading-normal">
+                  Selecciona una estructura para proyectar sus cimientos. Requiere Conocimiento y Ciencia.
+                </p>
+
+                <div className="space-y-2.5 max-h-[300px] overflow-y-auto pr-1">
+                  {PREFABS.map(p => (
+                    <div key={p.id} className="bg-slate-950 border border-[#143224] p-3.5 rounded-xl space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-bold text-slate-200 flex items-center gap-1">{p.icon} {p.name}</span>
+                        <button
+                          onClick={() => handlePlaceStructure(p)}
+                          className="px-3 py-1 bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-[10px] font-black uppercase rounded-lg border-none cursor-pointer transition"
+                        >
+                          Ubicar
+                        </button>
+                      </div>
+                      <p className="text-[10px] text-slate-400 leading-normal">{p.desc}</p>
+                      
+                      {/* Cost metrics */}
+                      <div className="flex gap-2.5 text-[9px] font-black uppercase text-slate-500">
+                        {p.cost.knowledge > 0 && <span className={knowledge >= p.cost.knowledge ? "text-emerald-400" : "text-rose-400"}>📚 {p.cost.knowledge} Con</span>}
+                        {p.cost.science > 0 && <span className={science >= p.cost.science ? "text-indigo-400" : "text-rose-400"}>🧪 {p.cost.science} Cie</span>}
+                        {p.cost.culture > 0 && <span className={culture >= p.cost.culture ? "text-purple-400" : "text-rose-400"}>🎨 {p.cost.culture} Cult</span>}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {activeTab === "custom_blocks" && (
+              <div className="space-y-4">
+                <h4 className="text-sm font-black text-slate-200">🧱 Construcción de Bloques</h4>
+                <p className="text-xs text-slate-400 leading-normal">
+                  Coloca bloques de construcción libres en el suelo al estilo Minecraft. Cada bloque colocado consume <span className="text-emerald-400 font-bold">2 de Conocimiento</span>.
+                </p>
+
+                <div className="grid grid-cols-2 gap-2">
+                  {(["brick", "wood", "glass", "roof"] as const).map(bt => (
+                    <button
+                      key={bt}
+                      onClick={() => setBlockBuildMode(bt)}
+                      className={`p-3.5 border rounded-xl font-black capitalize text-xs transition cursor-pointer flex flex-col items-center gap-1.5 ${blockBuildMode === bt ? "border-emerald-500 bg-emerald-500/10 text-emerald-400" : "border-slate-800 bg-slate-950 hover:bg-slate-900"}`}
+                    >
+                      <span className="text-xl">
+                        {bt === "brick" && "🧱"}
+                        {bt === "wood" && "🪵"}
+                        {bt === "glass" && "🪟"}
+                        {bt === "roof" && "🏠"}
+                      </span>
+                      {bt === "brick" ? "Ladrillo" : bt === "wood" ? "Madera" : bt === "glass" ? "Cristal" : "Techo"}
+                    </button>
+                  ))}
+                </div>
+
+                {blockBuildMode && (
+                  <div className="pt-2">
+                    <button
+                      onClick={handlePlaceCustomBlock}
+                      className="w-full py-2.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs rounded-xl border-none cursor-pointer transition"
+                    >
+                      Colocar Bloque Actual (E)
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
+          <div className="p-6 border-t border-slate-900 text-center text-[10px] text-slate-500">
+            Mundo Constructor 3D v2.0 · Lybanhi Sandbox
+          </div>
+        </div>
+      </main>
+
+      {/* DIALOG ACADEMIC TRIVIA QUESTION MODAL */}
+      {activeQuestion && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="w-full max-w-lg bg-[#091512] border-2 border-emerald-500/25 rounded-3xl p-6 shadow-2xl relative overflow-hidden animate-in zoom-in-95 duration-200 text-white">
+            <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-emerald-500 to-indigo-500" />
+            
+            <div className="flex justify-between items-center border-b border-[#143224] pb-3 text-xs text-slate-400 font-bold">
+              <span className="bg-emerald-500/10 text-emerald-300 border border-emerald-500/20 px-3 py-1 rounded-full uppercase tracking-wider">
+                Desafío: {activeQuestion.subject} ({activeQuestion.subtopic})
+              </span>
+              <span className="text-emerald-400">Racha: {streak} 🔥</span>
+            </div>
+
+            <div className="mt-5 space-y-4">
+              <p className="text-sm font-bold text-slate-200 leading-relaxed">{activeQuestion.prompt}</p>
+
+              {/* Feedback dialog */}
+              {roundFeedback !== null && (
+                <div className="p-4 rounded-xl text-xs bg-[#040908] border border-[#143224] space-y-2">
+                  <div className="flex items-center gap-1.5 font-bold">
+                    {roundFeedback ? (
+                      <span className="text-emerald-400 text-sm flex items-center gap-1">✅ ¡Correcto!</span>
+                    ) : (
+                      <span className="text-rose-500 text-sm flex items-center gap-1">❌ Incorrecto</span>
+                    )}
+                  </div>
+                  <p className="text-[10px] text-slate-400 font-normal leading-relaxed">
+                    <span className="font-bold text-emerald-400 block mb-0.5">Explicación:</span>
+                    {activeQuestion.explanation}
+                  </p>
+                </div>
+              )}
+
+              {/* Options */}
+              <div className="grid gap-2.5 text-left pt-2">
+                {activeQuestion.options.map((option, idx) => {
+                  let btnStyle = "border-[#143224] bg-[#040908] hover:bg-[#11241E] text-slate-300 border";
+                  if (selectedOption !== null) {
+                    if (idx === activeQuestion.correctIndex) {
+                      btnStyle = "border-emerald-500 bg-emerald-500/20 text-emerald-400 border-2";
+                    } else if (idx === selectedOption) {
+                      btnStyle = "border-rose-500 bg-rose-500/20 text-rose-400 border-2";
+                    } else {
+                      btnStyle = "opacity-35 border-[#143224] bg-[#040908]";
+                    }
+                  }
 
                   return (
-                    <div 
-                      key={recipe.id}
-                      className={`flex items-center justify-between p-3.5 rounded-xl border ${
-                        canAfford && !isLockedByStreak
-                          ? "border-[#1E4A35] bg-[#0C1E1A]" 
-                          : "border-[#143224]/30 bg-[#06100D] opacity-60"
-                      }`}
+                    <button
+                      key={idx}
+                      disabled={selectedOption !== null}
+                      onClick={() => handleSubmitAnswer(idx)}
+                      className={`w-full py-3 px-4 rounded-xl text-xs font-bold transition active:scale-[0.99] cursor-pointer text-left ${btnStyle}`}
                     >
-                      <div className="flex items-center gap-3">
-                        <span className="text-2xl">{recipe.icon}</span>
-                        <div>
-                          <h4 className="text-xs font-bold text-slate-200">{recipe.name}</h4>
-                          <p className="text-[10px] text-slate-400 leading-normal mt-0.5">{recipe.desc}</p>
-                          
-                          {/* Cost Badge list */}
-                          <div className="flex gap-2 mt-1.5 flex-wrap text-[9px] font-black uppercase text-slate-400">
-                            {recipe.cost.blocks > 0 && <span className={blocks >= recipe.cost.blocks ? "text-emerald-400" : "text-rose-400"}>🧱 {recipe.cost.blocks} Bl</span>}
-                            {recipe.cost.tech > 0 && <span className={techMaterials >= recipe.cost.tech ? "text-indigo-400" : "text-rose-400"}>🧪 {recipe.cost.tech} Tech</span>}
-                            {recipe.cost.culture > 0 && <span className={cultureMaterials >= recipe.cost.culture ? "text-purple-400" : "text-rose-400"}>📚 {recipe.cost.culture} Cult</span>}
-                            {recipe.cost.blueprints > 0 && <span className={blueprints >= recipe.cost.blueprints ? "text-pink-400" : "text-rose-400"}>🏛️ {recipe.cost.blueprints} Plan</span>}
-                            {recipe.reqStreak > 0 && <span className={streak >= recipe.reqStreak ? "text-yellow-400 font-bold" : "text-rose-400 font-bold"}>🔥 Racha {recipe.reqStreak}</span>}
-                          </div>
-                        </div>
-                      </div>
-
-                      <button
-                        disabled={!canAfford || isLockedByStreak}
-                        onClick={() => handleBuild(recipe)}
-                        className="h-8 px-4 bg-emerald-500 hover:bg-emerald-400 text-[#040908] font-bold text-[10px] rounded-lg border-none transition active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
-                      >
-                        Construir
-                      </button>
-                    </div>
+                      {option}
+                    </button>
                   );
                 })}
               </div>
 
-              {/* Demolish Button */}
-              {grid[activeCell.r][activeCell.c] !== "vacio" && (
-                <div className="mt-4 pt-3 border-t border-[#143224]">
+              {/* Next button */}
+              {selectedOption !== null && (
+                <div className="pt-3 border-t border-[#143224] flex justify-end">
                   <button
-                    onClick={handleDemolish}
-                    className="w-full py-2 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 hover:border-rose-400 text-rose-400 font-bold text-[10px] rounded-xl cursor-pointer transition active:scale-95"
+                    onClick={() => {
+                      setActiveQuestion(null);
+                      setCurrentQuizTarget(null);
+                    }}
+                    className="h-9 px-6 bg-emerald-500 hover:bg-emerald-400 text-[#040908] font-bold text-xs rounded-lg border-none cursor-pointer transition active:scale-95"
                   >
-                    Demoler Edificación Actual 🧹
+                    Continuar Construyendo
                   </button>
                 </div>
               )}
             </div>
           </div>
-        )}
-
-        {/* 2. ZONE UNLOCK REQUEST MODAL */}
-        {unlockTargetZone !== null && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-in fade-in duration-200">
-            <div className="w-full max-w-md bg-[#091512] border-2 border-amber-500/25 rounded-3xl p-6 shadow-2xl relative overflow-hidden animate-in zoom-in-95 duration-200">
-              <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-amber-500 to-red-500" />
-              <div className="flex justify-between items-center border-b border-[#143224] pb-3">
-                <h3 className="font-display text-base font-bold text-slate-100 flex items-center gap-1.5">
-                  <span>🔒 Desbloquear Sector {unlockTargetZone}</span>
-                </h3>
-                <button
-                  onClick={() => setUnlockTargetZone(null)}
-                  className="text-slate-400 hover:text-white font-bold bg-transparent border-none cursor-pointer"
-                >
-                  ✕
-                </button>
-              </div>
-
-              <div className="mt-4 space-y-4">
-                <p className="text-xs text-slate-300 leading-relaxed">
-                  Este sector del campus se encuentra restringido. Para expandir tu civilización escolar hacia esta área, debes superar una serie de acertijos lógicos.
-                </p>
-                <div className="p-3 bg-[#11241E]/40 border border-emerald-500/10 rounded-xl flex justify-between items-center text-xs font-bold text-emerald-400">
-                  <span>Preguntas requeridas:</span>
-                  <span>{unlockQuestionsSolved} / {ZONE_UNLOCK_REQUIREMENTS[unlockTargetZone]}</span>
-                </div>
-
-                <div className="pt-2 flex gap-3">
-                  <button
-                    onClick={() => setUnlockTargetZone(null)}
-                    className="w-1/2 py-2 border border-[#143224] text-xs font-bold rounded-xl text-slate-400 hover:bg-slate-800 transition"
-                  >
-                    Volver al Mapa
-                  </button>
-                  <button
-                    onClick={handleStartZoneUnlockChallenge}
-                    className="w-1/2 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-bold rounded-xl transition active:scale-95 cursor-pointer"
-                  >
-                    Iniciar Desafío
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* 3. ACADEMIC QUESTION OVERLAY */}
-        {activeQuestion && academicSubject && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-in fade-in duration-200">
-            <div className="w-full max-w-lg bg-[#091512] border-2 border-emerald-500/25 rounded-3xl p-6 shadow-2xl relative overflow-hidden animate-in zoom-in-95 duration-200">
-              <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-emerald-500 to-indigo-500" />
-              
-              <div className="flex justify-between items-center border-b border-[#143224] pb-3 text-xs text-slate-400 font-bold">
-                <span className="bg-emerald-500/10 text-emerald-300 border border-emerald-500/20 px-3 py-1 rounded-full uppercase tracking-wider">
-                  {unlockTargetZone !== null ? `Desafío de Zona: Lógica` : `Academia: ${academicSubject}`}
-                </span>
-                <span className="text-emerald-400">Racha: {streak} 🔥</span>
-              </div>
-
-              <div className="mt-5 space-y-4">
-                <p className="text-sm font-bold text-slate-200 leading-relaxed">{activeQuestion.prompt}</p>
-
-                {/* Feedback overlay */}
-                {roundFeedback !== null && (
-                  <div className="p-4 rounded-xl text-xs bg-[#040908] border border-[#143224] space-y-2">
-                    <div className="flex items-center gap-1.5 font-bold">
-                      {roundFeedback ? (
-                        <span className="text-emerald-400 text-sm flex items-center gap-1">✅ ¡Correcto!</span>
-                      ) : (
-                        <span className="text-rose-500 text-sm flex items-center gap-1">❌ Incorrecto</span>
-                      )}
-                    </div>
-                    <p className="text-[10px] text-slate-400 font-normal leading-relaxed">
-                      <span className="font-bold text-emerald-400 block mb-0.5">Explicación:</span>
-                      {activeQuestion.explanation}
-                    </p>
-                  </div>
-                )}
-
-                {/* Option list */}
-                <div className="grid gap-2.5 text-left pt-2">
-                  {activeQuestion.options.map((option, idx) => {
-                    let btnStyle = "border-[#143224] bg-[#040908] hover:bg-[#11241E] text-slate-300 border";
-                    if (selectedOption !== null) {
-                      if (idx === activeQuestion.correctIndex) {
-                        btnStyle = "border-emerald-500 bg-emerald-500/20 text-emerald-400 border-2";
-                      } else if (idx === selectedOption) {
-                        btnStyle = "border-rose-500 bg-rose-500/20 text-rose-400 border-2";
-                      } else {
-                        btnStyle = "opacity-35 border-[#143224] bg-[#040908]";
-                      }
-                    }
-
-                    return (
-                      <button
-                        key={idx}
-                        disabled={selectedOption !== null}
-                        onClick={() => submitAnswer(idx)}
-                        className={`w-full py-3 px-4 rounded-xl text-xs font-bold transition active:scale-[0.99] cursor-pointer text-left ${btnStyle}`}
-                      >
-                        {option}
-                      </button>
-                    );
-                  })}
-                </div>
-
-                {/* Next button */}
-                {selectedOption !== null && (
-                  <div className="pt-3 border-t border-[#143224] flex justify-end">
-                    <button
-                      onClick={() => {
-                        setActiveQuestion(null);
-                        // If it's a zone unlock challenge, do not clear target zone until fully completed
-                        if (unlockTargetZone === null) {
-                          setAcademicSubject(null);
-                        }
-                      }}
-                      className="h-9 px-6 bg-emerald-500 hover:bg-emerald-400 text-[#040908] font-bold text-xs rounded-lg border-none cursor-pointer transition active:scale-95"
-                    >
-                      Continuar y Cerrar
-                    </button>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
-      </main>
-    </>
+        </div>
+      )}
+    </div>
   );
 }
