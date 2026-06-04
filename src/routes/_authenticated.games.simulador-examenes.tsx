@@ -126,6 +126,16 @@ function SimuladorExamenesGame() {
     }
   };
 
+  const moveStep = (fromIndex: number, toIndex: number) => {
+    setOrderedSteps(prev => {
+      if (toIndex < 0 || toIndex >= prev.length) return prev;
+      const next = [...prev];
+      const [moved] = next.splice(fromIndex, 1);
+      next.splice(toIndex, 0, moved);
+      return next;
+    });
+  };
+
   const speakAudio = (text: string) => {
     if (typeof window !== "undefined" && window.speechSynthesis) {
       window.speechSynthesis.cancel();

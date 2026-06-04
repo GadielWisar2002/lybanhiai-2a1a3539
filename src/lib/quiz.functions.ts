@@ -256,28 +256,22 @@ export const getDashboard = createServerFn({ method: "GET" })
   .handler(async ({ context }) => {
     const { supabase, userId } = context;
     const [profileRes, streakRes, recsRes] = await Promise.all([
-      supabase.from("profiles").select("full_name, language, active_blook_id, avatar_config, unlocked_avatar_items, role").eq("id", userId).maybeSingle(),
+      supabase.from("profiles").select("full_name, language, active_blook_id, avatar_config, unlocked_avatar_items").eq("id", userId).maybeSingle(),
       supabase.from("streaks").select("*").eq("user_id", userId).maybeSingle(),
       supabase.from("recommendations").select("id, career_name, match_score, tags, language").eq("user_id", userId).order("match_score", { ascending: false }).limit(3),
     ]);
 
     let profile = profileRes.data;
     let email = "";
+    let isDeveloper = false;
 
-    // Server-side database role verification and promotion for developer accounts
+    // Server-side developer verification from authenticated claims.
     try {
       email = (context.claims as any)?.email ?? "";
       const emailLower = email.toLowerCase();
-      const isDevEmail = emailLower === "debanhivillanueva@colegiomaranatha.edu.mx";
-      
-      if (isDevEmail) {
-        if (profile) {
-          profile.role = "developer";
-        }
-        await supabase.from("profiles").update({ role: "developer" }).eq("id", userId);
-      }
+      isDeveloper = emailLower === "debanhivillanueva@colegiomaranatha.edu.mx";
     } catch (err) {
-      console.error("Error checking/updating developer role in getDashboard:", err);
+      console.error("Error checking developer role in getDashboard:", err);
     }
 
     // Fetch all user's quiz attempts to calculate actual real XP
@@ -359,6 +353,7 @@ export const getDashboard = createServerFn({ method: "GET" })
     return {
       profile: profile,
       email: email,
+      isDeveloper,
       streak: {
         current_streak: current,
         longest_streak: s?.longest_streak ?? 0,

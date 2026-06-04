@@ -75,8 +75,8 @@ function GamesHub() {
 
   const { user } = useAuth();
   const isDeveloper = user?.email?.toLowerCase() === "debanhivillanueva@colegiomaranatha.edu.mx" || 
-                      dash?.email?.toLowerCase() === "debanhivillanueva@colegiomaranatha.edu.mx" || 
-                      dash?.profile?.role === "developer";
+                      dash?.email?.toLowerCase() === "debanhivillanueva@colegiomaranatha.edu.mx" ||
+                      dash?.isDeveloper === true;
 
   const coins = dash?.streak.coins ?? 0;
   const totalXp = dash?.streak.total_xp ?? 0;
@@ -267,7 +267,7 @@ function GamesHub() {
             <h1 className="font-display text-2xl font-bold">{t("games.title", { defaultValue: "Games" })}</h1>
             <div className="flex flex-col gap-0.5 text-xs text-muted-foreground">
               <p>{t("games.subtitle", { defaultValue: "Spend coins to play & collect avatars!" })}</p>
-              <p className="text-[10px] font-bold text-slate-500">Sesión: {dash?.email} | Rol: {isDeveloper ? "developer" : (dash?.profile?.role || "student")}</p>
+              <p className="text-[10px] font-bold text-slate-500">Sesión: {dash?.email} | Rol: {isDeveloper ? "developer" : "student"}</p>
             </div>
           </div>
           <div className="flex items-center gap-3">
