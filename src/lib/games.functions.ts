@@ -170,6 +170,17 @@ export const unlockGame = createServerFn({ method: "POST" })
       "order-idea": 400,
       "connect-area": 500,
       "dictation": 600,
+      "criaturas-conocimiento": 100,
+      "rpg-academico": 200,
+      "centro-investigacion": 300,
+      "torre-infinita": 400,
+      "escape-room": 500,
+      "runner-conocimiento": 600,
+      "battle-royale": 700,
+      "laboratorio-inventores": 800,
+      "ciudad-conocimiento": 900,
+      "ligas-campeones": 1000,
+      "simulador-examenes": 150,
     };
     
     const cost = costs[data.gameId];
