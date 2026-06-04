@@ -326,231 +326,323 @@ function GamesHub() {
 
         {/* Play Tab */}
         {activeTab === "play" && (
-          <section className="mt-5 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-            {[
-              {
-                id: "wordle",
-                title: "Wordle de carreras",
-                style: "Léxico / Vocabulario",
-                desc: "Adivina palabras relacionadas con carreras universitarias y áreas de estudio en 6 intentos. Incluye retroalimentación por color y tarjeta de carrera.",
-                cost: 100,
-                path: "/games/wordle",
-                styleColor: "bg-blue-500/10 text-blue-500 border-blue-500/20",
-              },
-              {
-                id: "complete-concept",
-                title: "Completa el concepto",
-                style: "Drag & Drop / Conceptos",
-                desc: "Arrastra la palabra correcta al espacio en blanco para completar la definición académica antes de que se agote el tiempo (60s).",
-                cost: 200,
-                path: "/games/complete-concept",
-                styleColor: "bg-emerald-500/15 text-emerald-500 border-emerald-500/25",
-              },
-              {
-                id: "hangman",
-                title: "Ahorcado universitario",
-                style: "Ahorcado / Términos",
-                desc: "Salva al personaje con estados de ánimo adivinando términos técnicos y académicos reales. Obtén pistas de carreras universitarias.",
-                cost: 300,
-                path: "/games/hangman",
-                styleColor: "bg-purple-500/10 text-purple-500 border-purple-500/20",
-              },
-              {
-                id: "order-idea",
-                title: "Ordena la idea",
-                style: "Reconstrucción de ideas",
-                desc: "Ordena fragmentos de definiciones, hipótesis o conceptos académicos mezclados aleatoriamente en el menor tiempo posible.",
-                cost: 400,
-                path: "/games/order-idea",
-                styleColor: "bg-amber-500/10 text-amber-500 border-amber-500/20",
-              },
-              {
-                id: "connect-area",
-                title: "Conecta tu área",
-                style: "Asociación de pares",
-                desc: "Conecta términos con áreas de estudio, herramientas con carreras, o conceptos con su definición bajo un límite de 60 segundos.",
-                cost: 500,
-                path: "/games/connect-area",
-                styleColor: "bg-cyan-500/10 text-cyan-500 border-cyan-500/20",
-              },
-              {
-                id: "dictation",
-                title: "Dictado académico con IA",
-                style: "Dictado / Ortografía",
-                desc: "Escucha términos universitarios reales en audio y escríbelos. El análisis ortográfico detecta errores y te enseña las reglas.",
-                cost: 600,
-                path: "/games/dictation",
-                styleColor: "bg-rose-500/10 text-rose-500 border-rose-500/20",
-              },
-              {
-                id: "gold-quest",
-                title: "Gold Quest",
-                style: "Blooket Style",
-                desc: "Answer fast-paced trivia questions correctly to open mystery chests. Steal or double your gold against AI players!",
-                cost: 500,
-                path: "/games/gold-quest",
-                styleColor: "bg-primary/10 text-primary border-primary/20",
-              },
-              {
-                id: "space-rush",
-                title: "Space Rush",
-                style: "Quizizz Style",
-                desc: "Blast off into orbit! Answer questions correctly to accelerate your rocket ship and beat simulated competitors.",
-                cost: 1000,
-                path: "/games/space-rush",
-                styleColor: "bg-success/15 text-success border-success/20",
-              },
-              {
-                id: "criaturas-conocimiento",
-                title: "Criaturas del Conocimiento",
-                style: "Colección / Combate RPG",
-                desc: "Explora y captura criaturas académicas reales basadas en asignaturas escolares. Entrénalas y enfréntate a jefes legendarios.",
-                cost: 100,
-                path: "/games/criaturas-conocimiento",
-                styleColor: "bg-orange-500/10 text-orange-500 border-orange-500/20",
-              },
-              {
-                id: "rpg-academico",
-                title: "RPG Académico",
-                style: "Aventura RPG",
-                desc: "Explora un mundo con múltiples campus regionales que representan disciplinas de estudio. Completa quests principales e incrementa tu reputación.",
-                cost: 200,
-                path: "/games/rpg-academico",
-                styleColor: "bg-teal-500/10 text-teal-500 border-teal-500/20",
-              },
-              {
-                id: "centro-investigacion",
-                title: "Centro de Investigación",
-                style: "Simulador Científico",
-                desc: "Desarrolla proyectos en laboratorios científicos de materias exactas, humanidades y salud. Investiga, patenta y publica papers.",
-                cost: 300,
-                path: "/games/centro-investigacion",
-                styleColor: "bg-indigo-500/10 text-indigo-500 border-indigo-500/20",
-              },
-              {
-                id: "torre-infinita",
-                title: "Torre Infinita del Saber",
-                style: "Progreso / Supervivencia",
-                desc: "Asciende por pisos con quizzes de dificultad incremental, modificadores aleatorios extremos y guardianes de piso desafiantes.",
-                cost: 400,
-                path: "/games/torre-infinita",
-                styleColor: "bg-violet-500/10 text-violet-500 border-violet-500/20",
-              },
-              {
-                id: "escape-room",
-                title: "Escape Room Educativo",
-                style: "Point-and-Click / Puzzle",
-                desc: "Resuelve acertijos lógicos y académicos dentro de múltiples habitaciones interactivas (Laboratorio, Observatorio, Biblioteca).",
-                cost: 500,
-                path: "/games/escape-room",
-                styleColor: "bg-yellow-500/10 text-yellow-600 border-yellow-500/20",
-              },
-              {
-                id: "runner-conocimiento",
-                title: "Runner del Conocimiento",
-                style: "Acción / Reflejos rápidos",
-                desc: "Corre esquivando barreras de conceptos incorrectos. Junta gemas, equipa mascotas académicas y repele ataques de jefes veloces.",
-                cost: 600,
-                path: "/games/runner-conocimiento",
-                styleColor: "bg-pink-500/10 text-pink-500 border-pink-500/20",
-              },
-              {
-                id: "battle-royale",
-                title: "Battle Royale Académico",
-                style: "Trivia Multijugador",
-                desc: "Entra a una arena de 50 jugadores simultáneos en tiempo real. Sobrevive a las rondas eliminatorias de preguntas rápidas.",
-                cost: 700,
-                path: "/games/battle-royale",
-                styleColor: "bg-red-500/10 text-red-500 border-red-500/20",
-              },
-              {
-                id: "laboratorio-inventores",
-                title: "Laboratorio de Inventores",
-                style: "Simulador / Tecnología",
-                desc: "Investiga y combina componentes científicos a través del Árbol Tecnológico. Patenta inventos para generar sombreritos pasivos.",
-                cost: 800,
-                path: "/games/laboratorio-inventores",
-                styleColor: "bg-amber-600/10 text-amber-600 border-amber-600/20",
-              },
-              {
-                id: "ciudad-conocimiento",
-                title: "Ciudad del Conocimiento",
-                style: "Gestión / Construcción",
-                desc: "Junta intelecto y recursos para expandir tu territorio y construir facultades y observatorios en la urbe académica definitiva.",
-                cost: 900,
-                path: "/games/ciudad-conocimiento",
-                styleColor: "bg-sky-500/10 text-sky-500 border-sky-500/20",
-              },
-              {
-                id: "ligas-campeones",
-                title: "Ligas de Campeones",
-                style: "Competitivo Ranked",
-                desc: "Juega duelos 1v1 rápidos por Puntos de Liga (LP). Sube de división desde Bronce hasta Leyenda y gana recompensas estacionales.",
-                cost: 1000,
-                path: "/games/ligas-campeones",
-                styleColor: "bg-purple-600/10 text-purple-600 border-purple-600/20",
-              },
-              {
-                id: "simulador-examenes",
-                title: "Simulador de Exámenes",
-                style: "Práctica / Simulación Real",
-                desc: "Prepárate con exámenes cronometrados y retroalimentación interactiva para Secundaria, Preparatoria, Admisión, TOEFL y Cambridge.",
-                cost: 150,
-                path: "/games/simulador-examenes",
-                styleColor: "bg-emerald-600/10 text-emerald-600 border-emerald-600/20",
-              }
-            ].map((game) => {
-              const isUnlocked = (isDeveloper && devMode) || unlockedGames.includes(game.id);
-              return (
-                <div key={game.id} className="relative rounded-3xl border border-border bg-card p-5 shadow-[var(--shadow-card)] flex flex-col justify-between overflow-hidden">
-                  <div>
-                    <span className={`inline-block rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider ${game.styleColor}`}>
-                      {game.style}
+          <div className="mt-6 space-y-8 animate-in fade-in duration-300">
+            {/* Juegos Premium Educativos Section */}
+            <div className="rounded-3xl border border-purple-500/20 bg-gradient-to-r from-purple-950/20 via-slate-900/10 to-indigo-950/20 p-6 shadow-[0_0_50px_-12px_rgba(168,85,247,0.15)] relative overflow-hidden group">
+              {/* Glow effects */}
+              <div className="absolute -right-20 -top-20 h-48 w-48 rounded-full bg-purple-500/10 blur-[80px] group-hover:bg-purple-500/20 transition-all duration-700 pointer-events-none" />
+              <div className="absolute -left-20 -bottom-20 h-48 w-48 rounded-full bg-indigo-500/10 blur-[80px] group-hover:bg-indigo-500/20 transition-all duration-700 pointer-events-none" />
+              
+              <div className="relative flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div className="space-y-1.5">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-purple-500 to-indigo-500 px-3 py-1 text-[9px] font-bold uppercase tracking-wider text-white shadow-md shadow-purple-500/25">
+                      ✨ Premium & Competitivo
                     </span>
-                    <h3 className="mt-2 font-display text-xl font-bold">{game.title}</h3>
-                    <p className="mt-1 text-xs text-muted-foreground">
-                      {game.desc}
-                    </p>
-                    <div className="mt-3 flex items-center gap-4 text-xs font-semibold">
-                      <span className={`${isUnlocked ? 'text-emerald-500' : 'text-blue-400'} flex items-center gap-1`}>
-                        {isUnlocked ? (
-                          <Sparkles className="size-3.5" />
-                        ) : (
-                          <Trophy className="size-3.5 text-blue-400" />
-                        )}
-                        <span>{isUnlocked ? "Acceso Libre" : `${game.cost} XP`}</span>
+                    <span className="inline-flex items-center gap-1 rounded-full bg-rose-500/15 border border-rose-500/25 px-2.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-rose-400">
+                      Próximamente
+                    </span>
+                  </div>
+                  <h2 className="font-display text-2xl font-black bg-gradient-to-r from-purple-400 via-pink-400 to-indigo-400 bg-clip-text text-transparent">
+                    Juegos Premium Educativos
+                  </h2>
+                  <p className="text-xs text-muted-foreground max-w-2xl leading-relaxed">
+                    Nuevos desafíos diseñados para el desarrollo académico avanzado y la competencia intercolegial de alto rendimiento.
+                  </p>
+                </div>
+                
+                <div className="flex flex-wrap gap-2 items-center">
+                  <div className="flex items-center gap-1.5 text-[10px] font-bold text-purple-400 bg-purple-500/10 border border-purple-500/20 px-3 py-1.5 rounded-full">
+                    <Sparkles className="size-3.5 text-purple-400 animate-pulse" />
+                    <span>Ligas Ranked</span>
+                  </div>
+                  <div className="flex items-center gap-1.5 text-[10px] font-bold text-indigo-400 bg-indigo-500/10 border border-indigo-500/20 px-3 py-1.5 rounded-full">
+                    <Trophy className="size-3.5 text-indigo-400" />
+                    <span>Olimpiadas</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Holographic Cards Grid */}
+              <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                {[
+                  {
+                    title: "Olimpiada de Lógica Global",
+                    desc: "Competición intercolegial con problemas matemáticos complejos y razonamiento lógico-espacial en tiempo real.",
+                    badge: "Competitivo Ranked",
+                    badgeColor: "bg-purple-500/10 text-purple-400 border-purple-500/20",
+                  },
+                  {
+                    title: "Simulador Aeroespacial",
+                    desc: "Física de partículas y simulación de trayectorias orbitales. Aplica álgebra y trigonometría para guiar misiones espaciales.",
+                    badge: "Física Avanzada",
+                    badgeColor: "bg-indigo-500/10 text-indigo-400 border-indigo-500/20",
+                  },
+                  {
+                    title: "Laboratorio Clínico Virtual",
+                    desc: "Diagnósticos médicos basados en estudios de casos de microbiología, bioquímica y genética aplicada.",
+                    badge: "Ciencias de la Salud",
+                    badgeColor: "bg-pink-500/10 text-pink-400 border-pink-500/20",
+                  }
+                ].map((pGame, i) => (
+                  <div key={i} className="relative rounded-2xl border border-purple-500/15 bg-slate-950/40 p-4 flex flex-col justify-between overflow-hidden group/card hover:border-purple-500/30 transition-all duration-300">
+                    <div className="absolute inset-0 bg-gradient-to-b from-purple-500/0 via-purple-500/0 to-purple-500/5 opacity-0 group-hover/card:opacity-100 transition-opacity duration-500" />
+                    <div className="relative">
+                      <span className={`inline-block rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider ${pGame.badgeColor}`}>
+                        {pGame.badge}
                       </span>
-                      <span className="text-success flex items-center gap-1">
-                        <img src={streakCap} alt="" className="size-3.5 select-none" />
-                        <span>Gana sombreritos</span>
+                      <h4 className="mt-2 font-display text-sm font-bold text-slate-200">{pGame.title}</h4>
+                      <p className="mt-1 text-[11px] text-muted-foreground leading-relaxed">
+                        {pGame.desc}
+                      </p>
+                    </div>
+                    <div className="mt-4 pt-3 border-t border-purple-500/10 flex items-center justify-between text-[10px] font-bold">
+                      <span className="text-purple-400/80 flex items-center gap-1">
+                        <Lock className="size-3 text-purple-400" />
+                        <span>Zona Cerrada</span>
                       </span>
+                      <span className="text-slate-500 uppercase tracking-wider">Próxima Temporada</span>
                     </div>
                   </div>
-                  
-                  {isUnlocked ? (
-                    <button
-                      onClick={() => navigate({ to: game.path as any })}
-                      className="mt-4 flex h-11 items-center justify-center gap-2 rounded-2xl bg-primary font-semibold text-primary-foreground transition active:scale-95 cursor-pointer border-none"
-                    >
-                      <Gamepad2 className="size-4" /> Empezar juego
-                    </button>
-                  ) : (
-                    <button
-                      disabled={unlockMutation.isPending || totalXp < game.cost}
-                      onClick={() => {
-                        if (confirm(`¿Estás seguro de que deseas desbloquear ${game.title} por ${game.cost} XP?`)) {
-                          unlockMutation.mutate(game.id);
-                        }
-                      }}
-                      className="mt-4 flex h-11 items-center justify-center gap-2 rounded-2xl bg-muted border border-border text-muted-foreground hover:bg-primary/15 hover:text-primary hover:border-primary/40 font-semibold transition active:scale-95 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      <Lock className="size-4 text-muted-foreground" /> Desbloquear por {game.cost} XP
-                    </button>
-                  )}
-                </div>
-              );
-            })}
-          </section>
+                ))}
+              </div>
+            </div>
+
+            {/* Separator & Regular Title */}
+            <div className="pt-2">
+              <h2 className="font-display text-lg font-bold text-foreground flex items-center gap-2">
+                <span>🎮</span> Juegos Regulares
+              </h2>
+              <p className="text-xs text-muted-foreground">Colección estándar de actividades didácticas.</p>
+            </div>
+
+            {/* Normal Games Grid */}
+            <section className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+              {[
+                {
+                  id: "wordle",
+                  title: "Wordle de carreras",
+                  style: "Léxico / Vocabulario",
+                  desc: "Adivina palabras relacionadas con carreras universitarias y áreas de estudio en 6 intentos. Incluye retroalimentación por color y tarjeta de carrera.",
+                  cost: 100,
+                  path: "/games/wordle",
+                  styleColor: "bg-blue-500/10 text-blue-500 border-blue-500/20",
+                },
+                {
+                  id: "complete-concept",
+                  title: "Completa el concepto",
+                  style: "Drag & Drop / Conceptos",
+                  desc: "Arrastra la palabra correcta al espacio en blanco para completar la definición académica antes de que se agote el tiempo (60s).",
+                  cost: 200,
+                  path: "/games/complete-concept",
+                  styleColor: "bg-emerald-500/15 text-emerald-500 border-emerald-500/25",
+                },
+                {
+                  id: "hangman",
+                  title: "Ahorcado universitario",
+                  style: "Ahorcado / Términos",
+                  desc: "Salva al personaje con estados de ánimo adivinando términos técnicos y académicos reales. Obtén pistas de carreras universitarias.",
+                  cost: 300,
+                  path: "/games/hangman",
+                  styleColor: "bg-purple-500/10 text-purple-500 border-purple-500/20",
+                },
+                {
+                  id: "order-idea",
+                  title: "Ordena la idea",
+                  style: "Reconstrucción de ideas",
+                  desc: "Ordena fragmentos de definiciones, hipótesis o conceptos académicos mezclados aleatoriamente en el menor tiempo posible.",
+                  cost: 400,
+                  path: "/games/order-idea",
+                  styleColor: "bg-amber-500/10 text-amber-500 border-amber-500/20",
+                },
+                {
+                  id: "connect-area",
+                  title: "Conecta tu área",
+                  style: "Asociación de pares",
+                  desc: "Conecta términos con áreas de estudio, herramientas con carreras, o conceptos con su definición bajo un límite de 60 segundos.",
+                  cost: 500,
+                  path: "/games/connect-area",
+                  styleColor: "bg-cyan-500/10 text-cyan-500 border-cyan-500/20",
+                },
+                {
+                  id: "dictation",
+                  title: "Dictado académico con IA",
+                  style: "Dictado / Ortografía",
+                  desc: "Escucha términos universitarios reales en audio y escríbelos. El análisis ortográfico detecta errores y te enseña las reglas.",
+                  cost: 600,
+                  path: "/games/dictation",
+                  styleColor: "bg-rose-500/10 text-rose-500 border-rose-500/20",
+                },
+                {
+                  id: "gold-quest",
+                  title: "Gold Quest",
+                  style: "Blooket Style",
+                  desc: "Answer fast-paced trivia questions correctly to open mystery chests. Steal or double your gold against AI players!",
+                  cost: 500,
+                  path: "/games/gold-quest",
+                  styleColor: "bg-primary/10 text-primary border-primary/20",
+                },
+                {
+                  id: "space-rush",
+                  title: "Space Rush",
+                  style: "Quizizz Style",
+                  desc: "Blast off into orbit! Answer questions correctly to accelerate your rocket ship and beat simulated competitors.",
+                  cost: 1000,
+                  path: "/games/space-rush",
+                  styleColor: "bg-success/15 text-success border-success/20",
+                },
+                {
+                  id: "criaturas-conocimiento",
+                  title: "Criaturas del Conocimiento",
+                  style: "Colección / Combate RPG",
+                  desc: "Explora y captura criaturas académicas reales basadas en asignaturas escolares. Entrénalas y enfréntate a jefes legendarios.",
+                  cost: 100,
+                  path: "/games/criaturas-conocimiento",
+                  styleColor: "bg-orange-500/10 text-orange-500 border-orange-500/20",
+                },
+                {
+                  id: "rpg-academico",
+                  title: "RPG Académico",
+                  style: "Aventura RPG",
+                  desc: "Explora un mundo con múltiples campus regionales que representan disciplinas de estudio. Completa quests principales e incrementa tu reputación.",
+                  cost: 200,
+                  path: "/games/rpg-academico",
+                  styleColor: "bg-teal-500/10 text-teal-500 border-teal-500/20",
+                },
+                {
+                  id: "centro-investigacion",
+                  title: "Centro de Investigación",
+                  style: "Simulador Científico",
+                  desc: "Desarrolla proyectos en laboratorios científicos de materias exactas, humanidades y salud. Investiga, patenta y publica papers.",
+                  cost: 300,
+                  path: "/games/centro-investigacion",
+                  styleColor: "bg-indigo-500/10 text-indigo-500 border-indigo-500/20",
+                },
+                {
+                  id: "torre-infinita",
+                  title: "Torre Infinita del Saber",
+                  style: "Progreso / Supervivencia",
+                  desc: "Asciende por pisos con quizzes de dificultad incremental, modificadores aleatorios extremos y guardianes de piso desafiantes.",
+                  cost: 400,
+                  path: "/games/torre-infinita",
+                  styleColor: "bg-violet-500/10 text-violet-500 border-violet-500/20",
+                },
+                {
+                  id: "escape-room",
+                  title: "Escape Room Educativo",
+                  style: "Point-and-Click / Puzzle",
+                  desc: "Resuelve acertijos lógicos y académicos dentro de múltiples habitaciones interactivas (Laboratorio, Observatorio, Biblioteca).",
+                  cost: 500,
+                  path: "/games/escape-room",
+                  styleColor: "bg-yellow-500/10 text-yellow-600 border-yellow-500/20",
+                },
+                {
+                  id: "runner-conocimiento",
+                  title: "Runner del Conocimiento",
+                  style: "Acción / Reflejos rápidos",
+                  desc: "Corre esquivando barreras de conceptos incorrectos. Junta gemas, equipa mascotas académicas y repele ataques de jefes veloces.",
+                  cost: 600,
+                  path: "/games/runner-conocimiento",
+                  styleColor: "bg-pink-500/10 text-pink-500 border-pink-500/20",
+                },
+                {
+                  id: "battle-royale",
+                  title: "Battle Royale Académico",
+                  style: "Trivia Multijugador",
+                  desc: "Entra a una arena de 50 jugadores simultáneos en tiempo real. Sobrevive a las rondas eliminatorias de preguntas rápidas.",
+                  cost: 700,
+                  path: "/games/battle-royale",
+                  styleColor: "bg-red-500/10 text-red-500 border-red-500/20",
+                },
+                {
+                  id: "laboratorio-inventores",
+                  title: "Laboratorio de Inventores",
+                  style: "Simulador / Tecnología",
+                  desc: "Investiga y combina componentes científicos a través del Árbol Tecnológico. Patenta inventos para generar sombreritos pasivos.",
+                  cost: 800,
+                  path: "/games/laboratorio-inventores",
+                  styleColor: "bg-amber-600/10 text-amber-600 border-amber-600/20",
+                },
+                {
+                  id: "ciudad-conocimiento",
+                  title: "Ciudad del Conocimiento",
+                  style: "Gestión / Construcción",
+                  desc: "Junta intelecto y recursos para expandir tu territorio y construir facultades y observatorios en la urbe académica definitiva.",
+                  cost: 900,
+                  path: "/games/ciudad-conocimiento",
+                  styleColor: "bg-sky-500/10 text-sky-500 border-sky-500/20",
+                },
+                {
+                  id: "ligas-campeones",
+                  title: "Ligas de Campeones",
+                  style: "Competitivo Ranked",
+                  desc: "Juega duelos 1v1 rápidos por Puntos de Liga (LP). Sube de división desde Bronce hasta Leyenda y gana recompensas estacionales.",
+                  cost: 1000,
+                  path: "/games/ligas-campeones",
+                  styleColor: "bg-purple-600/10 text-purple-600 border-purple-600/20",
+                },
+                {
+                  id: "simulador-examenes",
+                  title: "Simulador de Exámenes",
+                  style: "Práctica / Simulación Real",
+                  desc: "Prepárate con exámenes cronometrados y retroalimentación interactiva para Secundaria, Preparatoria, Admisión, TOEFL y Cambridge.",
+                  cost: 150,
+                  path: "/games/simulador-examenes",
+                  styleColor: "bg-emerald-600/10 text-emerald-600 border-emerald-600/20",
+                }
+              ].map((game) => {
+                const isUnlocked = (isDeveloper && devMode) || unlockedGames.includes(game.id);
+                return (
+                  <div key={game.id} className="relative rounded-3xl border border-border bg-card p-5 shadow-[var(--shadow-card)] flex flex-col justify-between overflow-hidden">
+                    <div>
+                      <span className={`inline-block rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider ${game.styleColor}`}>
+                        {game.style}
+                      </span>
+                      <h3 className="mt-2 font-display text-xl font-bold">{game.title}</h3>
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        {game.desc}
+                      </p>
+                      <div className="mt-3 flex items-center gap-4 text-xs font-semibold">
+                        <span className={`${isUnlocked ? 'text-emerald-500' : 'text-blue-400'} flex items-center gap-1`}>
+                          {isUnlocked ? (
+                            <Sparkles className="size-3.5" />
+                          ) : (
+                            <Trophy className="size-3.5 text-blue-400" />
+                          )}
+                          <span>{isUnlocked ? "Acceso Libre" : `${game.cost} XP`}</span>
+                        </span>
+                        <span className="text-success flex items-center gap-1">
+                          <img src={streakCap} alt="" className="size-3.5 select-none" />
+                          <span>Gana sombreritos</span>
+                        </span>
+                      </div>
+                    </div>
+                    
+                    {isUnlocked ? (
+                      <button
+                        onClick={() => navigate({ to: game.path as any })}
+                        className="mt-4 flex h-11 items-center justify-center gap-2 rounded-2xl bg-primary font-semibold text-primary-foreground transition active:scale-95 cursor-pointer border-none"
+                      >
+                        <Gamepad2 className="size-4" /> Empezar juego
+                      </button>
+                    ) : (
+                      <button
+                        disabled={unlockMutation.isPending || totalXp < game.cost}
+                        onClick={() => {
+                          if (confirm(`¿Estás seguro de que deseas desbloquear ${game.title} por ${game.cost} XP?`)) {
+                            unlockMutation.mutate(game.id);
+                          }
+                        }}
+                        className="mt-4 flex h-11 items-center justify-center gap-2 rounded-2xl bg-muted border border-border text-muted-foreground hover:bg-primary/15 hover:text-primary hover:border-primary/40 font-semibold transition active:scale-95 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        <Lock className="size-4 text-muted-foreground" /> Desbloquear por {game.cost} XP
+                      </button>
+                    )}
+                  </div>
+                );
+              })}
+            </section>
+          </div>
         )}
 
         {/* Locker Tab */}
