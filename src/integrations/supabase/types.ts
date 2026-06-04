@@ -23,7 +23,6 @@ export type Database = {
           full_name: string | null
           id: string
           language: string
-          role: string
           unlocked_avatar_items: string[]
           updated_at: string
         }
@@ -35,7 +34,6 @@ export type Database = {
           full_name?: string | null
           id: string
           language?: string
-          role?: string
           unlocked_avatar_items?: string[]
           updated_at?: string
         }
@@ -47,7 +45,6 @@ export type Database = {
           full_name?: string | null
           id?: string
           language?: string
-          role?: string
           unlocked_avatar_items?: string[]
           updated_at?: string
         }
