@@ -5,7 +5,7 @@ import { useTranslation } from "react-i18next";
 import { useState, useEffect } from "react";
 import { rewardGameCoins } from "@/lib/games.functions";
 import { AppHeader } from "@/components/AppHeader";
-import { ArrowLeft, Sparkles, Trophy, Timer, HelpCircle, Swords, Zap, CheckCircle2, XCircle, BookOpen, GraduationCap, ChevronRight } from "lucide-react";
+import { ArrowLeft, Sparkles, Trophy, Timer, Swords, Zap, BookOpen, GraduationCap, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
 import { QUESTIONS_DB, type Question } from "@/lib/question-engine";
 import { analyticsEngine } from "@/lib/analytics-engine";
@@ -827,17 +827,17 @@ function QuizClashGame() {
                         <div className="flex items-center gap-1.5">
                           <span>Tú:</span>
                           {roundFeedback.playerCorrect ? (
-                            <span className="text-emerald-400 flex items-center gap-1"><CheckCircle2 className="size-4" /> Correcto</span>
+                            <span className="text-emerald-400 flex items-center gap-1">✅ Correcto</span>
                           ) : (
-                            <span className="text-rose-500 flex items-center gap-1"><XCircle className="size-4" /> Incorrecto</span>
+                            <span className="text-rose-500 flex items-center gap-1">❌ Incorrecto</span>
                           )}
                         </div>
                         <div className="flex items-center gap-1.5 border-l border-purple-500/20 pl-6">
                           <span>{opponentName}:</span>
                           {roundFeedback.opponentCorrect ? (
-                            <span className="text-emerald-400 flex items-center gap-1"><CheckCircle2 className="size-4" /> Correcto</span>
+                            <span className="text-emerald-400 flex items-center gap-1">✅ Correcto</span>
                           ) : (
-                            <span className="text-rose-500 flex items-center gap-1"><XCircle className="size-4" /> Incorrecto</span>
+                            <span className="text-rose-500 flex items-center gap-1">❌ Incorrecto</span>
                           )}
                         </div>
                       </div>
