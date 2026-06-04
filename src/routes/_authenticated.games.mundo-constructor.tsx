@@ -5,7 +5,7 @@ import { useTranslation } from "react-i18next";
 import { useState, useEffect } from "react";
 import { rewardGameCoins, rewardGameXp } from "@/lib/games.functions";
 import { AppHeader } from "@/components/AppHeader";
-import { ArrowLeft, Sparkles, Trophy, Landmark, Library, Play, ShieldAlert, Award, Timer, BookOpen, GraduationCap } from "lucide-react";
+import { ArrowLeft, GraduationCap, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { QUESTIONS_DB } from "@/lib/question-engine";
 import { analyticsEngine } from "@/lib/analytics-engine";
