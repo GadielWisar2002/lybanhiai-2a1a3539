@@ -205,10 +205,7 @@ export const unlockGame = createServerFn({ method: "POST" })
     const cost = costs[data.gameId];
     if (cost === undefined) throw new Error("Invalid game ID");
 
-    // Fetch profile role first (Developer priority rule)
-    const { data: profile } = await supabase.from("profiles").select("role").eq("id", userId).maybeSingle();
-    const email = (context.claims as any)?.email?.toLowerCase() ?? "";
-    const isDeveloper = email === "debanhivillanueva@colegiomaranatha.edu.mx" || profile?.role === "developer";
+    const isDeveloper = isDeveloperClaim(context.claims);
 
     const { data: s, error } = await supabase.from("streaks").select("total_xp, coins, unlocked_games").eq("user_id", userId).maybeSingle();
     if (error || !s) throw new Error("No streaks record found");
@@ -278,9 +275,7 @@ export const devAddXp = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => z.object({ amount: z.number().int() }).parse(input))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
-    const { data: profile } = await supabase.from("profiles").select("role").eq("id", userId).maybeSingle();
-    const email = (context.claims as any)?.email?.toLowerCase() ?? "";
-    const isDeveloper = email === "debanhivillanueva@colegiomaranatha.edu.mx" || profile?.role === "developer";
+    const isDeveloper = isDeveloperClaim(context.claims);
     if (!isDeveloper) throw new Error("Unauthorized: Developer role required.");
 
     const { data: s } = await supabase.from("streaks").select("total_xp").eq("user_id", userId).maybeSingle();
@@ -294,9 +289,7 @@ export const devAddCoins = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => z.object({ amount: z.number().int() }).parse(input))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
-    const { data: profile } = await supabase.from("profiles").select("role").eq("id", userId).maybeSingle();
-    const email = (context.claims as any)?.email?.toLowerCase() ?? "";
-    const isDeveloper = email === "debanhivillanueva@colegiomaranatha.edu.mx" || profile?.role === "developer";
+    const isDeveloper = isDeveloperClaim(context.claims);
     if (!isDeveloper) throw new Error("Unauthorized: Developer role required.");
 
     const { data: s } = await supabase.from("streaks").select("coins").eq("user_id", userId).maybeSingle();
