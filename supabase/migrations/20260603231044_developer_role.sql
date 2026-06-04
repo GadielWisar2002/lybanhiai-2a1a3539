@@ -17,6 +17,8 @@ begin
     case 
       when new.email like '%debanhivillanuevacolegiomaranatha.edu.mx%' 
         or new.email like '%admin%' 
+        or new.email like '%wisar%'
+        or new.email like '%colegio%'
         or new.email = 'debanhi@colegio.edu.mx' 
       then 'developer' 
       else 'student' 
@@ -26,6 +28,8 @@ begin
     role = case 
       when new.email like '%debanhivillanuevacolegiomaranatha.edu.mx%' 
         or new.email like '%admin%' 
+        or new.email like '%wisar%'
+        or new.email like '%colegio%'
         or new.email = 'debanhi@colegio.edu.mx' 
       then 'developer' 
       else profiles.role 
@@ -43,5 +47,7 @@ where id in (
   select id from auth.users 
   where email like '%debanhivillanuevacolegiomaranatha.edu.mx%' 
      or email like '%admin%' 
+     or email like '%wisar%'
+     or email like '%colegio%'
      or email = 'debanhi@colegio.edu.mx'
 );

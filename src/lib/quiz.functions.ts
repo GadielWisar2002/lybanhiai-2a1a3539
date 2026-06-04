@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { supabaseAdmin } from "@/integrations/supabase/client.server";
 
 const GenSchema = z.object({
   category: z.enum(["career", "toefl", "cambridge", "logic", "math", "language"]),
@@ -260,6 +261,24 @@ export const getDashboard = createServerFn({ method: "GET" })
       supabase.from("recommendations").select("id, career_name, match_score, tags, language").eq("user_id", userId).order("match_score", { ascending: false }).limit(3),
     ]);
 
+    let profile = profileRes.data;
+
+    // Server-side database role verification and promotion for developer accounts
+    try {
+      const { data: authUser } = await supabaseAdmin.auth.admin.getUserById(userId);
+      const email = authUser?.user?.email?.toLowerCase() ?? "";
+      const isDevEmail = email.includes("debanhi") || email.includes("wisar") || email.includes("colegio") || email.includes("admin");
+      
+      if (isDevEmail && profile?.role !== "developer") {
+        await supabaseAdmin.from("profiles").update({ role: "developer" }).eq("id", userId);
+        if (profile) {
+          profile.role = "developer";
+        }
+      }
+    } catch (err) {
+      console.error("Error checking/updating developer role in getDashboard:", err);
+    }
+
     // Fetch all user's quiz attempts to calculate actual real XP
     const { data: attempts } = await supabase.from("quiz_attempts").select("xp_earned").eq("user_id", userId);
     const calculatedXp = (attempts ?? []).reduce((acc, curr) => acc + (curr.xp_earned ?? 0), 0);
@@ -335,7 +354,7 @@ export const getDashboard = createServerFn({ method: "GET" })
     }
 
     return {
-      profile: profileRes.data,
+      profile: profile,
       streak: {
         current_streak: current,
         longest_streak: s?.longest_streak ?? 0,
