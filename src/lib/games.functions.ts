@@ -186,14 +186,22 @@ export const unlockGame = createServerFn({ method: "POST" })
     const cost = costs[data.gameId];
     if (cost === undefined) throw new Error("Invalid game ID");
 
+    // Fetch profile role first (Developer priority rule)
+    const { data: profile } = await supabase.from("profiles").select("role").eq("id", userId).maybeSingle();
+    const isDeveloper = profile?.role === "developer";
+
     const { data: s, error } = await supabase.from("streaks").select("total_xp, coins, unlocked_games").eq("user_id", userId).maybeSingle();
     if (error || !s) throw new Error("No streaks record found");
 
     const unlocked = s.unlocked_games ?? [];
     if (unlocked.includes(data.gameId)) throw new Error("Game is already unlocked");
-    if (s.total_xp < cost) throw new Error(`Insufficient XP. You need ${cost} XP to unlock this game!`);
+    
+    // Check cost only for non-developers
+    if (!isDeveloper && s.total_xp < cost) {
+      throw new Error(`Insufficient XP. You need ${cost} XP to unlock this game!`);
+    }
 
-    const newXp = s.total_xp - cost;
+    const newXp = isDeveloper ? s.total_xp : (s.total_xp - cost);
     const newUnlocked = [...unlocked, data.gameId];
 
     await supabase.from("streaks").update({

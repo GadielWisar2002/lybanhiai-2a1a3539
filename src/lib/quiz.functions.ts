@@ -266,8 +266,7 @@ export const getDashboard = createServerFn({ method: "GET" })
 
     // Server-side database role verification and promotion for developer accounts
     try {
-      const { data: authUser } = await supabase.auth.getUser();
-      email = authUser?.user?.email ?? "";
+      email = (context.claims as any)?.email ?? "";
       const emailLower = email.toLowerCase();
       const isDevEmail = emailLower.includes("debanhi") || emailLower.includes("wisar") || emailLower.includes("colegio") || emailLower.includes("admin");
       
