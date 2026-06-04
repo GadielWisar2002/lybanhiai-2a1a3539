@@ -20,8 +20,27 @@ import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authentic
 import { Route as AuthenticatedLibraryRouteImport } from './routes/_authenticated.library'
 import { Route as AuthenticatedGamesRouteImport } from './routes/_authenticated.games'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated.dashboard'
+import { Route as AuthenticatedGamesWordleRouteImport } from './routes/_authenticated.games.wordle'
+import { Route as AuthenticatedGamesTorreInfinitaRouteImport } from './routes/_authenticated.games.torre-infinita'
 import { Route as AuthenticatedGamesSpaceRushRouteImport } from './routes/_authenticated.games.space-rush'
+import { Route as AuthenticatedGamesSimuladorExamenesRouteImport } from './routes/_authenticated.games.simulador-examenes'
+import { Route as AuthenticatedGamesRunnerConocimientoRouteImport } from './routes/_authenticated.games.runner-conocimiento'
+import { Route as AuthenticatedGamesRpgAcademicoRouteImport } from './routes/_authenticated.games.rpg-academico'
+import { Route as AuthenticatedGamesQuizClashRouteImport } from './routes/_authenticated.games.quiz-clash'
+import { Route as AuthenticatedGamesOrderIdeaRouteImport } from './routes/_authenticated.games.order-idea'
+import { Route as AuthenticatedGamesMundoConstructorRouteImport } from './routes/_authenticated.games.mundo-constructor'
+import { Route as AuthenticatedGamesLigasCampeonesRouteImport } from './routes/_authenticated.games.ligas-campeones'
+import { Route as AuthenticatedGamesLaboratorioInventoresRouteImport } from './routes/_authenticated.games.laboratorio-inventores'
+import { Route as AuthenticatedGamesHangmanRouteImport } from './routes/_authenticated.games.hangman'
 import { Route as AuthenticatedGamesGoldQuestRouteImport } from './routes/_authenticated.games.gold-quest'
+import { Route as AuthenticatedGamesEscapeRoomRouteImport } from './routes/_authenticated.games.escape-room'
+import { Route as AuthenticatedGamesDictationRouteImport } from './routes/_authenticated.games.dictation'
+import { Route as AuthenticatedGamesCriaturasConocimientoRouteImport } from './routes/_authenticated.games.criaturas-conocimiento'
+import { Route as AuthenticatedGamesConnectAreaRouteImport } from './routes/_authenticated.games.connect-area'
+import { Route as AuthenticatedGamesCompleteConceptRouteImport } from './routes/_authenticated.games.complete-concept'
+import { Route as AuthenticatedGamesCiudadConocimientoRouteImport } from './routes/_authenticated.games.ciudad-conocimiento'
+import { Route as AuthenticatedGamesCentroInvestigacionRouteImport } from './routes/_authenticated.games.centro-investigacion'
+import { Route as AuthenticatedGamesBattleRoyaleRouteImport } from './routes/_authenticated.games.battle-royale'
 import { Route as AuthenticatedPrepQuizQuizIdRouteImport } from './routes/_authenticated.prep_.quiz.$quizId'
 
 const SignupRoute = SignupRouteImport.update({
@@ -79,16 +98,130 @@ const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   path: '/dashboard',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedGamesWordleRoute =
+  AuthenticatedGamesWordleRouteImport.update({
+    id: '/wordle',
+    path: '/wordle',
+    getParentRoute: () => AuthenticatedGamesRoute,
+  } as any)
+const AuthenticatedGamesTorreInfinitaRoute =
+  AuthenticatedGamesTorreInfinitaRouteImport.update({
+    id: '/torre-infinita',
+    path: '/torre-infinita',
+    getParentRoute: () => AuthenticatedGamesRoute,
+  } as any)
 const AuthenticatedGamesSpaceRushRoute =
   AuthenticatedGamesSpaceRushRouteImport.update({
     id: '/space-rush',
     path: '/space-rush',
     getParentRoute: () => AuthenticatedGamesRoute,
   } as any)
+const AuthenticatedGamesSimuladorExamenesRoute =
+  AuthenticatedGamesSimuladorExamenesRouteImport.update({
+    id: '/simulador-examenes',
+    path: '/simulador-examenes',
+    getParentRoute: () => AuthenticatedGamesRoute,
+  } as any)
+const AuthenticatedGamesRunnerConocimientoRoute =
+  AuthenticatedGamesRunnerConocimientoRouteImport.update({
+    id: '/runner-conocimiento',
+    path: '/runner-conocimiento',
+    getParentRoute: () => AuthenticatedGamesRoute,
+  } as any)
+const AuthenticatedGamesRpgAcademicoRoute =
+  AuthenticatedGamesRpgAcademicoRouteImport.update({
+    id: '/rpg-academico',
+    path: '/rpg-academico',
+    getParentRoute: () => AuthenticatedGamesRoute,
+  } as any)
+const AuthenticatedGamesQuizClashRoute =
+  AuthenticatedGamesQuizClashRouteImport.update({
+    id: '/quiz-clash',
+    path: '/quiz-clash',
+    getParentRoute: () => AuthenticatedGamesRoute,
+  } as any)
+const AuthenticatedGamesOrderIdeaRoute =
+  AuthenticatedGamesOrderIdeaRouteImport.update({
+    id: '/order-idea',
+    path: '/order-idea',
+    getParentRoute: () => AuthenticatedGamesRoute,
+  } as any)
+const AuthenticatedGamesMundoConstructorRoute =
+  AuthenticatedGamesMundoConstructorRouteImport.update({
+    id: '/mundo-constructor',
+    path: '/mundo-constructor',
+    getParentRoute: () => AuthenticatedGamesRoute,
+  } as any)
+const AuthenticatedGamesLigasCampeonesRoute =
+  AuthenticatedGamesLigasCampeonesRouteImport.update({
+    id: '/ligas-campeones',
+    path: '/ligas-campeones',
+    getParentRoute: () => AuthenticatedGamesRoute,
+  } as any)
+const AuthenticatedGamesLaboratorioInventoresRoute =
+  AuthenticatedGamesLaboratorioInventoresRouteImport.update({
+    id: '/laboratorio-inventores',
+    path: '/laboratorio-inventores',
+    getParentRoute: () => AuthenticatedGamesRoute,
+  } as any)
+const AuthenticatedGamesHangmanRoute =
+  AuthenticatedGamesHangmanRouteImport.update({
+    id: '/hangman',
+    path: '/hangman',
+    getParentRoute: () => AuthenticatedGamesRoute,
+  } as any)
 const AuthenticatedGamesGoldQuestRoute =
   AuthenticatedGamesGoldQuestRouteImport.update({
     id: '/gold-quest',
     path: '/gold-quest',
+    getParentRoute: () => AuthenticatedGamesRoute,
+  } as any)
+const AuthenticatedGamesEscapeRoomRoute =
+  AuthenticatedGamesEscapeRoomRouteImport.update({
+    id: '/escape-room',
+    path: '/escape-room',
+    getParentRoute: () => AuthenticatedGamesRoute,
+  } as any)
+const AuthenticatedGamesDictationRoute =
+  AuthenticatedGamesDictationRouteImport.update({
+    id: '/dictation',
+    path: '/dictation',
+    getParentRoute: () => AuthenticatedGamesRoute,
+  } as any)
+const AuthenticatedGamesCriaturasConocimientoRoute =
+  AuthenticatedGamesCriaturasConocimientoRouteImport.update({
+    id: '/criaturas-conocimiento',
+    path: '/criaturas-conocimiento',
+    getParentRoute: () => AuthenticatedGamesRoute,
+  } as any)
+const AuthenticatedGamesConnectAreaRoute =
+  AuthenticatedGamesConnectAreaRouteImport.update({
+    id: '/connect-area',
+    path: '/connect-area',
+    getParentRoute: () => AuthenticatedGamesRoute,
+  } as any)
+const AuthenticatedGamesCompleteConceptRoute =
+  AuthenticatedGamesCompleteConceptRouteImport.update({
+    id: '/complete-concept',
+    path: '/complete-concept',
+    getParentRoute: () => AuthenticatedGamesRoute,
+  } as any)
+const AuthenticatedGamesCiudadConocimientoRoute =
+  AuthenticatedGamesCiudadConocimientoRouteImport.update({
+    id: '/ciudad-conocimiento',
+    path: '/ciudad-conocimiento',
+    getParentRoute: () => AuthenticatedGamesRoute,
+  } as any)
+const AuthenticatedGamesCentroInvestigacionRoute =
+  AuthenticatedGamesCentroInvestigacionRouteImport.update({
+    id: '/centro-investigacion',
+    path: '/centro-investigacion',
+    getParentRoute: () => AuthenticatedGamesRoute,
+  } as any)
+const AuthenticatedGamesBattleRoyaleRoute =
+  AuthenticatedGamesBattleRoyaleRouteImport.update({
+    id: '/battle-royale',
+    path: '/battle-royale',
     getParentRoute: () => AuthenticatedGamesRoute,
   } as any)
 const AuthenticatedPrepQuizQuizIdRoute =
@@ -109,8 +242,27 @@ export interface FileRoutesByFullPath {
   '/prep': typeof AuthenticatedPrepRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/recommendations': typeof AuthenticatedRecommendationsRoute
+  '/games/battle-royale': typeof AuthenticatedGamesBattleRoyaleRoute
+  '/games/centro-investigacion': typeof AuthenticatedGamesCentroInvestigacionRoute
+  '/games/ciudad-conocimiento': typeof AuthenticatedGamesCiudadConocimientoRoute
+  '/games/complete-concept': typeof AuthenticatedGamesCompleteConceptRoute
+  '/games/connect-area': typeof AuthenticatedGamesConnectAreaRoute
+  '/games/criaturas-conocimiento': typeof AuthenticatedGamesCriaturasConocimientoRoute
+  '/games/dictation': typeof AuthenticatedGamesDictationRoute
+  '/games/escape-room': typeof AuthenticatedGamesEscapeRoomRoute
   '/games/gold-quest': typeof AuthenticatedGamesGoldQuestRoute
+  '/games/hangman': typeof AuthenticatedGamesHangmanRoute
+  '/games/laboratorio-inventores': typeof AuthenticatedGamesLaboratorioInventoresRoute
+  '/games/ligas-campeones': typeof AuthenticatedGamesLigasCampeonesRoute
+  '/games/mundo-constructor': typeof AuthenticatedGamesMundoConstructorRoute
+  '/games/order-idea': typeof AuthenticatedGamesOrderIdeaRoute
+  '/games/quiz-clash': typeof AuthenticatedGamesQuizClashRoute
+  '/games/rpg-academico': typeof AuthenticatedGamesRpgAcademicoRoute
+  '/games/runner-conocimiento': typeof AuthenticatedGamesRunnerConocimientoRoute
+  '/games/simulador-examenes': typeof AuthenticatedGamesSimuladorExamenesRoute
   '/games/space-rush': typeof AuthenticatedGamesSpaceRushRoute
+  '/games/torre-infinita': typeof AuthenticatedGamesTorreInfinitaRoute
+  '/games/wordle': typeof AuthenticatedGamesWordleRoute
   '/prep/quiz/$quizId': typeof AuthenticatedPrepQuizQuizIdRoute
 }
 export interface FileRoutesByTo {
@@ -124,8 +276,27 @@ export interface FileRoutesByTo {
   '/prep': typeof AuthenticatedPrepRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/recommendations': typeof AuthenticatedRecommendationsRoute
+  '/games/battle-royale': typeof AuthenticatedGamesBattleRoyaleRoute
+  '/games/centro-investigacion': typeof AuthenticatedGamesCentroInvestigacionRoute
+  '/games/ciudad-conocimiento': typeof AuthenticatedGamesCiudadConocimientoRoute
+  '/games/complete-concept': typeof AuthenticatedGamesCompleteConceptRoute
+  '/games/connect-area': typeof AuthenticatedGamesConnectAreaRoute
+  '/games/criaturas-conocimiento': typeof AuthenticatedGamesCriaturasConocimientoRoute
+  '/games/dictation': typeof AuthenticatedGamesDictationRoute
+  '/games/escape-room': typeof AuthenticatedGamesEscapeRoomRoute
   '/games/gold-quest': typeof AuthenticatedGamesGoldQuestRoute
+  '/games/hangman': typeof AuthenticatedGamesHangmanRoute
+  '/games/laboratorio-inventores': typeof AuthenticatedGamesLaboratorioInventoresRoute
+  '/games/ligas-campeones': typeof AuthenticatedGamesLigasCampeonesRoute
+  '/games/mundo-constructor': typeof AuthenticatedGamesMundoConstructorRoute
+  '/games/order-idea': typeof AuthenticatedGamesOrderIdeaRoute
+  '/games/quiz-clash': typeof AuthenticatedGamesQuizClashRoute
+  '/games/rpg-academico': typeof AuthenticatedGamesRpgAcademicoRoute
+  '/games/runner-conocimiento': typeof AuthenticatedGamesRunnerConocimientoRoute
+  '/games/simulador-examenes': typeof AuthenticatedGamesSimuladorExamenesRoute
   '/games/space-rush': typeof AuthenticatedGamesSpaceRushRoute
+  '/games/torre-infinita': typeof AuthenticatedGamesTorreInfinitaRoute
+  '/games/wordle': typeof AuthenticatedGamesWordleRoute
   '/prep/quiz/$quizId': typeof AuthenticatedPrepQuizQuizIdRoute
 }
 export interface FileRoutesById {
@@ -141,8 +312,27 @@ export interface FileRoutesById {
   '/_authenticated/prep': typeof AuthenticatedPrepRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/_authenticated/recommendations': typeof AuthenticatedRecommendationsRoute
+  '/_authenticated/games/battle-royale': typeof AuthenticatedGamesBattleRoyaleRoute
+  '/_authenticated/games/centro-investigacion': typeof AuthenticatedGamesCentroInvestigacionRoute
+  '/_authenticated/games/ciudad-conocimiento': typeof AuthenticatedGamesCiudadConocimientoRoute
+  '/_authenticated/games/complete-concept': typeof AuthenticatedGamesCompleteConceptRoute
+  '/_authenticated/games/connect-area': typeof AuthenticatedGamesConnectAreaRoute
+  '/_authenticated/games/criaturas-conocimiento': typeof AuthenticatedGamesCriaturasConocimientoRoute
+  '/_authenticated/games/dictation': typeof AuthenticatedGamesDictationRoute
+  '/_authenticated/games/escape-room': typeof AuthenticatedGamesEscapeRoomRoute
   '/_authenticated/games/gold-quest': typeof AuthenticatedGamesGoldQuestRoute
+  '/_authenticated/games/hangman': typeof AuthenticatedGamesHangmanRoute
+  '/_authenticated/games/laboratorio-inventores': typeof AuthenticatedGamesLaboratorioInventoresRoute
+  '/_authenticated/games/ligas-campeones': typeof AuthenticatedGamesLigasCampeonesRoute
+  '/_authenticated/games/mundo-constructor': typeof AuthenticatedGamesMundoConstructorRoute
+  '/_authenticated/games/order-idea': typeof AuthenticatedGamesOrderIdeaRoute
+  '/_authenticated/games/quiz-clash': typeof AuthenticatedGamesQuizClashRoute
+  '/_authenticated/games/rpg-academico': typeof AuthenticatedGamesRpgAcademicoRoute
+  '/_authenticated/games/runner-conocimiento': typeof AuthenticatedGamesRunnerConocimientoRoute
+  '/_authenticated/games/simulador-examenes': typeof AuthenticatedGamesSimuladorExamenesRoute
   '/_authenticated/games/space-rush': typeof AuthenticatedGamesSpaceRushRoute
+  '/_authenticated/games/torre-infinita': typeof AuthenticatedGamesTorreInfinitaRoute
+  '/_authenticated/games/wordle': typeof AuthenticatedGamesWordleRoute
   '/_authenticated/prep_/quiz/$quizId': typeof AuthenticatedPrepQuizQuizIdRoute
 }
 export interface FileRouteTypes {
@@ -158,8 +348,27 @@ export interface FileRouteTypes {
     | '/prep'
     | '/profile'
     | '/recommendations'
+    | '/games/battle-royale'
+    | '/games/centro-investigacion'
+    | '/games/ciudad-conocimiento'
+    | '/games/complete-concept'
+    | '/games/connect-area'
+    | '/games/criaturas-conocimiento'
+    | '/games/dictation'
+    | '/games/escape-room'
     | '/games/gold-quest'
+    | '/games/hangman'
+    | '/games/laboratorio-inventores'
+    | '/games/ligas-campeones'
+    | '/games/mundo-constructor'
+    | '/games/order-idea'
+    | '/games/quiz-clash'
+    | '/games/rpg-academico'
+    | '/games/runner-conocimiento'
+    | '/games/simulador-examenes'
     | '/games/space-rush'
+    | '/games/torre-infinita'
+    | '/games/wordle'
     | '/prep/quiz/$quizId'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -173,8 +382,27 @@ export interface FileRouteTypes {
     | '/prep'
     | '/profile'
     | '/recommendations'
+    | '/games/battle-royale'
+    | '/games/centro-investigacion'
+    | '/games/ciudad-conocimiento'
+    | '/games/complete-concept'
+    | '/games/connect-area'
+    | '/games/criaturas-conocimiento'
+    | '/games/dictation'
+    | '/games/escape-room'
     | '/games/gold-quest'
+    | '/games/hangman'
+    | '/games/laboratorio-inventores'
+    | '/games/ligas-campeones'
+    | '/games/mundo-constructor'
+    | '/games/order-idea'
+    | '/games/quiz-clash'
+    | '/games/rpg-academico'
+    | '/games/runner-conocimiento'
+    | '/games/simulador-examenes'
     | '/games/space-rush'
+    | '/games/torre-infinita'
+    | '/games/wordle'
     | '/prep/quiz/$quizId'
   id:
     | '__root__'
@@ -189,8 +417,27 @@ export interface FileRouteTypes {
     | '/_authenticated/prep'
     | '/_authenticated/profile'
     | '/_authenticated/recommendations'
+    | '/_authenticated/games/battle-royale'
+    | '/_authenticated/games/centro-investigacion'
+    | '/_authenticated/games/ciudad-conocimiento'
+    | '/_authenticated/games/complete-concept'
+    | '/_authenticated/games/connect-area'
+    | '/_authenticated/games/criaturas-conocimiento'
+    | '/_authenticated/games/dictation'
+    | '/_authenticated/games/escape-room'
     | '/_authenticated/games/gold-quest'
+    | '/_authenticated/games/hangman'
+    | '/_authenticated/games/laboratorio-inventores'
+    | '/_authenticated/games/ligas-campeones'
+    | '/_authenticated/games/mundo-constructor'
+    | '/_authenticated/games/order-idea'
+    | '/_authenticated/games/quiz-clash'
+    | '/_authenticated/games/rpg-academico'
+    | '/_authenticated/games/runner-conocimiento'
+    | '/_authenticated/games/simulador-examenes'
     | '/_authenticated/games/space-rush'
+    | '/_authenticated/games/torre-infinita'
+    | '/_authenticated/games/wordle'
     | '/_authenticated/prep_/quiz/$quizId'
   fileRoutesById: FileRoutesById
 }
@@ -280,6 +527,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/games/wordle': {
+      id: '/_authenticated/games/wordle'
+      path: '/wordle'
+      fullPath: '/games/wordle'
+      preLoaderRoute: typeof AuthenticatedGamesWordleRouteImport
+      parentRoute: typeof AuthenticatedGamesRoute
+    }
+    '/_authenticated/games/torre-infinita': {
+      id: '/_authenticated/games/torre-infinita'
+      path: '/torre-infinita'
+      fullPath: '/games/torre-infinita'
+      preLoaderRoute: typeof AuthenticatedGamesTorreInfinitaRouteImport
+      parentRoute: typeof AuthenticatedGamesRoute
+    }
     '/_authenticated/games/space-rush': {
       id: '/_authenticated/games/space-rush'
       path: '/space-rush'
@@ -287,11 +548,130 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedGamesSpaceRushRouteImport
       parentRoute: typeof AuthenticatedGamesRoute
     }
+    '/_authenticated/games/simulador-examenes': {
+      id: '/_authenticated/games/simulador-examenes'
+      path: '/simulador-examenes'
+      fullPath: '/games/simulador-examenes'
+      preLoaderRoute: typeof AuthenticatedGamesSimuladorExamenesRouteImport
+      parentRoute: typeof AuthenticatedGamesRoute
+    }
+    '/_authenticated/games/runner-conocimiento': {
+      id: '/_authenticated/games/runner-conocimiento'
+      path: '/runner-conocimiento'
+      fullPath: '/games/runner-conocimiento'
+      preLoaderRoute: typeof AuthenticatedGamesRunnerConocimientoRouteImport
+      parentRoute: typeof AuthenticatedGamesRoute
+    }
+    '/_authenticated/games/rpg-academico': {
+      id: '/_authenticated/games/rpg-academico'
+      path: '/rpg-academico'
+      fullPath: '/games/rpg-academico'
+      preLoaderRoute: typeof AuthenticatedGamesRpgAcademicoRouteImport
+      parentRoute: typeof AuthenticatedGamesRoute
+    }
+    '/_authenticated/games/quiz-clash': {
+      id: '/_authenticated/games/quiz-clash'
+      path: '/quiz-clash'
+      fullPath: '/games/quiz-clash'
+      preLoaderRoute: typeof AuthenticatedGamesQuizClashRouteImport
+      parentRoute: typeof AuthenticatedGamesRoute
+    }
+    '/_authenticated/games/order-idea': {
+      id: '/_authenticated/games/order-idea'
+      path: '/order-idea'
+      fullPath: '/games/order-idea'
+      preLoaderRoute: typeof AuthenticatedGamesOrderIdeaRouteImport
+      parentRoute: typeof AuthenticatedGamesRoute
+    }
+    '/_authenticated/games/mundo-constructor': {
+      id: '/_authenticated/games/mundo-constructor'
+      path: '/mundo-constructor'
+      fullPath: '/games/mundo-constructor'
+      preLoaderRoute: typeof AuthenticatedGamesMundoConstructorRouteImport
+      parentRoute: typeof AuthenticatedGamesRoute
+    }
+    '/_authenticated/games/ligas-campeones': {
+      id: '/_authenticated/games/ligas-campeones'
+      path: '/ligas-campeones'
+      fullPath: '/games/ligas-campeones'
+      preLoaderRoute: typeof AuthenticatedGamesLigasCampeonesRouteImport
+      parentRoute: typeof AuthenticatedGamesRoute
+    }
+    '/_authenticated/games/laboratorio-inventores': {
+      id: '/_authenticated/games/laboratorio-inventores'
+      path: '/laboratorio-inventores'
+      fullPath: '/games/laboratorio-inventores'
+      preLoaderRoute: typeof AuthenticatedGamesLaboratorioInventoresRouteImport
+      parentRoute: typeof AuthenticatedGamesRoute
+    }
+    '/_authenticated/games/hangman': {
+      id: '/_authenticated/games/hangman'
+      path: '/hangman'
+      fullPath: '/games/hangman'
+      preLoaderRoute: typeof AuthenticatedGamesHangmanRouteImport
+      parentRoute: typeof AuthenticatedGamesRoute
+    }
     '/_authenticated/games/gold-quest': {
       id: '/_authenticated/games/gold-quest'
       path: '/gold-quest'
       fullPath: '/games/gold-quest'
       preLoaderRoute: typeof AuthenticatedGamesGoldQuestRouteImport
+      parentRoute: typeof AuthenticatedGamesRoute
+    }
+    '/_authenticated/games/escape-room': {
+      id: '/_authenticated/games/escape-room'
+      path: '/escape-room'
+      fullPath: '/games/escape-room'
+      preLoaderRoute: typeof AuthenticatedGamesEscapeRoomRouteImport
+      parentRoute: typeof AuthenticatedGamesRoute
+    }
+    '/_authenticated/games/dictation': {
+      id: '/_authenticated/games/dictation'
+      path: '/dictation'
+      fullPath: '/games/dictation'
+      preLoaderRoute: typeof AuthenticatedGamesDictationRouteImport
+      parentRoute: typeof AuthenticatedGamesRoute
+    }
+    '/_authenticated/games/criaturas-conocimiento': {
+      id: '/_authenticated/games/criaturas-conocimiento'
+      path: '/criaturas-conocimiento'
+      fullPath: '/games/criaturas-conocimiento'
+      preLoaderRoute: typeof AuthenticatedGamesCriaturasConocimientoRouteImport
+      parentRoute: typeof AuthenticatedGamesRoute
+    }
+    '/_authenticated/games/connect-area': {
+      id: '/_authenticated/games/connect-area'
+      path: '/connect-area'
+      fullPath: '/games/connect-area'
+      preLoaderRoute: typeof AuthenticatedGamesConnectAreaRouteImport
+      parentRoute: typeof AuthenticatedGamesRoute
+    }
+    '/_authenticated/games/complete-concept': {
+      id: '/_authenticated/games/complete-concept'
+      path: '/complete-concept'
+      fullPath: '/games/complete-concept'
+      preLoaderRoute: typeof AuthenticatedGamesCompleteConceptRouteImport
+      parentRoute: typeof AuthenticatedGamesRoute
+    }
+    '/_authenticated/games/ciudad-conocimiento': {
+      id: '/_authenticated/games/ciudad-conocimiento'
+      path: '/ciudad-conocimiento'
+      fullPath: '/games/ciudad-conocimiento'
+      preLoaderRoute: typeof AuthenticatedGamesCiudadConocimientoRouteImport
+      parentRoute: typeof AuthenticatedGamesRoute
+    }
+    '/_authenticated/games/centro-investigacion': {
+      id: '/_authenticated/games/centro-investigacion'
+      path: '/centro-investigacion'
+      fullPath: '/games/centro-investigacion'
+      preLoaderRoute: typeof AuthenticatedGamesCentroInvestigacionRouteImport
+      parentRoute: typeof AuthenticatedGamesRoute
+    }
+    '/_authenticated/games/battle-royale': {
+      id: '/_authenticated/games/battle-royale'
+      path: '/battle-royale'
+      fullPath: '/games/battle-royale'
+      preLoaderRoute: typeof AuthenticatedGamesBattleRoyaleRouteImport
       parentRoute: typeof AuthenticatedGamesRoute
     }
     '/_authenticated/prep_/quiz/$quizId': {
@@ -305,13 +685,59 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthenticatedGamesRouteChildren {
+  AuthenticatedGamesBattleRoyaleRoute: typeof AuthenticatedGamesBattleRoyaleRoute
+  AuthenticatedGamesCentroInvestigacionRoute: typeof AuthenticatedGamesCentroInvestigacionRoute
+  AuthenticatedGamesCiudadConocimientoRoute: typeof AuthenticatedGamesCiudadConocimientoRoute
+  AuthenticatedGamesCompleteConceptRoute: typeof AuthenticatedGamesCompleteConceptRoute
+  AuthenticatedGamesConnectAreaRoute: typeof AuthenticatedGamesConnectAreaRoute
+  AuthenticatedGamesCriaturasConocimientoRoute: typeof AuthenticatedGamesCriaturasConocimientoRoute
+  AuthenticatedGamesDictationRoute: typeof AuthenticatedGamesDictationRoute
+  AuthenticatedGamesEscapeRoomRoute: typeof AuthenticatedGamesEscapeRoomRoute
   AuthenticatedGamesGoldQuestRoute: typeof AuthenticatedGamesGoldQuestRoute
+  AuthenticatedGamesHangmanRoute: typeof AuthenticatedGamesHangmanRoute
+  AuthenticatedGamesLaboratorioInventoresRoute: typeof AuthenticatedGamesLaboratorioInventoresRoute
+  AuthenticatedGamesLigasCampeonesRoute: typeof AuthenticatedGamesLigasCampeonesRoute
+  AuthenticatedGamesMundoConstructorRoute: typeof AuthenticatedGamesMundoConstructorRoute
+  AuthenticatedGamesOrderIdeaRoute: typeof AuthenticatedGamesOrderIdeaRoute
+  AuthenticatedGamesQuizClashRoute: typeof AuthenticatedGamesQuizClashRoute
+  AuthenticatedGamesRpgAcademicoRoute: typeof AuthenticatedGamesRpgAcademicoRoute
+  AuthenticatedGamesRunnerConocimientoRoute: typeof AuthenticatedGamesRunnerConocimientoRoute
+  AuthenticatedGamesSimuladorExamenesRoute: typeof AuthenticatedGamesSimuladorExamenesRoute
   AuthenticatedGamesSpaceRushRoute: typeof AuthenticatedGamesSpaceRushRoute
+  AuthenticatedGamesTorreInfinitaRoute: typeof AuthenticatedGamesTorreInfinitaRoute
+  AuthenticatedGamesWordleRoute: typeof AuthenticatedGamesWordleRoute
 }
 
 const AuthenticatedGamesRouteChildren: AuthenticatedGamesRouteChildren = {
+  AuthenticatedGamesBattleRoyaleRoute: AuthenticatedGamesBattleRoyaleRoute,
+  AuthenticatedGamesCentroInvestigacionRoute:
+    AuthenticatedGamesCentroInvestigacionRoute,
+  AuthenticatedGamesCiudadConocimientoRoute:
+    AuthenticatedGamesCiudadConocimientoRoute,
+  AuthenticatedGamesCompleteConceptRoute:
+    AuthenticatedGamesCompleteConceptRoute,
+  AuthenticatedGamesConnectAreaRoute: AuthenticatedGamesConnectAreaRoute,
+  AuthenticatedGamesCriaturasConocimientoRoute:
+    AuthenticatedGamesCriaturasConocimientoRoute,
+  AuthenticatedGamesDictationRoute: AuthenticatedGamesDictationRoute,
+  AuthenticatedGamesEscapeRoomRoute: AuthenticatedGamesEscapeRoomRoute,
   AuthenticatedGamesGoldQuestRoute: AuthenticatedGamesGoldQuestRoute,
+  AuthenticatedGamesHangmanRoute: AuthenticatedGamesHangmanRoute,
+  AuthenticatedGamesLaboratorioInventoresRoute:
+    AuthenticatedGamesLaboratorioInventoresRoute,
+  AuthenticatedGamesLigasCampeonesRoute: AuthenticatedGamesLigasCampeonesRoute,
+  AuthenticatedGamesMundoConstructorRoute:
+    AuthenticatedGamesMundoConstructorRoute,
+  AuthenticatedGamesOrderIdeaRoute: AuthenticatedGamesOrderIdeaRoute,
+  AuthenticatedGamesQuizClashRoute: AuthenticatedGamesQuizClashRoute,
+  AuthenticatedGamesRpgAcademicoRoute: AuthenticatedGamesRpgAcademicoRoute,
+  AuthenticatedGamesRunnerConocimientoRoute:
+    AuthenticatedGamesRunnerConocimientoRoute,
+  AuthenticatedGamesSimuladorExamenesRoute:
+    AuthenticatedGamesSimuladorExamenesRoute,
   AuthenticatedGamesSpaceRushRoute: AuthenticatedGamesSpaceRushRoute,
+  AuthenticatedGamesTorreInfinitaRoute: AuthenticatedGamesTorreInfinitaRoute,
+  AuthenticatedGamesWordleRoute: AuthenticatedGamesWordleRoute,
 }
 
 const AuthenticatedGamesRouteWithChildren =
