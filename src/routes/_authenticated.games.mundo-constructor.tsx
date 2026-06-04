@@ -5,7 +5,7 @@ import { useTranslation } from "react-i18next";
 import { useState, useEffect } from "react";
 import { rewardGameCoins, rewardGameXp } from "@/lib/games.functions";
 import { AppHeader } from "@/components/AppHeader";
-import { ArrowLeft, Sparkles, Trophy, HelpCircle, Hammer, Brush, Home, Library, FlaskConical, School, Landmark, CheckCircle2, XCircle, ShieldAlert, Award, Play } from "lucide-react";
+import { ArrowLeft, Sparkles, Trophy, Landmark, Library, Play, ShieldAlert, Award, Timer, BookOpen, GraduationCap } from "lucide-react";
 import { toast } from "sonner";
 import { QUESTIONS_DB } from "@/lib/question-engine";
 import { analyticsEngine } from "@/lib/analytics-engine";
@@ -427,7 +427,7 @@ function MundoConstructorGame() {
           <ArrowLeft className="size-5" /> Regresar al Hub
         </button>
         <div className="flex items-center gap-2">
-          <Hammer className="size-5 text-emerald-400 animate-bounce" />
+          <span className="text-xl animate-bounce">🔨</span>
           <h1 className="font-display text-lg font-black tracking-wide bg-gradient-to-r from-emerald-400 to-indigo-400 bg-clip-text text-transparent">Mundo Constructor</h1>
         </div>
         <div className="flex items-center gap-1.5 bg-[#143224]/30 border border-[#1E4A35] px-3.5 py-1.5 rounded-full text-xs font-bold text-emerald-300">
@@ -485,8 +485,8 @@ function MundoConstructorGame() {
           </div>
 
           <div className="mt-6 pt-4 border-t border-[#143224] flex justify-between items-center text-[10px] text-slate-400 font-bold">
-            <span className="flex items-center gap-1.5"><Home className="size-3 text-emerald-400" /> Casas construidas: {grid.flat().filter(x => x === "casa").length}</span>
-            <span className="flex items-center gap-1.5"><School className="size-3 text-indigo-400" /> Campus Universitarios: {grid.flat().filter(x => x === "universidad").length}</span>
+            <span className="flex items-center gap-1.5"><span className="text-xs">🏠</span> Casas construidas: {grid.flat().filter(x => x === "casa").length}</span>
+            <span className="flex items-center gap-1.5"><span className="text-xs">🏫</span> Campus Universitarios: {grid.flat().filter(x => x === "universidad").length}</span>
           </div>
         </div>
 
@@ -496,7 +496,7 @@ function MundoConstructorGame() {
           {/* Inventory Box */}
           <div className="bg-[#091512] border border-[#143224] rounded-3xl p-6 shadow-lg">
             <h3 className="font-display font-bold text-sm text-slate-100 uppercase tracking-widest border-b border-[#143224] pb-3 flex items-center gap-1.5">
-              <Brush className="size-4 text-emerald-400" /> Almacén de Recursos
+              <span className="text-sm">🖌️</span> Almacén de Recursos
             </h3>
             
             <div className="grid grid-cols-2 gap-3 mt-4 text-xs font-bold">
@@ -564,7 +564,7 @@ function MundoConstructorGame() {
                 className="w-full py-2.5 px-4 bg-[#040908] border border-[#143224] hover:bg-[#11241E] hover:border-emerald-500/40 rounded-xl transition text-left flex justify-between items-center cursor-pointer"
               >
                 <span>🧩 Desafío de Lógica</span>
-                <span className="text-[9px] bg-pink-500/10 text-pink-400 border border-pink-500/25 px-2 py-0.5 rounded">+1 Planos</span>
+                <span className="text-[9px] bg-pink-500/10 text-pink-400 border-pink-500/25 px-2 py-0.5 rounded">+1 Planos</span>
               </button>
             </div>
           </div>
@@ -579,7 +579,7 @@ function MundoConstructorGame() {
               <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-emerald-500 to-indigo-500" />
               <div className="flex justify-between items-center border-b border-[#143224] pb-3">
                 <h3 className="font-display text-lg font-bold text-slate-100 flex items-center gap-1.5">
-                  <Hammer className="size-5 text-emerald-400" /> Menú de Edificación (Celda {activeCell.r}, {activeCell.c})
+                  <span className="text-lg">🔨</span> Menú de Edificación (Celda {activeCell.r}, {activeCell.c})
                 </h3>
                 <button
                   onClick={() => { setShowBuildMenu(false); setActiveCell(null); }}
@@ -673,9 +673,9 @@ function MundoConstructorGame() {
                   <div className="p-4 rounded-xl text-xs bg-[#040908] border border-[#143224] space-y-2">
                     <div className="flex items-center gap-1.5 font-bold">
                       {roundFeedback ? (
-                        <span className="text-emerald-400 flex items-center gap-1"><CheckCircle2 className="size-4 animate-pulse" /> ¡Correcto!</span>
+                        <span className="text-emerald-400 text-sm flex items-center gap-1">✅ ¡Correcto!</span>
                       ) : (
-                        <span className="text-rose-500 flex items-center gap-1"><XCircle className="size-4" /> Incorrecto</span>
+                        <span className="text-rose-500 text-sm flex items-center gap-1">❌ Incorrecto</span>
                       )}
                     </div>
                     <p className="text-[10px] text-slate-400 font-normal leading-relaxed">
