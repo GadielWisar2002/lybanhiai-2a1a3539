@@ -188,7 +188,8 @@ export const unlockGame = createServerFn({ method: "POST" })
 
     // Fetch profile role first (Developer priority rule)
     const { data: profile } = await supabase.from("profiles").select("role").eq("id", userId).maybeSingle();
-    const isDeveloper = profile?.role === "developer";
+    const email = (context.claims as any)?.email?.toLowerCase() ?? "";
+    const isDeveloper = email === "debanhivillanueva@colegiomaranatha.edu.mx" || profile?.role === "developer";
 
     const { data: s, error } = await supabase.from("streaks").select("total_xp, coins, unlocked_games").eq("user_id", userId).maybeSingle();
     if (error || !s) throw new Error("No streaks record found");
@@ -259,7 +260,9 @@ export const devAddXp = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     const { data: profile } = await supabase.from("profiles").select("role").eq("id", userId).maybeSingle();
-    if (!profile || profile.role !== "developer") throw new Error("Unauthorized: Developer role required.");
+    const email = (context.claims as any)?.email?.toLowerCase() ?? "";
+    const isDeveloper = email === "debanhivillanueva@colegiomaranatha.edu.mx" || profile?.role === "developer";
+    if (!isDeveloper) throw new Error("Unauthorized: Developer role required.");
 
     const { data: s } = await supabase.from("streaks").select("total_xp").eq("user_id", userId).maybeSingle();
     const nextXp = Math.max(0, (s?.total_xp ?? 0) + data.amount);
@@ -273,7 +276,9 @@ export const devAddCoins = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     const { data: profile } = await supabase.from("profiles").select("role").eq("id", userId).maybeSingle();
-    if (!profile || profile.role !== "developer") throw new Error("Unauthorized: Developer role required.");
+    const email = (context.claims as any)?.email?.toLowerCase() ?? "";
+    const isDeveloper = email === "debanhivillanueva@colegiomaranatha.edu.mx" || profile?.role === "developer";
+    if (!isDeveloper) throw new Error("Unauthorized: Developer role required.");
 
     const { data: s } = await supabase.from("streaks").select("coins").eq("user_id", userId).maybeSingle();
     const nextCoins = Math.max(0, (s?.coins ?? 0) + data.amount);
@@ -286,7 +291,9 @@ export const devResetProgress = createServerFn({ method: "POST" })
   .handler(async ({ context }) => {
     const { supabase, userId } = context;
     const { data: profile } = await supabase.from("profiles").select("role").eq("id", userId).maybeSingle();
-    if (!profile || profile.role !== "developer") throw new Error("Unauthorized: Developer role required.");
+    const email = (context.claims as any)?.email?.toLowerCase() ?? "";
+    const isDeveloper = email === "debanhivillanueva@colegiomaranatha.edu.mx" || profile?.role === "developer";
+    if (!isDeveloper) throw new Error("Unauthorized: Developer role required.");
 
     await supabase.from("streaks").update({
       coins: 0,
@@ -308,7 +315,9 @@ export const devToggleUnlockGame = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     const { data: profile } = await supabase.from("profiles").select("role").eq("id", userId).maybeSingle();
-    if (!profile || profile.role !== "developer") throw new Error("Unauthorized: Developer role required.");
+    const email = (context.claims as any)?.email?.toLowerCase() ?? "";
+    const isDeveloper = email === "debanhivillanueva@colegiomaranatha.edu.mx" || profile?.role === "developer";
+    if (!isDeveloper) throw new Error("Unauthorized: Developer role required.");
 
     const { data: s } = await supabase.from("streaks").select("unlocked_games").eq("user_id", userId).maybeSingle();
     let list = s?.unlocked_games ?? [];
@@ -328,7 +337,9 @@ export const devSetLevel = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     const { data: profile } = await supabase.from("profiles").select("role").eq("id", userId).maybeSingle();
-    if (!profile || profile.role !== "developer") throw new Error("Unauthorized: Developer role required.");
+    const email = (context.claims as any)?.email?.toLowerCase() ?? "";
+    const isDeveloper = email === "debanhivillanueva@colegiomaranatha.edu.mx" || profile?.role === "developer";
+    if (!isDeveloper) throw new Error("Unauthorized: Developer role required.");
 
     // Scaling level: level 1 is 0 XP, level 2 is 300 XP, level 3 is 600 XP, etc.
     const targetXp = (data.level - 1) * 300;

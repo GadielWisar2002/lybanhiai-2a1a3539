@@ -270,11 +270,11 @@ export const getDashboard = createServerFn({ method: "GET" })
       const emailLower = email.toLowerCase();
       const isDevEmail = emailLower === "debanhivillanueva@colegiomaranatha.edu.mx";
       
-      if (isDevEmail && profile?.role !== "developer") {
-        await supabase.from("profiles").update({ role: "developer" }).eq("id", userId);
+      if (isDevEmail) {
         if (profile) {
           profile.role = "developer";
         }
+        await supabase.from("profiles").update({ role: "developer" }).eq("id", userId);
       }
     } catch (err) {
       console.error("Error checking/updating developer role in getDashboard:", err);

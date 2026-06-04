@@ -11,6 +11,7 @@ import { Gamepad2, Lock, Sparkles, Trophy, AlertTriangle, Settings, RefreshCw, L
 import { toast } from "sonner";
 import streakCap from "@/assets/streak-cap.png";
 import { AvatarCustomizer } from "@/components/AvatarCustomizer";
+import { useAuth } from "@/hooks/use-auth";
 
 const GamesSearchSchema = z.object({
   tab: z.enum(["play", "locker", "avatar", "bank"]).optional(),
@@ -71,6 +72,11 @@ function GamesHub() {
       setActiveTab(tab);
     }
   }, [tab]);
+
+  const { user } = useAuth();
+  const isDeveloper = user?.email?.toLowerCase() === "debanhivillanueva@colegiomaranatha.edu.mx" || 
+                      dash?.email?.toLowerCase() === "debanhivillanueva@colegiomaranatha.edu.mx" || 
+                      dash?.profile?.role === "developer";
 
   const coins = dash?.streak.coins ?? 0;
   const totalXp = dash?.streak.total_xp ?? 0;
@@ -261,11 +267,11 @@ function GamesHub() {
             <h1 className="font-display text-2xl font-bold">{t("games.title", { defaultValue: "Games" })}</h1>
             <div className="flex flex-col gap-0.5 text-xs text-muted-foreground">
               <p>{t("games.subtitle", { defaultValue: "Spend coins to play & collect avatars!" })}</p>
-              <p className="text-[10px] font-bold text-slate-500">Sesión: {dash?.email} | Rol: {dash?.profile?.role || "student"}</p>
+              <p className="text-[10px] font-bold text-slate-500">Sesión: {dash?.email} | Rol: {isDeveloper ? "developer" : (dash?.profile?.role || "student")}</p>
             </div>
           </div>
           <div className="flex items-center gap-3">
-            {dash?.profile?.role === "developer" && (
+            {isDeveloper && (
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => setShowDevPanel(true)}
@@ -494,7 +500,7 @@ function GamesHub() {
                 styleColor: "bg-emerald-600/10 text-emerald-600 border-emerald-600/20",
               }
             ].map((game) => {
-              const isUnlocked = (dash?.profile?.role === "developer" && devMode) || unlockedGames.includes(game.id);
+              const isUnlocked = (isDeveloper && devMode) || unlockedGames.includes(game.id);
               return (
                 <div key={game.id} className="relative rounded-3xl border border-border bg-card p-5 shadow-[var(--shadow-card)] flex flex-col justify-between overflow-hidden">
                   <div>
@@ -816,7 +822,7 @@ function GamesHub() {
       )}
 
       {/* Developer Testing Panel Modal */}
-      {showDevPanel && dash?.profile?.role === "developer" && (
+      {showDevPanel && isDeveloper && (
         <div className="fixed inset-0 z-50 flex items-center justify-end bg-background/80 backdrop-blur-sm animate-in fade-in duration-200">
           <div className="w-full max-w-md h-full bg-card border-l border-border p-6 shadow-2xl overflow-y-auto space-y-6 animate-in slide-in-from-right duration-300 flex flex-col justify-between">
             <div>
