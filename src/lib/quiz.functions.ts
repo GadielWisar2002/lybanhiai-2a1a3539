@@ -304,6 +304,7 @@ export const getDashboard = createServerFn({ method: "GET" })
       "ciudad-conocimiento": 900,
       "ligas-campeones": 1000,
       "simulador-examenes": 150,
+      "quiz-clash": 1200,
     };
 
     let s = streakRes.data;

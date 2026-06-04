@@ -181,6 +181,7 @@ export const unlockGame = createServerFn({ method: "POST" })
       "ciudad-conocimiento": 900,
       "ligas-campeones": 1000,
       "simulador-examenes": 150,
+      "quiz-clash": 1200,
     };
     
     const cost = costs[data.gameId];
