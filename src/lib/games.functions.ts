@@ -244,3 +244,86 @@ export const buyBlookDirect = createServerFn({ method: "POST" })
       remainingCoins,
     };
   });
+
+export const devAddXp = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => z.object({ amount: z.number().int() }).parse(input))
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    const { data: profile } = await supabase.from("profiles").select("role").eq("id", userId).maybeSingle();
+    if (!profile || profile.role !== "developer") throw new Error("Unauthorized: Developer role required.");
+
+    const { data: s } = await supabase.from("streaks").select("total_xp").eq("user_id", userId).maybeSingle();
+    const nextXp = Math.max(0, (s?.total_xp ?? 0) + data.amount);
+    await supabase.from("streaks").update({ total_xp: nextXp, updated_at: new Date().toISOString() }).eq("user_id", userId);
+    return { totalXp: nextXp };
+  });
+
+export const devAddCoins = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => z.object({ amount: z.number().int() }).parse(input))
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    const { data: profile } = await supabase.from("profiles").select("role").eq("id", userId).maybeSingle();
+    if (!profile || profile.role !== "developer") throw new Error("Unauthorized: Developer role required.");
+
+    const { data: s } = await supabase.from("streaks").select("coins").eq("user_id", userId).maybeSingle();
+    const nextCoins = Math.max(0, (s?.coins ?? 0) + data.amount);
+    await supabase.from("streaks").update({ coins: nextCoins, updated_at: new Date().toISOString() }).eq("user_id", userId);
+    return { coins: nextCoins };
+  });
+
+export const devResetProgress = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabase, userId } = context;
+    const { data: profile } = await supabase.from("profiles").select("role").eq("id", userId).maybeSingle();
+    if (!profile || profile.role !== "developer") throw new Error("Unauthorized: Developer role required.");
+
+    await supabase.from("streaks").update({
+      coins: 0,
+      total_xp: 0,
+      current_streak: 0,
+      longest_streak: 0,
+      unlocked_games: [],
+      last_active_date: null,
+      updated_at: new Date().toISOString(),
+    }).eq("user_id", userId);
+
+    await supabase.from("user_blooks").delete().eq("user_id", userId);
+    return { ok: true };
+  });
+
+export const devToggleUnlockGame = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => z.object({ gameId: z.string(), unlocked: z.boolean() }).parse(input))
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    const { data: profile } = await supabase.from("profiles").select("role").eq("id", userId).maybeSingle();
+    if (!profile || profile.role !== "developer") throw new Error("Unauthorized: Developer role required.");
+
+    const { data: s } = await supabase.from("streaks").select("unlocked_games").eq("user_id", userId).maybeSingle();
+    let list = s?.unlocked_games ?? [];
+    if (data.unlocked) {
+      if (!list.includes(data.gameId)) list = [...list, data.gameId];
+    } else {
+      list = list.filter(id => id !== data.gameId);
+    }
+
+    await supabase.from("streaks").update({ unlocked_games: list, updated_at: new Date().toISOString() }).eq("user_id", userId);
+    return { unlockedGames: list };
+  });
+
+export const devSetLevel = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => z.object({ level: z.number().int().min(1) }).parse(input))
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    const { data: profile } = await supabase.from("profiles").select("role").eq("id", userId).maybeSingle();
+    if (!profile || profile.role !== "developer") throw new Error("Unauthorized: Developer role required.");
+
+    // Scaling level: level 1 is 0 XP, level 2 is 300 XP, level 3 is 600 XP, etc.
+    const targetXp = (data.level - 1) * 300;
+    await supabase.from("streaks").update({ total_xp: targetXp, updated_at: new Date().toISOString() }).eq("user_id", userId);
+    return { totalXp: targetXp };
+  });

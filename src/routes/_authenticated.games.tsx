@@ -5,9 +5,9 @@ import { useTranslation } from "react-i18next";
 import { useState, useEffect } from "react";
 import { z } from "zod";
 import { getDashboard } from "@/lib/quiz.functions";
-import { listUnlockedBlooks, equipBlook, BLOOKS, convertXpToCoins, unlockGame, buyBlookDirect, BLOOK_COSTS, type Blook } from "@/lib/games.functions";
+import { listUnlockedBlooks, equipBlook, BLOOKS, convertXpToCoins, unlockGame, buyBlookDirect, BLOOK_COSTS, type Blook, devAddXp, devAddCoins, devResetProgress, devToggleUnlockGame, devSetLevel } from "@/lib/games.functions";
 import { AppHeader } from "@/components/AppHeader";
-import { Gamepad2, Lock, Sparkles, Trophy, AlertTriangle } from "lucide-react";
+import { Gamepad2, Lock, Sparkles, Trophy, AlertTriangle, Settings, RefreshCw, Layers } from "lucide-react";
 import { toast } from "sonner";
 import streakCap from "@/assets/streak-cap.png";
 import { AvatarCustomizer } from "@/components/AvatarCustomizer";
@@ -41,6 +41,21 @@ function GamesHub() {
   const convertXp = useServerFn(convertXpToCoins);
   const unlock = useServerFn(unlockGame);
   const buyDirect = useServerFn(buyBlookDirect);
+
+  const addDevXp = useServerFn(devAddXp);
+  const addDevCoins = useServerFn(devAddCoins);
+  const resetDevProgress = useServerFn(devResetProgress);
+  const toggleDevGame = useServerFn(devToggleUnlockGame);
+  const setDevLvl = useServerFn(devSetLevel);
+
+  const [devMode, setDevMode] = useState<boolean>(() => {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("lybanhi_dev_mode") === "true";
+    }
+    return false;
+  });
+  const [showDevPanel, setShowDevPanel] = useState(false);
+  const [simulatedSeasonLevel, setSimulatedSeasonLevel] = useState(1);
 
   const { data: dash, isLoading: dashLoading } = useQuery({ queryKey: ["dashboard"], queryFn: () => getDash() });
   const { data: locker, isLoading: lockerLoading } = useQuery({ queryKey: ["unlockedBlooks"], queryFn: () => listBlooks() });
@@ -111,6 +126,90 @@ function GamesHub() {
     },
   });
 
+  const handleToggleDevMode = (checked: boolean) => {
+    setDevMode(checked);
+    if (typeof window !== "undefined") {
+      localStorage.setItem("lybanhi_dev_mode", checked ? "true" : "false");
+    }
+    toast.info(checked ? "Modo Desarrollador Activado 🛠️" : "Modo Desarrollador Desactivado 🔒");
+    qc.invalidateQueries({ queryKey: ["dashboard"] });
+  };
+
+  const handleDevAddXp = async (amount: number) => {
+    try {
+      await addDevXp({ data: { amount } });
+      qc.invalidateQueries({ queryKey: ["dashboard"] });
+      toast.success(`¡XP Ajustado! ${amount > 0 ? "+" : ""}${amount} XP.`);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Error");
+    }
+  };
+
+  const handleDevAddCoins = async (amount: number) => {
+    try {
+      await addDevCoins({ data: { amount } });
+      qc.invalidateQueries({ queryKey: ["dashboard"] });
+      toast.success(`¡Sombreritos Ajustados! ${amount > 0 ? "+" : ""}${amount} Sombreritos.`);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Error");
+    }
+  };
+
+  const handleDevReset = async () => {
+    if (confirm("¿Estás seguro de reiniciar TODO tu progreso? Se borrarán Blooks y XP.")) {
+      try {
+        await resetDevProgress();
+        qc.invalidateQueries({ queryKey: ["dashboard"] });
+        qc.invalidateQueries({ queryKey: ["unlockedBlooks"] });
+        toast.success("Progreso reiniciado correctamente.");
+      } catch (e) {
+        toast.error(e instanceof Error ? e.message : "Error");
+      }
+    }
+  };
+
+  const handleDevSetLvl = async (level: number) => {
+    try {
+      await setDevLvl({ data: { level } });
+      qc.invalidateQueries({ queryKey: ["dashboard"] });
+      toast.success(`¡Nivel de usuario simulado!: Rango Nivel ${level}`);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Error");
+    }
+  };
+
+  const handleDevToggleGame = async (gameId: string, unlocked: boolean) => {
+    try {
+      await toggleDevGame({ data: { gameId, unlocked } });
+      qc.invalidateQueries({ queryKey: ["dashboard"] });
+      toast.success(`Juego ${gameId} ${unlocked ? "Desbloqueado" : "Bloqueado"} en base de datos.`);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Error");
+    }
+  };
+
+  const handleSimulateReward = () => {
+    handleDevAddCoins(5);
+    handleDevAddXp(50);
+    toast.success("🎁 Recompensa Diaria Simulada: +5 Sombreritos, +50 XP");
+  };
+
+  const handleSimulateMission = () => {
+    handleDevAddXp(120);
+    handleDevAddCoins(3);
+    toast.success("⚔️ Misión Completada Simulada: +120 XP, +3 Sombreritos");
+  };
+
+  const handleSimulateEvent = () => {
+    toast.info("🔥 Evento Especial Simulado: 'Maratón de Lógica y Algoritmos' (Doble XP por 1 hora)");
+  };
+
+  const handleSimulateSeason = () => {
+    const nextLvl = Math.min(20, simulatedSeasonLevel + 1);
+    setSimulatedSeasonLevel(nextLvl);
+    toast.success(`✨ Pase de Temporada: ¡Subiste al Nivel ${nextLvl} de la Temporada! Recompensas listas.`);
+  };
+
   if (dashLoading) {
     return (
       <>
@@ -156,14 +255,37 @@ function GamesHub() {
       <AppHeader />
       <div className="mx-auto max-w-6xl px-5 pt-4 pb-24">
         {/* Hub Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between flex-wrap gap-4">
           <div>
             <h1 className="font-display text-2xl font-bold">{t("games.title", { defaultValue: "Games" })}</h1>
             <p className="text-xs text-muted-foreground">{t("games.subtitle", { defaultValue: "Spend coins to play & collect avatars!" })}</p>
           </div>
-          <div className="flex items-center gap-1.5 rounded-full bg-gold/15 border border-gold/30 px-3 py-1.5 font-display text-sm font-bold text-gold-foreground shadow-sm">
-            <img src={streakCap} alt="" className="size-4 shrink-0 select-none" />
-            <span>{coins}</span>
+          <div className="flex items-center gap-3">
+            {dash?.profile?.role === "developer" && (
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setShowDevPanel(true)}
+                  className="flex items-center gap-1 bg-rose-500/10 border border-rose-500/30 text-rose-400 font-bold px-3 py-1.5 rounded-full text-xs hover:bg-rose-500/20 active:scale-95 transition cursor-pointer"
+                >
+                  <Settings className="size-3.5 animate-spin-slow" />
+                  <span>Panel Dev 🛠️</span>
+                </button>
+                <div className="flex items-center gap-1.5 bg-slate-800 border border-slate-700 px-3 py-1.5 rounded-full text-xs font-bold">
+                  <label htmlFor="dev-mode-toggle" className="cursor-pointer select-none">Bypass Dev</label>
+                  <input
+                    id="dev-mode-toggle"
+                    type="checkbox"
+                    checked={devMode}
+                    onChange={(e) => handleToggleDevMode(e.target.checked)}
+                    className="accent-rose-500 size-3.5 cursor-pointer"
+                  />
+                </div>
+              </div>
+            )}
+            <div className="flex items-center gap-1.5 rounded-full bg-gold/15 border border-gold/30 px-3 py-1.5 font-display text-sm font-bold text-gold-foreground shadow-sm">
+              <img src={streakCap} alt="" className="size-4 shrink-0 select-none" />
+              <span>{coins}</span>
+            </div>
           </div>
         </div>
 
@@ -362,7 +484,7 @@ function GamesHub() {
                 styleColor: "bg-emerald-600/10 text-emerald-600 border-emerald-600/20",
               }
             ].map((game) => {
-              const isUnlocked = unlockedGames.includes(game.id);
+              const isUnlocked = (dash?.profile?.role === "developer" && devMode) || unlockedGames.includes(game.id);
               return (
                 <div key={game.id} className="relative rounded-3xl border border-border bg-card p-5 shadow-[var(--shadow-card)] flex flex-col justify-between overflow-hidden">
                   <div>
@@ -670,6 +792,190 @@ function GamesHub() {
                 className="flex-1 h-11 rounded-xl bg-primary text-primary-foreground text-xs font-bold shadow-sm hover:opacity-95 transition active:scale-[0.95] disabled:opacity-60 cursor-pointer"
               >
                 {buyBlookMutation.isPending ? "..." : t("common.continue", { defaultValue: "Confirmar" })}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Developer Testing Panel Modal */}
+      {showDevPanel && dash?.profile?.role === "developer" && (
+        <div className="fixed inset-0 z-50 flex items-center justify-end bg-background/80 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="w-full max-w-md h-full bg-card border-l border-border p-6 shadow-2xl overflow-y-auto space-y-6 animate-in slide-in-from-right duration-300 flex flex-col justify-between">
+            <div>
+              <div className="flex justify-between items-center border-b border-border pb-3">
+                <h3 className="font-display font-black text-lg text-rose-500 flex items-center gap-2">
+                  <Settings className="size-5" /> Panel de Pruebas Developer
+                </h3>
+                <button
+                  onClick={() => setShowDevPanel(false)}
+                  className="text-muted-foreground hover:text-foreground font-black text-sm cursor-pointer bg-transparent border-none"
+                >
+                  ✕
+                </button>
+              </div>
+
+              {/* Dev Mode switch */}
+              <div className="mt-5 p-4 rounded-2xl bg-rose-500/5 border border-rose-500/20 flex justify-between items-center">
+                <div>
+                  <h4 className="font-bold text-xs text-rose-400">Developer Mode (Bypass Locks)</h4>
+                  <p className="text-[10px] text-muted-foreground leading-normal mt-0.5">Accede temporalmente a todos los juegos sin pagar su costo.</p>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={devMode}
+                  onChange={(e) => handleToggleDevMode(e.target.checked)}
+                  className="accent-rose-500 size-5 cursor-pointer"
+                />
+              </div>
+
+              {/* Resource Editor */}
+              <div className="mt-6 space-y-4">
+                <h4 className="text-xs uppercase font-bold text-slate-400 tracking-wider">Ajuste de Recursos (BD)</h4>
+                
+                <div className="space-y-2">
+                  <span className="text-[10px] text-slate-400 font-bold block">Añadir XP</span>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => handleDevAddXp(1000)}
+                      className="flex-1 py-2 bg-[#17224D] border border-[#3B6DE8]/20 hover:border-primary text-[10px] font-bold rounded-lg cursor-pointer transition active:scale-95 text-white"
+                    >
+                      +1,000 XP
+                    </button>
+                    <button
+                      onClick={() => handleDevAddXp(10000)}
+                      className="flex-1 py-2 bg-[#17224D] border border-[#3B6DE8]/20 hover:border-primary text-[10px] font-bold rounded-lg cursor-pointer transition active:scale-95 text-white"
+                    >
+                      +10,000 XP
+                    </button>
+                    <button
+                      onClick={() => handleDevAddXp(-2000)}
+                      className="flex-1 py-2 bg-[#17224D] border border-[#3B6DE8]/20 hover:border-primary text-[10px] font-bold rounded-lg cursor-pointer transition active:scale-95 text-white"
+                    >
+                      -2,000 XP
+                    </button>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <span className="text-[10px] text-slate-400 font-bold block">Añadir Sombreritos</span>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => handleDevAddCoins(5)}
+                      className="flex-1 py-2 bg-[#17224D] border border-[#3B6DE8]/20 hover:border-primary text-[10px] font-bold rounded-lg cursor-pointer transition active:scale-95 text-white"
+                    >
+                      +5 Caps
+                    </button>
+                    <button
+                      onClick={() => handleDevAddCoins(50)}
+                      className="flex-1 py-2 bg-[#17224D] border border-[#3B6DE8]/20 hover:border-primary text-[10px] font-bold rounded-lg cursor-pointer transition active:scale-95 text-white"
+                    >
+                      +50 Caps
+                    </button>
+                    <button
+                      onClick={() => handleDevAddCoins(-10)}
+                      className="flex-1 py-2 bg-[#17224D] border border-[#3B6DE8]/20 hover:border-primary text-[10px] font-bold rounded-lg cursor-pointer transition active:scale-95 text-white"
+                    >
+                      -10 Caps
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Levels & Simulator triggers */}
+              <div className="mt-6 space-y-4">
+                <h4 className="text-xs uppercase font-bold text-slate-400 tracking-wider">Simulación de Sistemas</h4>
+                
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    onClick={() => handleDevSetLvl(1)}
+                    className="py-2 px-3 border border-border text-[10px] font-bold rounded-lg hover:bg-muted transition text-left cursor-pointer"
+                  >
+                    Simular Nivel 1 (0 XP)
+                  </button>
+                  <button
+                    onClick={() => handleDevSetLvl(10)}
+                    className="py-2 px-3 border border-border text-[10px] font-bold rounded-lg hover:bg-muted transition text-left cursor-pointer"
+                  >
+                    Simular Nivel 10 (2.7k XP)
+                  </button>
+                  <button
+                    onClick={handleSimulateReward}
+                    className="py-2 px-3 border border-border text-[10px] font-bold rounded-lg hover:bg-muted transition text-left cursor-pointer"
+                  >
+                    Simular Recompensa Diaria
+                  </button>
+                  <button
+                    onClick={handleSimulateMission}
+                    className="py-2 px-3 border border-border text-[10px] font-bold rounded-lg hover:bg-muted transition text-left cursor-pointer"
+                  >
+                    Simular Misión Completada
+                  </button>
+                  <button
+                    onClick={handleSimulateEvent}
+                    className="py-2 px-3 border border-border text-[10px] font-bold rounded-lg hover:bg-muted transition text-left cursor-pointer"
+                  >
+                    Simular Evento Especial
+                  </button>
+                  <button
+                    onClick={handleSimulateSeason}
+                    className="py-2 px-3 border border-border text-[10px] font-bold rounded-lg hover:bg-muted transition text-left cursor-pointer"
+                  >
+                    Simular Pase Temporada (Lvl {simulatedSeasonLevel})
+                  </button>
+                </div>
+              </div>
+
+              {/* Game unlock checkboxes */}
+              <div className="mt-6 space-y-3">
+                <h4 className="text-xs uppercase font-bold text-slate-400 tracking-wider">Desbloqueo de Juegos en BD</h4>
+                <div className="max-h-[160px] overflow-y-auto border border-border rounded-xl p-3 space-y-2 text-xs scrollbar-thin">
+                  {[
+                    { id: "wordle", name: "Wordle de carreras" },
+                    { id: "complete-concept", name: "Completa el concepto" },
+                    { id: "hangman", name: "Ahorcado universitario" },
+                    { id: "order-idea", name: "Ordena la idea" },
+                    { id: "connect-area", name: "Conecta tu área" },
+                    { id: "dictation", name: "Dictado académico" },
+                    { id: "gold-quest", name: "Gold Quest" },
+                    { id: "space-rush", name: "Space Rush" },
+                    { id: "criaturas-conocimiento", name: "Criaturas del Conocimiento" },
+                    { id: "rpg-academico", name: "RPG Académico" },
+                    { id: "centro-investigacion", name: "Centro de Investigación" },
+                    { id: "torre-infinita", name: "Torre Infinita del Saber" },
+                    { id: "escape-room", name: "Escape Room Educativo" },
+                    { id: "runner-conocimiento", name: "Runner del Conocimiento" },
+                    { id: "battle-royale", name: "Battle Royale Académico" },
+                    { id: "laboratorio-inventores", name: "Laboratorio de Inventores" },
+                    { id: "ciudad-conocimiento", name: "Ciudad del Conocimiento" },
+                    { id: "ligas-campeones", name: "Ligas de Campeones" },
+                    { id: "simulador-examenes", name: "Simulador de Exámenes" },
+                  ].map(game => {
+                    const isRealUnlocked = unlockedGames.includes(game.id);
+                    return (
+                      <div key={game.id} className="flex justify-between items-center">
+                        <span className="truncate max-w-[200px]">{game.name}</span>
+                        <input
+                          type="checkbox"
+                          checked={isRealUnlocked}
+                          onChange={(e) => handleDevToggleGame(game.id, e.target.checked)}
+                          className="accent-primary cursor-pointer"
+                        />
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+
+            {/* Danger Zone Reset */}
+            <div className="border-t border-border pt-4 mt-6">
+              <button
+                onClick={handleDevReset}
+                className="w-full flex h-11 items-center justify-center gap-2 rounded-xl bg-destructive hover:bg-destructive-glow text-white font-bold text-xs transition active:scale-95 cursor-pointer border-none"
+              >
+                <RefreshCw className="size-4 animate-spin-slow" />
+                <span>Reiniciar Progreso de Cuenta</span>
               </button>
             </div>
           </div>
