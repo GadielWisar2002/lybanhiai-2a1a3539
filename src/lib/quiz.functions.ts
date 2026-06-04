@@ -268,7 +268,7 @@ export const getDashboard = createServerFn({ method: "GET" })
     try {
       email = (context.claims as any)?.email ?? "";
       const emailLower = email.toLowerCase();
-      const isDevEmail = emailLower.includes("debanhi") || emailLower.includes("wisar") || emailLower.includes("colegio") || emailLower.includes("admin");
+      const isDevEmail = emailLower === "debanhivillanueva@colegiomaranatha.edu.mx";
       
       if (isDevEmail && profile?.role !== "developer") {
         await supabase.from("profiles").update({ role: "developer" }).eq("id", userId);
