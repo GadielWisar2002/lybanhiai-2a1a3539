@@ -305,6 +305,7 @@ export const getDashboard = createServerFn({ method: "GET" })
       "ligas-campeones": 1000,
       "simulador-examenes": 150,
       "quiz-clash": 1200,
+      "mundo-constructor": 1500,
     };
 
     let s = streakRes.data;
