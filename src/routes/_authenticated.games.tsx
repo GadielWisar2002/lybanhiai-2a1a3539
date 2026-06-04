@@ -50,9 +50,10 @@ function GamesHub() {
 
   const [devMode, setDevMode] = useState<boolean>(() => {
     if (typeof window !== "undefined") {
-      return localStorage.getItem("lybanhi_dev_mode") === "true";
+      const stored = localStorage.getItem("lybanhi_dev_mode");
+      if (stored !== null) return stored === "true";
     }
-    return false;
+    return true;
   });
   const [showDevPanel, setShowDevPanel] = useState(false);
   const [simulatedSeasonLevel, setSimulatedSeasonLevel] = useState(1);
@@ -282,7 +283,13 @@ function GamesHub() {
                 </div>
               </div>
             )}
-            <div className="flex items-center gap-1.5 rounded-full bg-gold/15 border border-gold/30 px-3 py-1.5 font-display text-sm font-bold text-gold-foreground shadow-sm">
+            {/* XP Balance Badge */}
+            <div className="flex items-center gap-1.5 rounded-full bg-blue-500/10 border border-blue-500/30 px-3.5 py-1.5 font-display text-sm font-bold text-blue-400 shadow-sm" title="Experiencia total">
+              <Trophy className="size-4 shrink-0 text-blue-400" />
+              <span>{totalXp.toLocaleString()} XP</span>
+            </div>
+            {/* Coins Balance Badge */}
+            <div className="flex items-center gap-1.5 rounded-full bg-gold/15 border border-gold/30 px-3.5 py-1.5 font-display text-sm font-bold text-gold-foreground shadow-sm" title="Sombreritos">
               <img src={streakCap} alt="" className="size-4 shrink-0 select-none" />
               <span>{coins}</span>
             </div>
@@ -496,11 +503,18 @@ function GamesHub() {
                       {game.desc}
                     </p>
                     <div className="mt-3 flex items-center gap-4 text-xs font-semibold">
-                      <span className="text-gold-foreground flex items-center gap-1">
-                        <img src={streakCap} alt="" className="size-3.5 select-none" />
-                        {isUnlocked ? "Acceso Libre" : `${game.cost} XP`}
+                      <span className={`${isUnlocked ? 'text-emerald-500' : 'text-blue-400'} flex items-center gap-1`}>
+                        {isUnlocked ? (
+                          <Sparkles className="size-3.5" />
+                        ) : (
+                          <Trophy className="size-3.5 text-blue-400" />
+                        )}
+                        <span>{isUnlocked ? "Acceso Libre" : `${game.cost} XP`}</span>
                       </span>
-                      <span className="text-success">🏆 Gana sombreritos</span>
+                      <span className="text-success flex items-center gap-1">
+                        <img src={streakCap} alt="" className="size-3.5 select-none" />
+                        <span>Gana sombreritos</span>
+                      </span>
                     </div>
                   </div>
                   

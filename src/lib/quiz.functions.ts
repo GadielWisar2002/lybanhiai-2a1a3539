@@ -264,14 +264,40 @@ export const getDashboard = createServerFn({ method: "GET" })
     const { data: attempts } = await supabase.from("quiz_attempts").select("xp_earned").eq("user_id", userId);
     const calculatedXp = (attempts ?? []).reduce((acc, curr) => acc + (curr.xp_earned ?? 0), 0);
 
+    const GAME_COSTS: Record<string, number> = {
+      "gold-quest": 500,
+      "space-rush": 1000,
+      "wordle": 100,
+      "complete-concept": 200,
+      "hangman": 300,
+      "order-idea": 400,
+      "connect-area": 500,
+      "dictation": 600,
+      "criaturas-conocimiento": 100,
+      "rpg-academico": 200,
+      "centro-investigacion": 300,
+      "torre-infinita": 400,
+      "escape-room": 500,
+      "runner-conocimiento": 600,
+      "battle-royale": 700,
+      "laboratorio-inventores": 800,
+      "ciudad-conocimiento": 900,
+      "ligas-campeones": 1000,
+      "simulador-examenes": 150,
+    };
+
     let s = streakRes.data;
     let totalXp = s?.total_xp ?? 0;
     let coins = s?.coins ?? 0;
     let unlockedGames = s?.unlocked_games ?? [];
 
-    // If database total_xp is lower than calculated XP from attempts, sync it!
-    if (calculatedXp > totalXp) {
-      totalXp = calculatedXp;
+    // Calculate spent XP from unlocked games
+    const spentXp = unlockedGames.reduce((acc, gameId) => acc + (GAME_COSTS[gameId] ?? 0), 0);
+    const netXp = Math.max(0, calculatedXp - spentXp);
+
+    // If database total_xp is lower than calculated net XP, sync it!
+    if (netXp > totalXp) {
+      totalXp = netXp;
     }
 
     const today = new Date().toISOString().slice(0, 10);
