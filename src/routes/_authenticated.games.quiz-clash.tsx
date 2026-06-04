@@ -5,9 +5,9 @@ import { useTranslation } from "react-i18next";
 import { useState, useEffect } from "react";
 import { rewardGameCoins } from "@/lib/games.functions";
 import { AppHeader } from "@/components/AppHeader";
-import { ArrowLeft, Gamepad2, Lock, Sparkles, Trophy, User, Users, Timer, HelpCircle, Swords, Zap, CheckCircle2, XCircle } from "lucide-react";
+import { ArrowLeft, Sparkles, Trophy, Timer, HelpCircle, Swords, Zap, CheckCircle2, XCircle, BookOpen, GraduationCap, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
-import { getRandomQuestion, type Question } from "@/lib/question-engine";
+import { QUESTIONS_DB, type Question } from "@/lib/question-engine";
 import { analyticsEngine } from "@/lib/analytics-engine";
 import streakCap from "@/assets/streak-cap.png";
 
@@ -21,6 +21,281 @@ const BOT_NAMES = [
   "Alexis_Quantum", "Clara_Genetica", "Mateo_Algoritmos", 
   "Valeria_Newton", "Hugo_Socrates", "Elena_Calculo",
   "Diego_Darwin", "Sofia_Química", "Lucas_Algebra"
+];
+
+// Rich fallback bank of educational questions
+interface EducationalQuestion {
+  id: string;
+  level: "secundaria" | "preparatoria" | "admision" | "toefl" | "cambridge";
+  subject: "matemáticas" | "física" | "química" | "biología" | "historia" | "geografía" | "español" | "inglés" | "lógica" | "programación";
+  topic: string;
+  difficulty: "easy" | "medium" | "hard";
+  prompt: string;
+  options: string[];
+  correctIndex: number;
+  explanation: string;
+}
+
+const LOCAL_QUESTIONS_DB: EducationalQuestion[] = [
+  // --- MATEMÁTICAS ---
+  {
+    id: "qc_m_1",
+    level: "secundaria",
+    subject: "matemáticas",
+    topic: "Álgebra",
+    difficulty: "easy",
+    prompt: "¿Cuánto es el valor de x en la ecuación: 2x + 5 = 15?",
+    options: ["x = 5", "x = 3", "x = 10", "x = 7"],
+    correctIndex: 0,
+    explanation: "Restamos 5 a ambos lados: 2x = 10. Luego dividimos entre 2: x = 5."
+  },
+  {
+    id: "qc_m_2",
+    level: "preparatoria",
+    subject: "matemáticas",
+    topic: "Álgebra",
+    difficulty: "medium",
+    prompt: "¿Cuál es el valor de x en la ecuación cuadrática x² - 9 = 0?",
+    options: ["x = ±3", "x = 3", "x = -9", "x = ±9"],
+    correctIndex: 0,
+    explanation: "Despejando x² obtenemos x² = 9. Aplicando raíz cuadrada a ambos lados, obtenemos x = ±3."
+  },
+  {
+    id: "qc_m_3",
+    level: "admision",
+    subject: "matemáticas",
+    topic: "Lógica",
+    difficulty: "hard",
+    prompt: "Si dos pintores tardan 6 horas en pintar una casa, ¿cuánto tardarán 3 pintores al mismo ritmo?",
+    options: ["9 horas", "3 horas", "4 horas", "5 horas"],
+    correctIndex: 2,
+    explanation: "Es una proporción inversa. A más pintores, menos tiempo: (2 pintores * 6 horas) / 3 pintores = 4 horas."
+  },
+  {
+    id: "qc_m_4",
+    level: "secundaria",
+    subject: "matemáticas",
+    topic: "Aritmética",
+    difficulty: "easy",
+    prompt: "¿Cuál es el resultado de la siguiente operación básica: 15 - 3 * 4 + 2?",
+    options: ["5", "50", "14", "9"],
+    correctIndex: 0,
+    explanation: "Por jerarquía de operaciones, resolvemos primero la multiplicación: 3 * 4 = 12. Luego sumas y restas de izquierda a derecha: 15 - 12 + 2 = 5."
+  },
+  {
+    id: "qc_m_5",
+    level: "preparatoria",
+    subject: "matemáticas",
+    topic: "Aritmética",
+    difficulty: "medium",
+    prompt: "¿Qué fracción es exactamente equivalente a la expresión decimal 0.875?",
+    options: ["5/6", "7/8", "3/4", "9/10"],
+    correctIndex: 1,
+    explanation: "0.875 se puede expresar como 875/1000, lo cual simplificado entre 125 nos da 7/8."
+  },
+  {
+    id: "qc_m_6",
+    level: "admision",
+    subject: "matemáticas",
+    topic: "Álgebra",
+    difficulty: "hard",
+    prompt: "¿Cuál es la pendiente de la recta tangente a la curva y = x² - 3x en el punto x = 2?",
+    options: ["1", "2", "3", "0"],
+    correctIndex: 0,
+    explanation: "La derivada es y' = 2x - 3. Evaluando en x = 2: y'(2) = 2(2) - 3 = 1."
+  },
+  {
+    id: "qc_m_7",
+    level: "secundaria",
+    subject: "matemáticas",
+    topic: "Lógica",
+    difficulty: "easy",
+    prompt: "¿Qué número sigue en la secuencia lógica: 2, 4, 8, 16, ...?",
+    options: ["20", "32", "24", "48"],
+    correctIndex: 1,
+    explanation: "Cada número se multiplica por 2 (progresión geométrica). 16 * 2 = 32."
+  },
+
+  // --- CIENCIAS (Física, Química, Biología) ---
+  {
+    id: "qc_c_1",
+    level: "secundaria",
+    subject: "química",
+    topic: "Química Básica",
+    difficulty: "easy",
+    prompt: "¿Cuál es la fórmula química del agua común?",
+    options: ["CO2", "HO2", "H2O", "H2O2"],
+    correctIndex: 2,
+    explanation: "El agua contiene dos átomos de Hidrógeno y uno de Oxígeno: H2O."
+  },
+  {
+    id: "qc_c_2",
+    level: "preparatoria",
+    subject: "física",
+    topic: "Leyes del Movimiento",
+    difficulty: "medium",
+    prompt: "¿Qué ley física explica directamente la relación proporcional entre fuerza y aceleración (F = m*a)?",
+    options: ["Segunda Ley de Newton", "Primera Ley de Newton", "Tercera Ley de Newton", "Ley de la Gravitación"],
+    correctIndex: 0,
+    explanation: "La Segunda Ley de Newton establece que la aceleración es proporcional a la fuerza neta e inversamente proporcional a la masa."
+  },
+  {
+    id: "qc_c_3",
+    level: "admision",
+    subject: "biología",
+    topic: "Biología Celular",
+    difficulty: "hard",
+    prompt: "¿Qué organelo es responsable de llevar a cabo la respiración celular y producir ATP?",
+    options: ["Cloroplasto", "Lisosoma", "Mitocondria", "Aparato de Golgi"],
+    correctIndex: 2,
+    explanation: "Las mitocondrias son los organelos celulares donde se produce la mayor parte de la energía química (ATP) de la célula."
+  },
+  {
+    id: "qc_c_4",
+    level: "secundaria",
+    subject: "física",
+    topic: "Electricidad",
+    difficulty: "easy",
+    prompt: "¿Qué unidad se utiliza en física para medir la resistencia eléctrica de un material?",
+    options: ["Voltio (V)", "Amperio (A)", "Ohmio (Ω)", "Vatio (W)"],
+    correctIndex: 2,
+    explanation: "La resistencia eléctrica se mide en Ohmios en honor al físico Georg Simon Ohm."
+  },
+  {
+    id: "qc_c_5",
+    level: "preparatoria",
+    subject: "química",
+    topic: "Tabla Periódica",
+    difficulty: "medium",
+    prompt: "¿Cuál es el símbolo químico correcto para el elemento Hierro?",
+    options: ["H", "Hi", "Fe", "Ir"],
+    correctIndex: 2,
+    explanation: "El símbolo del Hierro es Fe, proveniente de su nombre en latín 'ferrum'."
+  },
+  {
+    id: "qc_c_6",
+    level: "admision",
+    subject: "química",
+    topic: "Enlaces Químicos",
+    difficulty: "hard",
+    prompt: "¿Qué tipo de enlace se forma cuando dos átomos comparten electrones de manera equitativa?",
+    options: ["Enlace Covalente No Polar", "Enlace Covalente Polar", "Enlace Iónico", "Enlace Metálico"],
+    correctIndex: 0,
+    explanation: "Cuando los átomos tienen electronegatividades similares, comparten electrones de forma equitativa, resultando en un enlace covalente no polar."
+  },
+
+  // --- HISTORIA / GEOGRAFÍA ---
+  {
+    id: "qc_h_1",
+    level: "secundaria",
+    subject: "historia",
+    topic: "Historia de México",
+    difficulty: "easy",
+    prompt: "¿En qué año inició el movimiento revolucionario de la Independencia de México?",
+    options: ["1810", "1821", "1910", "1776"],
+    correctIndex: 0,
+    explanation: "Comenzó el 16 de septiembre de 1810 con el Grito de Dolores del cura Miguel Hidalgo."
+  },
+  {
+    id: "qc_h_2",
+    level: "preparatoria",
+    subject: "historia",
+    topic: "Historia Universal",
+    difficulty: "medium",
+    prompt: "¿Qué evento detonó directamente el inicio de la Primera Guerra Mundial en 1914?",
+    options: [
+      "La invasión a Polonia", 
+      "El asesinato del archiduque Francisco Fernando", 
+      "El Tratado de Versalles", 
+      "El ataque a Pearl Harbor"
+    ],
+    correctIndex: 1,
+    explanation: "El magnicidio del archiduque de Austria en Sarajevo encendió la red de alianzas que originó el conflicto mundial."
+  },
+  {
+    id: "qc_h_3",
+    level: "admision",
+    subject: "historia",
+    topic: "Historia Contemporánea",
+    difficulty: "hard",
+    prompt: "¿En qué año cayó el Muro de Berlín, marcando el fin simbólico de la Guerra Fría?",
+    options: ["1985", "1991", "1989", "1993"],
+    correctIndex: 2,
+    explanation: "El muro de Berlín fue derribado el 9 de noviembre de 1989, acelerando la unificación alemana y la disolución del bloque soviético."
+  },
+  {
+    id: "qc_h_4",
+    level: "secundaria",
+    subject: "geografía",
+    topic: "Geografía Física",
+    difficulty: "easy",
+    prompt: "¿Cuál es el río considerado oficialmente el más largo del mundo?",
+    options: ["Río Nilo", "Río Misisipi", "Río Amazonas", "Río Yangtsé"],
+    correctIndex: 2,
+    explanation: "El Río Amazonas es el más caudaloso y el más largo del mundo, superando al Nilo por margen de estudios recientes."
+  },
+
+  // --- INGLÉS / TOEFL / CAMBRIDGE ---
+  {
+    id: "qc_i_1",
+    level: "toefl",
+    subject: "inglés",
+    topic: "Gramática",
+    difficulty: "easy",
+    prompt: "Choose the grammatically correct sentence:",
+    options: [
+      "He go to school every day.", 
+      "He goes to school every day.", 
+      "He going to school every day.", 
+      "He gone to school every day."
+    ],
+    correctIndex: 1,
+    explanation: "In Present Simple, third person singular subjects (he, she, it) require the verb to end in -s or -es."
+  },
+  {
+    id: "qc_i_2",
+    level: "toefl",
+    subject: "inglés",
+    topic: "Vocabulario",
+    difficulty: "medium",
+    prompt: "What is the synonym of the word 'EPHEMERAL'?",
+    options: ["Long-lasting", "Short-lived", "Very bright", "Mysterious"],
+    correctIndex: 1,
+    explanation: "'Ephemeral' refers to something that lasts for a very short time; transient or fleeting."
+  },
+  {
+    id: "qc_i_3",
+    level: "cambridge",
+    subject: "inglés",
+    topic: "Condicionales",
+    difficulty: "hard",
+    prompt: "Complete the sentence: 'If I had known about the traffic, I _______ left earlier.'",
+    options: ["would have", "will have", "would", "had"],
+    correctIndex: 0,
+    explanation: "This is a Third Conditional sentence expressing past regret: If + past perfect, would have + past participle."
+  },
+  {
+    id: "qc_i_4",
+    level: "toefl",
+    subject: "inglés",
+    topic: "Comprensión Lectora",
+    difficulty: "medium",
+    prompt: "Identify the word that means 'to make something better or improve its quality':",
+    options: ["Diminish", "Enhance", "Stagnate", "Alleviate"],
+    correctIndex: 1,
+    explanation: "To 'enhance' means to intensify, increase, or further improve the quality, value, or extent of something."
+  },
+  {
+    id: "qc_i_5",
+    level: "cambridge",
+    subject: "inglés",
+    topic: "Estructuras Gramaticales",
+    difficulty: "hard",
+    prompt: "Complete: 'Hardly _______ started my presentation when the computer crashed.'",
+    options: ["I had", "had I", "was I", "I have"],
+    correctIndex: 1,
+    explanation: "When starting a sentence with negative adverbials like 'hardly', 'scarcely', or 'no sooner', subject-auxiliary inversion (had I) is required."
+  }
 ];
 
 function QuizClashGame() {
@@ -54,7 +329,8 @@ function QuizClashGame() {
     return 0;
   });
 
-  // Game States
+  // Game Settings & States
+  const [gameMode, setGameMode] = useState<"mixto" | "matemáticas" | "inglés">("mixto");
   const [gameState, setGameState] = useState<"lobby" | "queue" | "match" | "postmatch">("lobby");
   const [opponentName, setOpponentName] = useState("");
   const [opponentDivision, setOpponentDivision] = useState("");
@@ -63,9 +339,12 @@ function QuizClashGame() {
   const [opponentScore, setOpponentScore] = useState(0);
   const [outcome, setOutcome] = useState<"victory" | "defeat" | "draw">("victory");
 
-  // Question Engine States
-  const [currentQuestion, setCurrentQuestion] = useState<Question | null>(null);
-  const [timeLeft, setTimeLeft] = useState(15); // Fast-paced 15 seconds!
+  // Question Deck
+  const [questionDeck, setQuestionDeck] = useState<EducationalQuestion[]>([]);
+  const [currentQuestion, setCurrentQuestion] = useState<EducationalQuestion | null>(null);
+  
+  // Timers & Feedbacks
+  const [timeLeft, setTimeLeft] = useState(15);
   const [selectedOption, setSelectedOption] = useState<number | null>(null);
   const [questionStartTime, setQuestionStartTime] = useState(0);
   const [roundFeedback, setRoundFeedback] = useState<{ playerCorrect: boolean; opponentCorrect: boolean } | null>(null);
@@ -80,7 +359,6 @@ function QuizClashGame() {
   }, [divisionIdx, lp, winStreak]);
 
   const rewardMutation = useMutation({
-    onMutate: () => {},
     mutationFn: (coins: number) => rewardCoins({ data: { coins } }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["dashboard"] });
@@ -91,7 +369,6 @@ function QuizClashGame() {
   useEffect(() => {
     if (gameState !== "match" || timeLeft <= 0) {
       if (gameState === "match" && timeLeft === 0) {
-        // Force wrap up round if timeout
         handleRoundTimeout();
       }
       return;
@@ -102,9 +379,117 @@ function QuizClashGame() {
     return () => clearInterval(timer);
   }, [timeLeft, gameState]);
 
+  // Generates 5 educational questions based on Mode & current Division Difficulty
+  const generateDeck = (mode: "mixto" | "matemáticas" | "inglés"): EducationalQuestion[] => {
+    // Determine difficulty filter based on league standing
+    let difficulty: "easy" | "medium" | "hard" = "easy";
+    if (divisionIdx >= 3 && divisionIdx <= 6) difficulty = "medium";
+    if (divisionIdx > 6) difficulty = "hard";
+
+    // Combine database sources
+    const allCandidates = [...LOCAL_QUESTIONS_DB];
+    
+    // Attempt to parse global engine questions to enrich our pool
+    try {
+      QUESTIONS_DB.forEach(q => {
+        if (q.type === "multiple-choice" && q.options && q.options.length === 4) {
+          // Normalize subjects to translate database naming (e.g. math -> matemáticas)
+          let mappedSubject: any = q.subject;
+          if (q.subject === "math") mappedSubject = "matemáticas";
+          if (q.subject === "physics") mappedSubject = "física";
+          if (q.subject === "chemistry") mappedSubject = "química";
+          if (q.subject === "biology") mappedSubject = "biología";
+          if (q.subject === "english") mappedSubject = "inglés";
+          
+          allCandidates.push({
+            id: q.id,
+            level: q.level as any,
+            subject: mappedSubject,
+            topic: q.topic,
+            difficulty: q.difficulty,
+            prompt: q.prompt,
+            options: q.options,
+            correctIndex: q.correctIndex,
+            explanation: q.explanation || "Respuesta correcta determinada por la lógica interna del concepto académico."
+          });
+        }
+      });
+    } catch (e) {
+      console.warn("Global question database unavailable, relying entirely on Local DB", e);
+    }
+
+    const deck: EducationalQuestion[] = [];
+
+    if (mode === "mixto") {
+      // 2 Matemáticas, 1 Historia, 1 Inglés, 1 Ciencia (Física/Química/Biología)
+      const mathFilter = allCandidates.filter(q => q.subject === "matemáticas");
+      const historyFilter = allCandidates.filter(q => q.subject === "historia" || q.subject === "geografía");
+      const englishFilter = allCandidates.filter(q => q.subject === "inglés");
+      const scienceFilter = allCandidates.filter(q => ["física", "química", "biología"].includes(q.subject));
+
+      const grabRandom = (arr: EducationalQuestion[], targetDiff: string) => {
+        let matches = arr.filter(q => q.difficulty === targetDiff);
+        if (matches.length === 0) matches = arr; // fallback
+        if (matches.length === 0) return LOCAL_QUESTIONS_DB[0]; // absolute fallback
+        return matches[Math.floor(Math.random() * matches.length)];
+      };
+
+      deck.push(grabRandom(mathFilter, difficulty));
+      deck.push(grabRandom(mathFilter, difficulty));
+      deck.push(grabRandom(historyFilter, difficulty));
+      deck.push(grabRandom(englishFilter, difficulty));
+      deck.push(grabRandom(scienceFilter, difficulty));
+    } else if (mode === "matemáticas") {
+      // 70% Algebra, 20% Aritmética, 10% Lógica
+      const algebraFilter = allCandidates.filter(q => q.subject === "matemáticas" && q.topic === "Álgebra");
+      const arithmeticFilter = allCandidates.filter(q => q.subject === "matemáticas" && q.topic === "Aritmética");
+      const logicFilter = allCandidates.filter(q => q.subject === "matemáticas" && q.topic === "Lógica");
+
+      const grabRandom = (arr: EducationalQuestion[], targetDiff: string) => {
+        let matches = arr.filter(q => q.difficulty === targetDiff);
+        if (matches.length === 0) matches = arr; // fallback
+        if (matches.length === 0) return LOCAL_QUESTIONS_DB[0]; // absolute fallback
+        return matches[Math.floor(Math.random() * matches.length)];
+      };
+
+      deck.push(grabRandom(algebraFilter, difficulty));
+      deck.push(grabRandom(algebraFilter, difficulty));
+      deck.push(grabRandom(algebraFilter, difficulty));
+      deck.push(grabRandom(arithmeticFilter, difficulty));
+      deck.push(grabRandom(logicFilter, difficulty));
+    } else {
+      // Inglés (TOEFL / Cambridge)
+      const englishFilter = allCandidates.filter(q => q.subject === "inglés");
+      const grabRandom = (arr: EducationalQuestion[], targetDiff: string) => {
+        let matches = arr.filter(q => q.difficulty === targetDiff);
+        if (matches.length === 0) matches = arr; // fallback
+        if (matches.length === 0) return LOCAL_QUESTIONS_DB[18]; // absolute fallback
+        return matches[Math.floor(Math.random() * matches.length)];
+      };
+
+      // Generate 5 distinct English questions
+      const selected = [...englishFilter];
+      for (let j = 0; j < 5; j++) {
+        if (selected.length > 0) {
+          const idx = Math.floor(Math.random() * selected.length);
+          deck.push(selected[idx]);
+          selected.splice(idx, 1);
+        } else {
+          deck.push(LOCAL_QUESTIONS_DB[18 + (j % 5)]);
+        }
+      }
+    }
+
+    return deck;
+  };
+
   const handleStartQueue = () => {
+    // Generate the deck of exactly 5 rounds
+    const deck = generateDeck(gameMode);
+    setQuestionDeck(deck);
+
     setGameState("queue");
-    // Select a bot
+    // Select bot details
     const bot = BOT_NAMES[Math.floor(Math.random() * BOT_NAMES.length)];
     const spread = Math.floor(Math.random() * 3) - 1; // -1, 0, +1 division range
     const opponentDivIdx = Math.max(0, Math.min(DIVISIONS.length - 1, divisionIdx + spread));
@@ -117,33 +502,24 @@ function QuizClashGame() {
       setOpponentScore(0);
       setMatchRound(1);
       setGameState("match");
-      loadQuestionForRound(1);
-    }, 2500);
-  };
-
-  const loadQuestionForRound = (roundNum: number) => {
-    setMatchRound(roundNum);
-    setTimeLeft(15);
-    setSelectedOption(null);
-    setRoundFeedback(null);
-    setQuestionStartTime(Date.now());
-
-    // Higher divisions load harder questions
-    let difficulty: "easy" | "medium" | "hard" = "easy";
-    if (divisionIdx >= 3 && divisionIdx <= 6) difficulty = "medium";
-    if (divisionIdx > 6) difficulty = "hard";
-
-    const q = getRandomQuestion({ difficulty });
-    setCurrentQuestion(q);
+      
+      // Load first question
+      const firstQ = deck[0];
+      setCurrentQuestion(firstQ);
+      setTimeLeft(15);
+      setSelectedOption(null);
+      setRoundFeedback(null);
+      setQuestionStartTime(Date.now());
+    }, 2000);
   };
 
   const handleRoundTimeout = () => {
     if (!currentQuestion) return;
-    setSelectedOption(-1); // Marked as incorrect/unanswered
+    setSelectedOption(-1); // marked as timeout
 
-    const aiCorrect = Math.random() > 0.45; // AI has ~55% accuracy
+    const aiCorrect = Math.random() > 0.45; // 55% accuracy
     const aiPoints = aiCorrect ? Math.floor(Math.random() * 30) + 70 : 0;
-    
+
     setRoundFeedback({
       playerCorrect: false,
       opponentCorrect: aiCorrect
@@ -159,7 +535,7 @@ function QuizClashGame() {
     if (!currentQuestion || selectedOption !== null) return;
     setSelectedOption(optionIdx);
 
-    const correct = currentQuestion.type === "multiple-choice" && currentQuestion.correctIndex === optionIdx;
+    const correct = currentQuestion.correctIndex === optionIdx;
     const timeTaken = Date.now() - questionStartTime;
 
     analyticsEngine.trackAnswer(
@@ -170,10 +546,11 @@ function QuizClashGame() {
       currentQuestion.id
     );
 
-    // Simulated AI response speed and accuracy
-    const aiCorrect = Math.random() > (divisionIdx > 5 ? 0.35 : 0.5); // Higher divisions mean smarter AI
+    // AI answer logic: higher division equals smarter and faster AI
+    const aiCorrect = Math.random() > (divisionIdx > 5 ? 0.30 : 0.45);
     const aiPoints = aiCorrect ? Math.round((Math.random() * 30 + 70) * (Math.random() * 0.4 + 0.6)) : 0;
     
+    // Speed bonus calculation for correct answer (up to 150 points)
     const playerPoints = correct ? Math.round((timeLeft / 15) * 100) + 50 : 0;
 
     setRoundFeedback({
@@ -185,12 +562,12 @@ function QuizClashGame() {
       setPlayerScore(p => p + playerPoints);
       setOpponentScore(o => o + aiPoints);
       processNextStep(correct, playerPoints, aiPoints);
-    }, 1500);
+    }, 2000);
   };
 
   const processNextStep = (playerCorrect: boolean, pPoints: number, oPoints: number) => {
-    if (matchRound >= 3) {
-      // End of Match
+    if (matchRound >= 5) {
+      // Match Finished!
       const finalPlayer = playerScore + pPoints;
       const finalOpponent = opponentScore + oPoints;
 
@@ -201,13 +578,12 @@ function QuizClashGame() {
       if (finalPlayer > finalOpponent) {
         matchOutcome = "victory";
         lpChange = 25;
-        // Streak bonus sombreritos
         const newStreak = winStreak + 1;
         setWinStreak(newStreak);
-        coinReward = 10 + (newStreak >= 3 ? 5 : 0);
+        coinReward = 15 + (newStreak >= 3 ? 10 : 0); // 15 Sombreritos for a win!
         rewardMutation.mutate(coinReward);
         if (newStreak >= 3) {
-          toast.success(`🔥 ¡Racha de victorias x${newStreak}! +5 Sombreritos de bonificación.`);
+          toast.success(`🔥 ¡Super Racha x${newStreak}! +10 Sombreritos de bonificación.`);
         }
       } else if (finalPlayer < finalOpponent) {
         matchOutcome = "defeat";
@@ -216,15 +592,15 @@ function QuizClashGame() {
       } else {
         matchOutcome = "draw";
         lpChange = 5;
-        coinReward = 3;
-        rewardMutation.mutate(3);
+        coinReward = 5;
+        rewardMutation.mutate(5);
         setWinStreak(0);
       }
 
       setOutcome(matchOutcome);
       setGameState("postmatch");
 
-      // Update league points and handle promotions/demotions
+      // Update persistent standing
       setLp(prev => {
         let nextLp = prev + lpChange;
         if (nextLp >= 100) {
@@ -244,15 +620,24 @@ function QuizClashGame() {
         return nextLp;
       });
     } else {
-      loadQuestionForRound(matchRound + 1);
+      // Load next round question from pre-generated deck
+      const nextRound = matchRound + 1;
+      const nextQ = questionDeck[nextRound - 1];
+      
+      setMatchRound(nextRound);
+      setTimeLeft(15);
+      setSelectedOption(null);
+      setRoundFeedback(null);
+      setQuestionStartTime(Date.now());
+      setCurrentQuestion(nextQ);
     }
   };
 
   return (
     <>
-      <header className="sticky top-0 z-30 bg-[#0E0B1E] border-b border-[#2D1B4E] px-6 py-4 flex items-center justify-between text-white">
+      <header className="sticky top-0 z-30 bg-[#0E0B1E] border-b border-[#2D1B4E] px-6 py-4 flex items-center justify-between text-white shadow-md">
         <button onClick={() => navigate({ to: "/games" })} className="text-purple-400 hover:text-white font-bold flex items-center gap-1.5 cursor-pointer bg-transparent border-none">
-          <ArrowLeft className="size-5" /> Regresar
+          <ArrowLeft className="size-5" /> Regresar al Hub
         </button>
         <div className="flex items-center gap-2">
           <Swords className="size-5 text-purple-400 animate-pulse" />
@@ -298,35 +683,74 @@ function QuizClashGame() {
               </div>
               
               <p className="text-[10px] text-slate-400 leading-relaxed mt-8 max-w-[200px]">
-                Enfréntate a rivales 1v1. Suma LP ganando para ascender. El descenso está activo si bajas de 0 LP.
+                Enfréntate a rivales 1v1 en partidas rápidas de 5 preguntas. El nivel de dificultad se adaptará automáticamente a tu división.
               </p>
             </div>
 
-            {/* Right Battle Panel */}
+            {/* Right Battle Panel & Mode Selector */}
             <div className="md:col-span-2 bg-[#140F27] border-2 border-purple-500/10 rounded-3xl p-8 flex flex-col justify-between shadow-lg relative overflow-hidden">
               <div className="absolute top-0 inset-x-0 h-1.5 bg-gradient-to-r from-purple-500 to-pink-500" />
-              <div className="space-y-4">
+              <div className="space-y-6">
                 <div className="flex items-center gap-2">
                   <span className="text-xs bg-purple-500/20 text-purple-300 border border-purple-500/30 px-3 py-1 rounded-full font-black uppercase tracking-wider">
                     Arena Premium 1v1
                   </span>
                   <span className="text-xs bg-gradient-to-r from-pink-500 to-purple-500 text-white px-2.5 py-1 rounded-full font-black uppercase tracking-wider animate-pulse">
-                    En Vivo ⚔️
+                    JUEGO JUGABLE ⚔️
                   </span>
                 </div>
-                <h2 className="font-display font-black text-3xl text-slate-100 mt-2">Duelos de Arena Académica</h2>
-                <p className="text-xs text-slate-300 leading-relaxed">
-                  Competencia intensa en tiempo real contra los mejores perfiles estudiantiles. Responde correctamente y a gran velocidad para ganar el choque del Quiz.
-                </p>
-                <div className="grid grid-cols-2 gap-4 pt-4 text-xs font-bold text-slate-300">
-                  <div className="flex items-center gap-2 bg-[#0B0816] p-3 rounded-xl border border-purple-500/10">
-                    <Zap className="size-4 text-pink-400" />
-                    <span>Duelo Rápido (3 Rondas)</span>
-                  </div>
-                  <div className="flex items-center gap-2 bg-[#0B0816] p-3 rounded-xl border border-purple-500/10">
-                    <HelpCircle className="size-4 text-purple-400" />
-                    <span>Materias Escolares Reales</span>
-                  </div>
+                
+                <div>
+                  <h2 className="font-display font-black text-3xl text-slate-100">Selecciona Categoría del Duelo</h2>
+                  <p className="text-xs text-slate-400 mt-1.5 leading-relaxed">
+                    Personaliza tu choque de arena. La distribución de temas variará según el modo de estudio elegido.
+                  </p>
+                </div>
+
+                {/* Mode Selectors */}
+                <div className="grid grid-cols-1 gap-3">
+                  {[
+                    {
+                      id: "mixto",
+                      name: "Modo Mixto (Por Defecto)",
+                      desc: "2 Matemáticas, 1 Historia/Geografía, 1 Inglés, 1 Ciencia (Física/Química/Biología).",
+                      icon: <GraduationCap className="size-5" />
+                    },
+                    {
+                      id: "matemáticas",
+                      name: "Especialización Matemática",
+                      desc: "70% Álgebra avanzada, 20% Aritmética analítica, 10% Preguntas lógicas de velocidad.",
+                      icon: <Zap className="size-5" />
+                    },
+                    {
+                      id: "inglés",
+                      name: "Competición de Inglés (TOEFL / Cambridge)",
+                      desc: "Duelos de gramática, comprensión rápida, vocabulario contextual y condicionales avanzados.",
+                      icon: <BookOpen className="size-5" />
+                    }
+                  ].map((mode) => {
+                    const isSelected = gameMode === mode.id;
+                    return (
+                      <button
+                        key={mode.id}
+                        onClick={() => setGameMode(mode.id as any)}
+                        className={`flex items-start gap-4 p-4 rounded-2xl border text-left transition duration-300 cursor-pointer ${
+                          isSelected 
+                            ? "border-purple-500 bg-purple-500/10 shadow-[0_0_15px_-3px_rgba(168,85,247,0.3)]" 
+                            : "border-[#2D1B4E] bg-[#0B0816] hover:bg-[#120D23]"
+                        }`}
+                      >
+                        <div className={`p-2 rounded-xl mt-0.5 ${isSelected ? "bg-purple-500 text-white animate-pulse" : "bg-[#2D1B4E]/30 text-purple-400"}`}>
+                          {mode.icon}
+                        </div>
+                        <div className="flex-1">
+                          <h4 className={`text-xs font-bold ${isSelected ? "text-purple-300" : "text-slate-200"}`}>{mode.name}</h4>
+                          <p className="text-[10px] text-slate-400 mt-1 leading-normal">{mode.desc}</p>
+                        </div>
+                        <ChevronRight className={`size-4 mt-2 transition-transform duration-300 ${isSelected ? "text-purple-400 translate-x-1" : "text-slate-600"}`} />
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
 
@@ -334,7 +758,7 @@ function QuizClashGame() {
                 onClick={handleStartQueue}
                 className="w-full h-12 mt-8 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-400 hover:to-pink-400 font-black text-xs uppercase tracking-widest rounded-2xl cursor-pointer border-none transition active:scale-98 shadow-md shadow-purple-500/20"
               >
-                Buscar Rival y Entrar a Arena
+                Ingresar al Matchmaking
               </button>
             </div>
           </div>
@@ -349,7 +773,7 @@ function QuizClashGame() {
                 ⚔️
               </div>
             </div>
-            <div className="space-y-2">
+            <div className="space-y-2 animate-pulse">
               <h2 className="font-display font-black text-xl text-purple-300">Buscando Contrincante...</h2>
               <p className="text-xs text-slate-400">Matchmaking inteligente buscando un oponente en {DIVISIONS[divisionIdx]}...</p>
             </div>
@@ -360,7 +784,7 @@ function QuizClashGame() {
         {gameState === "match" && currentQuestion && (
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6 relative z-10">
             {/* Scoreboard Left */}
-            <div className="md:col-span-1 bg-[#140F27] border border-purple-500/10 rounded-3xl p-5 text-center flex flex-col justify-between min-h-[250px] shadow-md">
+            <div className="md:col-span-1 bg-[#140F27] border border-purple-500/10 rounded-3xl p-5 text-center flex flex-col justify-between min-h-[280px] shadow-md">
               <div>
                 <span className="text-[10px] font-black uppercase text-purple-400 tracking-widest">Choque de Arena</span>
                 
@@ -377,7 +801,7 @@ function QuizClashGame() {
                 </div>
               </div>
               <div className="text-[10px] text-purple-300 font-black uppercase tracking-wider border-t border-purple-500/10 pt-3">
-                Ronda {matchRound} de 3
+                Ronda {matchRound} de 5
               </div>
             </div>
 
@@ -398,27 +822,33 @@ function QuizClashGame() {
 
                   {/* Feedback overlay */}
                   {roundFeedback && (
-                    <div className="flex items-center gap-4 bg-[#0B0816]/70 border border-purple-500/20 p-3.5 rounded-xl text-xs font-bold text-slate-300 animate-in fade-in slide-in-from-bottom-2 duration-300">
-                      <div className="flex items-center gap-1">
-                        <span>Tú:</span>
-                        {roundFeedback.playerCorrect ? (
-                          <CheckCircle2 className="size-4 text-emerald-400" />
-                        ) : (
-                          <XCircle className="size-4 text-rose-500" />
-                        )}
+                    <div className="flex flex-col gap-2.5 bg-[#0B0816]/90 border border-purple-500/25 p-4 rounded-2xl text-xs font-bold text-slate-300 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                      <div className="flex items-center gap-6">
+                        <div className="flex items-center gap-1.5">
+                          <span>Tú:</span>
+                          {roundFeedback.playerCorrect ? (
+                            <span className="text-emerald-400 flex items-center gap-1"><CheckCircle2 className="size-4" /> Correcto</span>
+                          ) : (
+                            <span className="text-rose-500 flex items-center gap-1"><XCircle className="size-4" /> Incorrecto</span>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-1.5 border-l border-purple-500/20 pl-6">
+                          <span>{opponentName}:</span>
+                          {roundFeedback.opponentCorrect ? (
+                            <span className="text-emerald-400 flex items-center gap-1"><CheckCircle2 className="size-4" /> Correcto</span>
+                          ) : (
+                            <span className="text-rose-500 flex items-center gap-1"><XCircle className="size-4" /> Incorrecto</span>
+                          )}
+                        </div>
                       </div>
-                      <div className="flex items-center gap-1 border-l border-purple-500/20 pl-4">
-                        <span>{opponentName}:</span>
-                        {roundFeedback.opponentCorrect ? (
-                          <CheckCircle2 className="size-4 text-emerald-400" />
-                        ) : (
-                          <XCircle className="size-4 text-rose-500" />
-                        )}
+                      <div className="text-[10px] text-slate-400 font-normal leading-relaxed border-t border-purple-500/10 pt-2.5 mt-1">
+                        <span className="font-bold text-purple-300 block mb-0.5">Explicación Académica:</span>
+                        {currentQuestion.explanation}
                       </div>
                     </div>
                   )}
 
-                  {currentQuestion.type === "multiple-choice" && (
+                  {currentQuestion.options && (
                     <div className="grid gap-3 pt-3 text-left">
                       {currentQuestion.options.map((option, idx) => {
                         let btnStyle = "border-[#2D1B4E] bg-[#0B0816] hover:bg-[#1C1538] text-slate-200 border";
@@ -461,10 +891,10 @@ function QuizClashGame() {
             
             <div className="space-y-1.5">
               <h2 className="font-display font-black text-2xl text-slate-100 uppercase tracking-wide">
-                {outcome === "victory" ? "¡Victoria Magistral!" : outcome === "defeat" ? "Derrota" : "Empate de Arena"}
+                {outcome === "victory" ? "¡Victoria de Arena!" : outcome === "defeat" ? "Derrota" : "Empate de Arena"}
               </h2>
               <p className="text-xs text-slate-400">
-                Choque Arena 1v1 contra <strong>{opponentName}</strong> finalizado.
+                Choque Arena 1v1 contra <strong>{opponentName}</strong> en {gameMode === "mixto" ? "Modo Mixto" : gameMode === "matemáticas" ? "Modo Matemáticas" : "Modo Inglés"}.
               </p>
             </div>
 
@@ -484,7 +914,7 @@ function QuizClashGame() {
             {outcome === "victory" && (
               <div className="flex items-center justify-center gap-1.5 bg-emerald-500/10 border border-emerald-500/25 py-2.5 px-4 rounded-xl text-xs font-bold text-emerald-400 max-w-xs mx-auto">
                 <img src={streakCap} alt="" className="size-4 shrink-0 select-none animate-bounce" />
-                <span>+10 Sombreritos de recompensa directa</span>
+                <span>+{winStreak >= 3 ? "25" : "15"} Sombreritos acumulados</span>
               </div>
             )}
 
