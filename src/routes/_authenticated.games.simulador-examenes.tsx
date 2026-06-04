@@ -5,7 +5,7 @@ import { useTranslation } from "react-i18next";
 import { useState, useEffect } from "react";
 import { rewardGameCoins } from "@/lib/games.functions";
 import { AppHeader } from "@/components/AppHeader";
-import { ArrowLeft, Play, ShieldAlert, Sparkles, Trophy, Timer, Volume2, BookOpen, CheckCircle, AlertCircle } from "lucide-react";
+import { ArrowLeft, Timer, Volume2, CheckCircle } from "lucide-react";
 import { toast } from "sonner";
 import { getQuestionsByFilters, type Question, type Level } from "@/lib/question-engine";
 import { analyticsEngine } from "@/lib/analytics-engine";

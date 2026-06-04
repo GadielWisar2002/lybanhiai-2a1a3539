@@ -7,7 +7,7 @@ import { z } from "zod";
 import { getDashboard } from "@/lib/quiz.functions";
 import { listUnlockedBlooks, equipBlook, BLOOKS, convertXpToCoins, unlockGame, buyBlookDirect, BLOOK_COSTS, type Blook, devAddXp, devAddCoins, devResetProgress, devToggleUnlockGame, devSetLevel } from "@/lib/games.functions";
 import { AppHeader } from "@/components/AppHeader";
-import { Gamepad2, Lock, Sparkles, Trophy, AlertTriangle, Settings, RefreshCw, Layers } from "lucide-react";
+import { Gamepad2, Lock, Sparkles, Trophy, Settings, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import streakCap from "@/assets/streak-cap.png";
 import { AvatarCustomizer } from "@/components/AvatarCustomizer";

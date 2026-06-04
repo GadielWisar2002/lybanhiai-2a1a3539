@@ -5,7 +5,7 @@ import { useTranslation } from "react-i18next";
 import { useState, useEffect } from "react";
 import { rewardGameCoins } from "@/lib/games.functions";
 import { AppHeader } from "@/components/AppHeader";
-import { ArrowLeft, Sparkles, Trophy, Timer, Swords, Zap, BookOpen, GraduationCap, ChevronRight } from "lucide-react";
+import { ArrowLeft, Trophy, Timer, Swords, Zap, BookOpen, GraduationCap, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
 import { QUESTIONS_DB, type Question } from "@/lib/question-engine";
 import { analyticsEngine } from "@/lib/analytics-engine";

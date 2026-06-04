@@ -5,11 +5,29 @@ import { useTranslation } from "react-i18next";
 import { useState, useEffect } from "react";
 import { rewardGameCoins, rewardGameXp } from "@/lib/games.functions";
 import { AppHeader } from "@/components/AppHeader";
-import { ArrowLeft, GraduationCap, Sparkles } from "lucide-react";
+import { ArrowLeft, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { QUESTIONS_DB } from "@/lib/question-engine";
 import { analyticsEngine } from "@/lib/analytics-engine";
 import streakCap from "@/assets/streak-cap.png";
+
+const GraduationCap = ({ className }: { className?: string }) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className={className}
+  >
+    <path d="M21.42 10.922a1 1 0 0 0-.019-1.838L12.83 5.18a2 2 0 0 0-1.66 0L2.6 9.08a1 1 0 0 0 0 1.832l8.57 3.908a2 2 0 0 0 1.66 0z" />
+    <path d="M6 12v5c0 2 2 3 6 3s6-1 6-3v-5" />
+    <path d="M21.5 12v6" />
+  </svg>
+);
+
 
 export const Route = createFileRoute("/_authenticated/games/mundo-constructor")({
   head: () => ({ meta: [{ title: "Mundo Constructor — Lybanhi" }] }),
