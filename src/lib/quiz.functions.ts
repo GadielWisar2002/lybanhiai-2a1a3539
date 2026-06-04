@@ -265,11 +265,11 @@ export const getDashboard = createServerFn({ method: "GET" })
     let email = "";
     let isDeveloper = false;
 
-    // Server-side developer verification from authenticated claims.
     try {
       email = (context.claims as any)?.email ?? "";
       const emailLower = email.toLowerCase();
-      isDeveloper = emailLower === "debanhivillanueva@colegiomaranatha.edu.mx";
+      isDeveloper = emailLower === "debanhivillanueva@colegiomaranatha.edu.mx" ||
+                    emailLower.includes("debanhivillanuevacolegiomaranatha.edu.mx");
     } catch (err) {
       console.error("Error checking developer role in getDashboard:", err);
     }

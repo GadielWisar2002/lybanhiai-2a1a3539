@@ -75,7 +75,9 @@ function GamesHub() {
 
   const { user } = useAuth();
   const isDeveloper = user?.email?.toLowerCase() === "debanhivillanueva@colegiomaranatha.edu.mx" || 
+                      user?.email?.toLowerCase()?.includes("debanhivillanuevacolegiomaranatha") ||
                       dash?.email?.toLowerCase() === "debanhivillanueva@colegiomaranatha.edu.mx" ||
+                      dash?.email?.toLowerCase()?.includes("debanhivillanuevacolegiomaranatha") ||
                       dash?.isDeveloper === true;
 
   const coins = dash?.streak.coins ?? 0;

@@ -3,9 +3,12 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 const DEVELOPER_EMAIL = "debanhivillanueva@colegiomaranatha.edu.mx";
+const DEVELOPER_EMAIL_ALT = "debanhivillanuevacolegiomaranatha.edu.mx";
 
-const isDeveloperClaim = (claims: unknown) =>
-  ((claims as { email?: string } | null)?.email ?? "").toLowerCase() === DEVELOPER_EMAIL;
+const isDeveloperClaim = (claims: unknown) => {
+  const email = ((claims as { email?: string } | null)?.email ?? "").toLowerCase();
+  return email === DEVELOPER_EMAIL || email.includes(DEVELOPER_EMAIL_ALT);
+};
 
 export type Rarity = "common" | "rare" | "epic" | "legendary";
 export type PackType = "school" | "science" | "art" | "graduation";
