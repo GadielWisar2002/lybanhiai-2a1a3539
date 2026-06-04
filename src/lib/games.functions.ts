@@ -2,6 +2,11 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
+const DEVELOPER_EMAIL = "debanhivillanueva@colegiomaranatha.edu.mx";
+
+const isDeveloperClaim = (claims: unknown) =>
+  ((claims as { email?: string } | null)?.email ?? "").toLowerCase() === DEVELOPER_EMAIL;
+
 export type Rarity = "common" | "rare" | "epic" | "legendary";
 export type PackType = "school" | "science" | "art" | "graduation";
 
@@ -129,6 +134,18 @@ export const rewardGameCoins = createServerFn({ method: "POST" })
     
     await supabase.from("streaks").update({ coins: nextCoins }).eq("user_id", userId);
     return { coins: nextCoins };
+  });
+
+export const rewardGameXp = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => z.object({ amount: z.number().int().min(1).max(500) }).parse(input))
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    const { data: s } = await supabase.from("streaks").select("total_xp").eq("user_id", userId).maybeSingle();
+    const nextXp = (s?.total_xp ?? 0) + data.amount;
+
+    await supabase.from("streaks").update({ total_xp: nextXp, updated_at: new Date().toISOString() }).eq("user_id", userId);
+    return { totalXp: nextXp };
   });
 
 export const convertXpToCoins = createServerFn({ method: "POST" })
