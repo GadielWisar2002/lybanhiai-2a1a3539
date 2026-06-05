@@ -495,6 +495,70 @@ function GamesHub() {
                   );
                 })()}
 
+                {/* CIUDAD DEL CONOCIMIENTO CARD */}
+                {(() => {
+                  const isUnlocked = (isDeveloper && devMode) || unlockedGames.includes("ciudad-conocimiento");
+                  return (
+                    <div className="relative rounded-2xl border-2 border-sky-500/40 bg-gradient-to-b from-sky-950/30 to-[#0A0E23] p-5 shadow-[0_0_25px_-3px_rgba(14,165,233,0.2)] flex flex-col justify-between overflow-hidden group/card hover:border-sky-400 hover:shadow-[0_0_35px_-3px_rgba(14,165,233,0.4)] transition-all duration-300">
+                      <div className="absolute inset-0 bg-gradient-to-t from-sky-500/5 to-sky-500/0 opacity-50 pointer-events-none" />
+                      <div>
+                        <div className="flex justify-between items-start">
+                          <span className="inline-block rounded-full bg-gradient-to-r from-sky-500 to-indigo-500 px-2.5 py-0.5 text-[9px] font-black uppercase tracking-wider text-white shadow-sm shadow-sky-500/20">
+                            🏗️ Tycoon / Gestión
+                          </span>
+                          {isUnlocked && (
+                            <span className="flex h-2 w-2 relative">
+                              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                            </span>
+                          )}
+                        </div>
+                        <h3 className="mt-3 font-display text-lg font-bold text-slate-100 flex items-center gap-1.5">
+                          Ciudad del Conocimiento
+                        </h3>
+                        <p className="mt-1 text-xs text-slate-300 leading-relaxed">
+                          Construye y administra tu propia urbe académica desde cero. Contrata profesores, crea carreras universitarias, realiza investigaciones y equilibra tus métricas.
+                        </p>
+                        <div className="mt-3 flex flex-wrap items-center gap-3 text-[10px] font-bold">
+                          <span className={`${isUnlocked ? 'text-sky-400' : 'text-sky-500/80'} flex items-center gap-1`}>
+                            {isUnlocked ? (
+                              <Sparkles className="size-3.5" />
+                            ) : (
+                              <Trophy className="size-3.5 text-sky-400" />
+                            )}
+                            <span>{isUnlocked ? "Acceso Libre" : "1,600 XP"}</span>
+                          </span>
+                          <span className="text-success flex items-center gap-1">
+                            <img src={streakCap} alt="" className="size-3.5 select-none" />
+                            <span>Gana sombreritos</span>
+                          </span>
+                        </div>
+                      </div>
+                      
+                      {isUnlocked ? (
+                        <button
+                          onClick={() => navigate({ to: "/games/ciudad-conocimiento" })}
+                          className="mt-5 flex h-10 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-sky-500 to-indigo-600 hover:from-sky-400 hover:to-indigo-500 font-bold text-xs tracking-wider text-white transition active:scale-95 cursor-pointer border-none shadow-md shadow-sky-500/20"
+                        >
+                          <Gamepad2 className="size-4" /> Administrar Ciudad
+                        </button>
+                      ) : (
+                        <button
+                          disabled={unlockMutation.isPending || totalXp < 1600}
+                          onClick={() => {
+                            if (confirm(`¿Estás seguro de que deseas desbloquear Ciudad del Conocimiento por 1,600 XP?`)) {
+                              unlockMutation.mutate("ciudad-conocimiento");
+                            }
+                          }}
+                          className="mt-5 flex h-10 items-center justify-center gap-2 rounded-xl bg-sky-500/10 border border-sky-500/30 text-sky-300 hover:bg-sky-500/20 font-bold text-xs tracking-wider transition active:scale-95 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          <Lock className="size-4 text-sky-400" /> Desbloquear por 1,600 XP
+                        </button>
+                      )}
+                    </div>
+                  );
+                })()}
+
                 {/* Coming Soon Cards */}
                 {[
                   {
