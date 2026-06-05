@@ -538,7 +538,7 @@ function CiudadConocimientoGame() {
     }, intervalSec);
 
     return () => clearInterval(interval);
-  }, [timeSpeed, buildings, myTeachers, degrees, activeEvent, experience, cityLevel, population, sciencePoints, culturePoints, happiness]);
+  }, [timeSpeed, buildings, myTeachers, degrees, activeEvent, globalXp, cityLevel, population, sciencePoints, culturePoints, happiness]);
 
   // BUILD FUNCTION
   const handleBuildBuilding = (x: number, y: number) => {
