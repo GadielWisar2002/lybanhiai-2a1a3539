@@ -277,14 +277,14 @@ export function LayeredAvatarRenderer({
   };
 
   // Head Group Layers (head of base body + hair layer)
-  // body_head: clipped to top 42% of image height
+  // body_head: clipped to top 62% of image height to keep the entire face (eyes, mouth, chin) intact
   const headLayers = [
     { 
       id: "body_head", 
       src: processedLayers.body || bodyImg, 
       pos: LAYER_POSITIONS.body, 
       zIndex: 1, 
-      clipPath: "inset(0% 0% 58% 0%)" 
+      clipPath: "inset(0% 0% 38% 0%)" 
     },
     { 
       id: "hair", 
@@ -295,14 +295,14 @@ export function LayeredAvatarRenderer({
   ];
 
   // Body Group Layers (torso downwards + clothes + shoes)
-  // body_torso: clipped to bottom 58% of image height
+  // body_torso: clipped to bottom 38% of image height (starting from neck at 62%)
   const bodyLayers = [
     { 
       id: "body_torso", 
       src: processedLayers.body || bodyImg, 
       pos: LAYER_POSITIONS.body, 
       zIndex: 1, 
-      clipPath: "inset(42% 0% 0% 0%)" 
+      clipPath: "inset(62% 0% 0% 0%)" 
     },
     { 
       id: "bottom", 
@@ -489,7 +489,7 @@ export function LayeredAvatarRenderer({
             style={{ 
               zIndex: 5,
               // Grouped head Bobbing/Translation relative to body
-              transform: `translateY(${profileView ? "0px" : "-1px"})`, 
+              transform: `translateY(0px)`, 
               transition: "transform 0.2s ease-out" 
             }}
           >
