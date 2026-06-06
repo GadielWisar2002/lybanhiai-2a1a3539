@@ -132,14 +132,14 @@ function removeBlackBackground(src: string): Promise<string> {
                 continue;
               }
             }
-            // For long hair styles: remove the central mannequin face/chin/neck area
+            // For long hair styles: remove the central mannequin face/chin/neck area (below the nose/mouth level)
             if (
               src.includes("hair-long-wavy-pink") ||
               src.includes("hair-wavy") ||
               src.includes("hair-pigtails") ||
               src.includes("hair-braids")
             ) {
-              if (y > height * 0.45 && x > width * 0.22 && x < width * 0.78) {
+              if (y > height * 0.60 && x > width * 0.20 && x < width * 0.80) {
                 data[i + 3] = 0; // Force transparent
                 continue;
               }
@@ -272,7 +272,7 @@ export function LayeredAvatarRenderer({
 
   const hairPosition = {
     ...LAYER_POSITIONS.hair,
-    top: isLongHair ? "-4.5%" : "-1.5%", // Shifter down: -1.5% for short hair, -4.5% for long hair
+    top: isLongHair ? "-1.0%" : "-1.5%", // Shifted down to sit properly on forehead (-1.0% for long, -1.5% for short)
     height: isLongHair ? "52%" : "48%", // Height calibration
   };
 
