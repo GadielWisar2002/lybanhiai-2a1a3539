@@ -109,11 +109,43 @@ function removeBlackBackground(src: string): Promise<string> {
       try {
         const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
         const data = imgData.data;
+        const width = canvas.width;
+        const height = canvas.height;
+
         // Loop through pixels and make black background transparent
         for (let i = 0; i < data.length; i += 4) {
           const r = data[i];
           const g = data[i + 1];
           const b = data[i + 2];
+          
+          // Calculate 2D pixel coordinates
+          const pixelIndex = i / 4;
+          const x = pixelIndex % width;
+          const y = Math.floor(pixelIndex / width);
+
+          // If this is a hair layer, mask out the mannequin head/chin/neck templates
+          if (src.includes("/hair/")) {
+            // For short hair styles: remove the mannequin face/chin/neck below the scalp/ears line
+            if (src.includes("hair-short")) {
+              if (y > height * 0.58) {
+                data[i + 3] = 0; // Force transparent
+                continue;
+              }
+            }
+            // For long hair styles: remove the central mannequin face/chin/neck area
+            if (
+              src.includes("hair-long-wavy-pink") ||
+              src.includes("hair-wavy") ||
+              src.includes("hair-pigtails") ||
+              src.includes("hair-braids")
+            ) {
+              if (y > height * 0.45 && x > width * 0.22 && x < width * 0.78) {
+                data[i + 3] = 0; // Force transparent
+                continue;
+              }
+            }
+          }
+
           // Threshold for black background (RGB values close to 0)
           if (r < 18 && g < 18 && b < 18) {
             data[i + 3] = 0; // Set alpha to transparent
@@ -232,13 +264,25 @@ export function LayeredAvatarRenderer({
   // Accent color based on gender
   const accent = c.gender === "boy" ? "#3B6DE8" : "#E83B8E";
 
+  // Calibrate hair position dynamically to prevent forehead gap
+  const isLongHair =
+    c.hairStyle === "hair-wavy" ||
+    c.hairStyle === "hair-pigtails" ||
+    c.hairStyle === "hair-braids";
+
+  const hairPosition = {
+    ...LAYER_POSITIONS.hair,
+    top: isLongHair ? "-4.5%" : "-1.5%", // Shifter down: -1.5% for short hair, -4.5% for long hair
+    height: isLongHair ? "52%" : "48%", // Height calibration
+  };
+
   // Layer definitions in render order (bottom → top)
   const layers = [
     { id: "body", src: processedLayers.body || bodyImg, pos: LAYER_POSITIONS.body, zIndex: 1 },
     { id: "bottom", src: processedLayers.bottom || bottomImg, pos: LAYER_POSITIONS.bottom, zIndex: 2 },
     { id: "shoes", src: processedLayers.shoes || shoesImg, pos: LAYER_POSITIONS.shoes, zIndex: 3 },
     { id: "top", src: processedLayers.top || topImg, pos: LAYER_POSITIONS.top, zIndex: 4 },
-    { id: "hair", src: processedLayers.hair || hairImg, pos: LAYER_POSITIONS.hair, zIndex: 5 },
+    { id: "hair", src: processedLayers.hair || hairImg, pos: hairPosition, zIndex: 5 },
   ];
 
   return (
