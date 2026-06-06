@@ -148,6 +148,7 @@ export function LayeredAvatarRenderer({
   const [hoveredLayer, setHoveredLayer] = useState<string | null>(null);
   const [breathPhase, setBreathPhase] = useState(0);
   const [loaded, setLoaded] = useState(false);
+  const [processedLayers, setProcessedLayers] = useState<Record<string, string>>({});
 
   const c = {
     gender: config?.gender || "boy",
