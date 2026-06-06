@@ -123,28 +123,8 @@ function removeBlackBackground(src: string): Promise<string> {
           const x = pixelIndex % width;
           const y = Math.floor(pixelIndex / width);
 
-          // If this is a hair layer, mask out the mannequin head/chin/neck templates
-          if (src.includes("/hair/")) {
-            // For short hair styles: remove the mannequin face/chin/neck below the scalp/ears line
-            if (src.includes("hair-short")) {
-              if (y > height * 0.65) {
-                data[i + 3] = 0; // Force transparent
-                continue;
-              }
-            }
-            // For long hair styles: remove the central mannequin face/chin/neck area (below the nose/mouth level)
-            if (
-              src.includes("hair-long-wavy-pink") ||
-              src.includes("hair-wavy") ||
-              src.includes("hair-pigtails") ||
-              src.includes("hair-braids")
-            ) {
-              if (y > height * 0.65 && x > width * 0.20 && x < width * 0.80) {
-                data[i + 3] = 0; // Force transparent
-                continue;
-              }
-            }
-          }
+          // Eliminated manual JS hair mask to avoid cutting off parts of the hair.
+          // The background removal handles making the black background transparent.
 
           // Threshold for black background (RGB values close to 0)
           if (r < 18 && g < 18 && b < 18) {
@@ -264,45 +244,33 @@ export function LayeredAvatarRenderer({
   // Accent color based on gender
   const accent = c.gender === "boy" ? "#3B6DE8" : "#E83B8E";
 
-  // Calibrate hair position dynamically to prevent forehead gap
-  const isLongHair =
-    c.hairStyle === "hair-wavy" ||
-    c.hairStyle === "hair-pigtails" ||
-    c.hairStyle === "hair-braids";
-
-  const hairPosition = {
-    ...LAYER_POSITIONS.hair,
-    top: isLongHair ? "-1.0%" : "-1.5%", // Shifted down to sit properly on forehead (-1.0% for long, -1.5% for short)
-    height: isLongHair ? "52%" : "48%", // Height calibration
-  };
-
   // Head Group Layers (head of base body + hair layer)
-  // body_head: clipped to top 62% of image height to keep the entire face (eyes, mouth, chin) intact
+  // Separamos exactamente en el cuello. Así la cabeza se mueve de forma independiente del torso.
   const headLayers = [
     { 
       id: "body_head", 
       src: processedLayers.body || bodyImg, 
       pos: LAYER_POSITIONS.body, 
       zIndex: 1, 
-      clipPath: "inset(0% 0% 38% 0%)" 
+      clipPath: "inset(0% 0% 68% 0%)" // Mantiene el 32% superior (cabeza y cuello) para solapamiento
     },
     { 
       id: "hair", 
       src: processedLayers.hair || hairImg, 
-      pos: hairPosition, 
+      pos: LAYER_POSITIONS.hair, 
       zIndex: 2 
     },
   ];
 
   // Body Group Layers (torso downwards + clothes + shoes)
-  // body_torso: clipped to bottom 38% of image height (starting from neck at 62%)
+  // El torso comienza desde el 28% hacia abajo. Esto crea un solapamiento con la cabeza (28% a 32%) para evitar huecos.
   const bodyLayers = [
     { 
       id: "body_torso", 
       src: processedLayers.body || bodyImg, 
       pos: LAYER_POSITIONS.body, 
       zIndex: 1, 
-      clipPath: "inset(62% 0% 0% 0%)" 
+      clipPath: "inset(28% 0% 0% 0%)" 
     },
     { 
       id: "bottom", 
