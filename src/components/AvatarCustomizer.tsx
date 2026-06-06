@@ -5,6 +5,10 @@ import { RobloxAvatarRenderer } from "./RobloxAvatarRenderer";
 import { getDashboard } from "@/lib/quiz.functions";
 import { saveAvatarConfig } from "@/lib/avatar.functions";
 
+// High-quality chibi/anime character preview images
+const AVATAR_MALE_IMG = "/avatars/avatar-male.png";
+const AVATAR_FEMALE_IMG = "/avatars/avatar-female.png";
+
 interface AvatarCustomizerProps {
   onClose?: () => void;
   inline?: boolean;
@@ -396,31 +400,60 @@ export function AvatarCustomizer({ onClose, inline = false }: AvatarCustomizerPr
         {/* COLUMNA IZQUIERDA (220px) */}
         <section className="bg-[#0D1535] rounded-xl p-4 flex flex-col gap-4 overflow-hidden border border-[#1E2D5A]/40">
           
-          {/* SECCIÓN GÉNERO */}
-          <div className="flex flex-col gap-1.5 shrink-0">
-            <span className="text-[10px] letter-spacing-[2px] text-[#8896B3] font-bold">GÉNERO</span>
+          {/* SECCIÓN GÉNERO — Character Cards */}
+          <div className="flex flex-col gap-2 shrink-0">
+            <span className="text-[10px] letter-spacing-[2px] text-[#8896B3] font-bold">ELIGE TU PERSONAJE</span>
             <div className="flex gap-2">
+              {/* Male Character Card */}
               <button
                 onClick={() => handleGenderChange("boy")}
-                className="h-[36px] rounded-[20px] text-[13px] font-semibold flex-1 cursor-pointer transition-all duration-200 border-none flex items-center justify-center gap-1"
+                className="relative flex-1 rounded-xl cursor-pointer transition-all duration-300 border-2 overflow-hidden group"
                 style={{
-                  backgroundColor: previewConfig.gender === "boy" ? "#3B6DE8" : "#1A2240",
-                  color: previewConfig.gender === "boy" ? "#FFFFFF" : "#8896B3",
-                  boxShadow: previewConfig.gender === "boy" ? "0 0 12px #3B6DE880" : "none",
+                  borderColor: previewConfig.gender === "boy" ? "#3B6DE8" : "#1E2D5A",
+                  boxShadow: previewConfig.gender === "boy" ? "0 0 20px #3B6DE860, inset 0 0 30px #3B6DE815" : "none",
+                  background: previewConfig.gender === "boy" 
+                    ? "linear-gradient(180deg, #0D1A3A 0%, #1A2D5E 100%)" 
+                    : "#1A2240",
                 }}
               >
-                <span>♂</span> Masculino
+                <div className="flex flex-col items-center py-2 px-1">
+                  <img 
+                    src={AVATAR_MALE_IMG} 
+                    alt="Personaje Masculino" 
+                    className="w-[60px] h-[60px] object-contain transition-transform duration-300 group-hover:scale-110 drop-shadow-lg"
+                    style={{ filter: previewConfig.gender === "boy" ? "none" : "grayscale(0.4) brightness(0.7)" }}
+                  />
+                  <span className="text-[11px] font-bold mt-1" style={{ color: previewConfig.gender === "boy" ? "#FFFFFF" : "#8896B3" }}>♂ Chico</span>
+                </div>
+                {previewConfig.gender === "boy" && (
+                  <div className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-[#3B6DE8] shadow-[0_0_6px_#3B6DE8]" />
+                )}
               </button>
+
+              {/* Female Character Card */}
               <button
                 onClick={() => handleGenderChange("girl")}
-                className="h-[36px] rounded-[20px] text-[13px] font-semibold flex-1 cursor-pointer transition-all duration-200 border-none flex items-center justify-center gap-1"
+                className="relative flex-1 rounded-xl cursor-pointer transition-all duration-300 border-2 overflow-hidden group"
                 style={{
-                  backgroundColor: previewConfig.gender === "girl" ? "#E83B8E" : "#1A2240",
-                  color: previewConfig.gender === "girl" ? "#FFFFFF" : "#8896B3",
-                  boxShadow: previewConfig.gender === "girl" ? "0 0 12px #E83B8E80" : "none",
+                  borderColor: previewConfig.gender === "girl" ? "#E83B8E" : "#1E2D5A",
+                  boxShadow: previewConfig.gender === "girl" ? "0 0 20px #E83B8E60, inset 0 0 30px #E83B8E15" : "none",
+                  background: previewConfig.gender === "girl" 
+                    ? "linear-gradient(180deg, #2A0D25 0%, #3A1535 100%)" 
+                    : "#1A2240",
                 }}
               >
-                <span>♀</span> Femenino
+                <div className="flex flex-col items-center py-2 px-1">
+                  <img 
+                    src={AVATAR_FEMALE_IMG} 
+                    alt="Personaje Femenino" 
+                    className="w-[60px] h-[60px] object-contain transition-transform duration-300 group-hover:scale-110 drop-shadow-lg"
+                    style={{ filter: previewConfig.gender === "girl" ? "none" : "grayscale(0.4) brightness(0.7)" }}
+                  />
+                  <span className="text-[11px] font-bold mt-1" style={{ color: previewConfig.gender === "girl" ? "#FFFFFF" : "#8896B3" }}>♀ Chica</span>
+                </div>
+                {previewConfig.gender === "girl" && (
+                  <div className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-[#E83B8E] shadow-[0_0_6px_#E83B8E]" />
+                )}
               </button>
             </div>
           </div>
@@ -975,6 +1008,36 @@ export function AvatarCustomizer({ onClose, inline = false }: AvatarCustomizerPr
             <div className="absolute top-4 left-4 z-20">
               <span className="text-[10px] letter-spacing-[2px] text-white font-bold block">VISTA PREVIA 360°</span>
               <span className="text-[10px] text-[#8896B3]">Arrastra para rotar</span>
+            </div>
+
+            {/* CHARACTER REFERENCE IMAGE — Floating in top-right corner */}
+            <div className="absolute top-3 right-3 z-20">
+              <div 
+                className="relative w-[80px] h-[80px] rounded-xl overflow-hidden border-2 transition-all duration-500"
+                style={{
+                  borderColor: previewConfig.gender === "boy" ? "#3B6DE840" : "#E83B8E40",
+                  boxShadow: `0 4px 20px ${previewConfig.gender === "boy" ? "#3B6DE830" : "#E83B8E30"}`,
+                  background: "linear-gradient(135deg, #0D153580, #1A224080)",
+                  backdropFilter: "blur(8px)",
+                }}
+              >
+                <img 
+                  src={previewConfig.gender === "boy" ? AVATAR_MALE_IMG : AVATAR_FEMALE_IMG} 
+                  alt={previewConfig.gender === "boy" ? "Referencia Masculino" : "Referencia Femenino"}
+                  className="w-full h-full object-contain transition-all duration-500"
+                />
+                <div 
+                  className="absolute bottom-0 left-0 right-0 py-0.5 text-center text-[8px] font-bold tracking-wider"
+                  style={{ 
+                    background: previewConfig.gender === "boy" 
+                      ? "linear-gradient(0deg, #3B6DE8CC, transparent)" 
+                      : "linear-gradient(0deg, #E83B8ECC, transparent)",
+                    color: "#FFFFFF",
+                  }}
+                >
+                  {previewConfig.gender === "boy" ? "CHICO" : "CHICA"}
+                </div>
+              </div>
             </div>
 
             {/* CONTROLES DE ZOOM (Izquierda) */}
