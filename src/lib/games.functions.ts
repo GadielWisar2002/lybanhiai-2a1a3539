@@ -198,7 +198,7 @@ export const unlockGame = createServerFn({ method: "POST" })
       "runner-conocimiento": 600,
       "battle-royale": 700,
       "laboratorio-inventores": 800,
-      "ciudad-conocimiento": 900,
+      "ciudad-conocimiento": 1600,
       "ligas-campeones": 1000,
       "simulador-examenes": 150,
       "quiz-clash": 1200,

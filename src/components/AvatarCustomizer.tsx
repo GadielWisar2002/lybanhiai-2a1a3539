@@ -2,12 +2,33 @@ import React, { useState, useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { RobloxAvatarRenderer } from "./RobloxAvatarRenderer";
+import { LayeredAvatarRenderer } from "./LayeredAvatarRenderer";
 import { getDashboard } from "@/lib/quiz.functions";
 import { saveAvatarConfig } from "@/lib/avatar.functions";
 
 // High-quality chibi/anime character preview images
 const AVATAR_MALE_IMG = "/avatars/avatar-male.png";
 const AVATAR_FEMALE_IMG = "/avatars/avatar-female.png";
+
+const THUMBNAIL_MAP: Record<string, string> = {
+  "hair-short": "/avatars/hair/hair-short-brown.png",
+  "hair-wavy": "/avatars/hair/hair-long-wavy-pink.png",
+  "hair-straight": "/avatars/hair/hair-short-brown.png",
+  "hair-bangs": "/avatars/hair/hair-short-brown.png",
+  "hair-mohawk": "/avatars/hair/hair-short-brown.png",
+  "hair-afro": "/avatars/hair/hair-short-brown.png",
+  "hair-pigtails": "/avatars/hair/hair-long-wavy-pink.png",
+  "hair-braids": "/avatars/hair/hair-long-wavy-pink.png",
+  "shirt-academic-jacket": "/avatars/tops/top-varsity-jacket.png",
+  "shirt-basic-hoodie": "/avatars/tops/top-white-hoodie.png",
+  "shirt-basic-tee": "/avatars/tops/top-white-hoodie.png",
+  "shirt-lab-coat": "/avatars/tops/top-white-hoodie.png",
+  "pants-basic-jeans": "/avatars/bottoms/bottom-cargo-pants.png",
+  "pants-basic-skirt": "/avatars/bottoms/bottom-plaid-skirt.png",
+  "shoes-basic-shoes": "/avatars/shoes/shoes-hightop-blue.png",
+  "shoes-hightop": "/avatars/shoes/shoes-hightop-blue.png",
+  "shoes-lowtop": "/avatars/shoes/shoes-lowtop-white.png",
+};
 
 interface AvatarCustomizerProps {
   onClose?: () => void;
@@ -262,6 +283,7 @@ export function AvatarCustomizer({ onClose, inline = false }: AvatarCustomizerPr
   const [probarTodo, setProbarTodo] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [showToast, setShowToast] = useState(false);
+  const [renderMode, setRenderMode] = useState<"3d-layers" | "svg">("3d-layers");
 
   // Sync initial configuration from backend profile
   useEffect(() => {
@@ -559,31 +581,41 @@ export function AvatarCustomizer({ onClose, inline = false }: AvatarCustomizerPr
                             }}
                           >
                             <div className="w-[50px] h-[50px] flex items-center justify-center scale-90">
-                              <svg viewBox="0 0 60 60" className="w-12 h-12">
-                                <circle cx="30" cy="30" r="14" fill={previewConfig.skinColor} />
-                                <path
-                                  d="M 18,30 C 18,14 42,14 42,30 C 38,28 34,26 30,26 C 26,26 22,28 18,30 Z"
-                                  fill={previewConfig.hairColor}
-                                />
-                                {cut.id === "hair-pigtails" && (
-                                  <g fill={previewConfig.hairColor}>
-                                    <circle cx="14" cy="22" r="6" />
-                                    <circle cx="46" cy="22" r="6" />
-                                  </g>
-                                )}
-                                {cut.id === "hair-braids" && (
-                                  <g fill={previewConfig.hairColor}>
-                                    <path d="M 14,30 L 10,48 L 18,48 Z" />
-                                    <path d="M 46,30 L 50,48 L 42,48 Z" />
-                                  </g>
-                                )}
-                                {cut.id === "hair-mohawk" && (
-                                  <path d="M 27,16 Q 30,2 33,16 L 31,26 L 29,26 Z" fill={previewConfig.hairColor} />
-                                )}
-                                {cut.id === "hair-afro" && (
-                                  <circle cx="30" cy="25" r="18" fill={previewConfig.hairColor} opacity="0.8" />
-                                )}
-                              </svg>
+                              {renderMode === "3d-layers" && THUMBNAIL_MAP[cut.id] ? (
+                                <div className="w-full h-full relative bg-[#090D22]/80 rounded-md overflow-hidden flex items-center justify-center border border-[#2D3F6B]/30 shadow-inner">
+                                  <img 
+                                    src={THUMBNAIL_MAP[cut.id]} 
+                                    alt={cut.name} 
+                                    className="w-full h-full object-contain" 
+                                  />
+                                </div>
+                              ) : (
+                                <svg viewBox="0 0 60 60" className="w-12 h-12">
+                                  <circle cx="30" cy="30" r="14" fill={previewConfig.skinColor} />
+                                  <path
+                                    d="M 18,30 C 18,14 42,14 42,30 C 38,28 34,26 30,26 C 26,26 22,28 18,30 Z"
+                                    fill={previewConfig.hairColor}
+                                  />
+                                  {cut.id === "hair-pigtails" && (
+                                    <g fill={previewConfig.hairColor}>
+                                      <circle cx="14" cy="22" r="6" />
+                                      <circle cx="46" cy="22" r="6" />
+                                    </g>
+                                  )}
+                                  {cut.id === "hair-braids" && (
+                                    <g fill={previewConfig.hairColor}>
+                                      <path d="M 14,30 L 10,48 L 18,48 Z" />
+                                      <path d="M 46,30 L 50,48 L 42,48 Z" />
+                                    </g>
+                                  )}
+                                  {cut.id === "hair-mohawk" && (
+                                    <path d="M 27,16 Q 30,2 33,16 L 31,26 L 29,26 Z" fill={previewConfig.hairColor} />
+                                  )}
+                                  {cut.id === "hair-afro" && (
+                                    <circle cx="30" cy="25" r="18" fill={previewConfig.hairColor} opacity="0.8" />
+                                  )}
+                                </svg>
+                              )}
                             </div>
                             <span className="text-[11px] text-[#8896B3] mt-1.5 font-semibold truncate w-full">{cut.name}</span>
                           </div>
@@ -790,14 +822,20 @@ export function AvatarCustomizer({ onClose, inline = false }: AvatarCustomizerPr
                         <div
                           key={item.id}
                           onClick={() => setPreviewConfig((prev) => ({ ...prev, shirt: item.id }))}
-                          className="bg-[#1A2240] hover:bg-[#243060] rounded-xl p-3 text-center cursor-pointer transition border"
+                          className="bg-[#1A2240] hover:bg-[#243060] rounded-xl p-3 text-center cursor-pointer transition border flex flex-col items-center justify-between min-h-[90px]"
                           style={{
                             borderColor: isSel ? activeColor : "transparent",
                             backgroundColor: isSel ? "#1A2B5A" : "#1A2240",
                           }}
                         >
-                          <span className="text-xl block mb-1">{item.label}</span>
-                          <span className="text-[11px] font-bold text-slate-300 leading-none">{item.name}</span>
+                          {renderMode === "3d-layers" && THUMBNAIL_MAP[item.id] ? (
+                            <div className="w-12 h-12 mx-auto mb-1 bg-[#090D22]/80 rounded-lg overflow-hidden flex items-center justify-center border border-[#2D3F6B]/30 shadow-inner shrink-0">
+                              <img src={THUMBNAIL_MAP[item.id]} alt={item.name} className="w-10 h-10 object-contain" />
+                            </div>
+                          ) : (
+                            <span className="text-xl block mb-1">{item.label}</span>
+                          )}
+                          <span className="text-[11px] font-bold text-slate-300 leading-none mt-1">{item.name}</span>
                         </div>
                       );
                     })}
@@ -825,7 +863,13 @@ export function AvatarCustomizer({ onClose, inline = false }: AvatarCustomizerPr
                             backgroundColor: isSel ? "#1A2B5A" : "#1A2240",
                           }}
                         >
-                          <span className="text-2xl">{item.icon}</span>
+                          {renderMode === "3d-layers" && THUMBNAIL_MAP[item.id] ? (
+                            <div className="w-12 h-12 bg-[#090D22]/80 rounded-lg overflow-hidden flex items-center justify-center border border-[#2D3F6B]/30 shadow-inner shrink-0">
+                              <img src={THUMBNAIL_MAP[item.id]} alt={item.name} className="w-10 h-10 object-contain" />
+                            </div>
+                          ) : (
+                            <span className="text-2xl">{item.icon}</span>
+                          )}
                           <span className="text-xs font-bold text-white">{item.name}</span>
                         </div>
                       );
@@ -840,7 +884,8 @@ export function AvatarCustomizer({ onClose, inline = false }: AvatarCustomizerPr
                   <h3 className="text-[13px] letter-spacing-[2px] text-white font-bold uppercase mb-3">ZAPATOS</h3>
                   <div className="grid grid-cols-2 gap-3">
                     {[
-                      { id: "shoes-basic-shoes", name: "Zapatillas Altas", icon: "👟" },
+                      { id: "shoes-basic-shoes", name: "Sneakers Altos (Azul)", icon: "👟" },
+                      { id: "shoes-lowtop", name: "Sneakers Bajos (Blanco)", icon: "👟" },
                     ].map((item) => {
                       const isSel = previewConfig.shoes === item.id;
                       return (
@@ -853,7 +898,13 @@ export function AvatarCustomizer({ onClose, inline = false }: AvatarCustomizerPr
                             backgroundColor: isSel ? "#1A2B5A" : "#1A2240",
                           }}
                         >
-                          <span className="text-2xl">{item.icon}</span>
+                          {renderMode === "3d-layers" && THUMBNAIL_MAP[item.id] ? (
+                            <div className="w-12 h-12 bg-[#090D22]/80 rounded-lg overflow-hidden flex items-center justify-center border border-[#2D3F6B]/30 shadow-inner shrink-0">
+                              <img src={THUMBNAIL_MAP[item.id]} alt={item.name} className="w-10 h-10 object-contain" />
+                            </div>
+                          ) : (
+                            <span className="text-2xl">{item.icon}</span>
+                          )}
                           <span className="text-xs font-bold text-white">{item.name}</span>
                         </div>
                       );
@@ -1068,14 +1119,33 @@ export function AvatarCustomizer({ onClose, inline = false }: AvatarCustomizerPr
               </button>
             </div>
 
-            {/* CANVAS DEL AVATAR */}
+            {/* CANVAS DEL AVATAR — Dual Renderer */}
             <div className="flex-1 flex items-center justify-center relative overflow-hidden h-full max-h-[380px]">
-              <RobloxAvatarRenderer config={previewConfig} autoRotate={false} />
+              {renderMode === "3d-layers" ? (
+                <LayeredAvatarRenderer config={previewConfig} autoRotate={false} />
+              ) : (
+                <RobloxAvatarRenderer config={previewConfig} autoRotate={false} />
+              )}
             </div>
 
             {/* BARRA INFERIOR DE VISTA PREVIA */}
             <div className="flex items-center justify-between gap-4 mt-2 z-20 relative">
-              <div className="flex gap-3">
+              <div className="flex gap-2">
+                {/* Render mode toggle */}
+                <button
+                  onClick={() => setRenderMode(renderMode === "3d-layers" ? "svg" : "3d-layers")}
+                  className="h-11 px-3 rounded-full border cursor-pointer flex items-center justify-center gap-1.5 text-xs font-bold transition duration-200"
+                  style={{
+                    backgroundColor: renderMode === "3d-layers" ? activeColor : "#1A2240",
+                    borderColor: renderMode === "3d-layers" ? "#FFFFFF" : "#2D3F6B",
+                    color: "#FFFFFF",
+                  }}
+                  title={renderMode === "3d-layers" ? "Modo: Capas 3D" : "Modo: SVG Clásico"}
+                >
+                  {renderMode === "3d-layers" ? "🖼️" : "✏️"}
+                  <span className="text-[10px] hidden sm:inline">{renderMode === "3d-layers" ? "3D" : "SVG"}</span>
+                </button>
+
                 {[
                   { mode: "body", icon: "🧍" },
                   { mode: "clothes", icon: "👕" },

@@ -13,6 +13,7 @@ import { StreakBadge } from "@/components/StreakBadge";
 import { LogOut, Globe, Trophy } from "lucide-react";
 import { BLOOKS } from "@/lib/games.functions";
 import { RobloxAvatarRenderer } from "@/components/RobloxAvatarRenderer";
+import { LayeredAvatarRenderer } from "@/components/LayeredAvatarRenderer";
 import { getPrestigeTitle, getPrestigeBadge } from "@/lib/avatar.functions";
 
 export const Route = createFileRoute("/_authenticated/profile")({
@@ -85,9 +86,7 @@ function Profile() {
         <Link to="/games" search={{ tab: "avatar" }} className="block mt-4 transition hover:opacity-90 active:scale-[0.99]">
           <div className="flex items-center gap-3.5 rounded-2xl border border-border bg-card p-4 shadow-[var(--shadow-card)] cursor-pointer">
             <div className="size-14 shrink-0 rounded-2xl bg-slate-900 border border-slate-800/80 shadow-[var(--shadow-card)] overflow-hidden flex items-center justify-center relative">
-              <div className="scale-[0.32] absolute origin-center flex items-center justify-center">
-                <RobloxAvatarRenderer config={data?.profile?.avatar_config as any} autoRotate={true} />
-              </div>
+              <LayeredAvatarRenderer config={data?.profile?.avatar_config as any} profileView={true} />
             </div>
             <div>
               <p className="font-display font-bold text-lg leading-tight">{data?.profile?.full_name}</p>
