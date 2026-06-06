@@ -91,6 +91,47 @@ interface AvatarConfig {
   viewMode?: string;
 }
 
+// Helper function to remove black background from 3D rendered PNG layers client-side
+function removeBlackBackground(src: string): Promise<string> {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.onload = () => {
+      const canvas = document.createElement("canvas");
+      canvas.width = img.width;
+      canvas.height = img.height;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) {
+        resolve(src);
+        return;
+      }
+      ctx.drawImage(img, 0, 0);
+      try {
+        const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        const data = imgData.data;
+        // Loop through pixels and make black background transparent
+        for (let i = 0; i < data.length; i += 4) {
+          const r = data[i];
+          const g = data[i + 1];
+          const b = data[i + 2];
+          // Threshold for black background (RGB values close to 0)
+          if (r < 18 && g < 18 && b < 18) {
+            data[i + 3] = 0; // Set alpha to transparent
+          }
+        }
+        ctx.putImageData(imgData, 0, 0);
+        resolve(canvas.toDataURL("image/png"));
+      } catch (err) {
+        resolve(src);
+      }
+    };
+    img.onerror = () => {
+      resolve(src);
+    };
+    img.src = src;
+  });
+}
+
 interface LayeredAvatarRendererProps {
   config: AvatarConfig | null;
   autoRotate?: boolean;
@@ -142,9 +183,48 @@ export function LayeredAvatarRenderer({
   const bottomImg = BOTTOM_MAP[c.pants] || BOTTOM_MAP["pants-basic-jeans"];
   const shoesImg = SHOES_MAP[c.shoes] || SHOES_MAP["shoes-basic-shoes"];
 
+  // Process all layers to make black background transparent
+  useEffect(() => {
+    let active = true;
+    const processAll = async () => {
+      const keys = ["body", "bottom", "shoes", "top", "hair"];
+      const urls: Record<string, string> = {
+        body: bodyImg,
+        bottom: bottomImg,
+        shoes: shoesImg,
+        top: topImg,
+        hair: hairImg,
+      };
+
+      const results: Record<string, string> = {};
+      await Promise.all(
+        keys.map(async (key) => {
+          const processed = await removeBlackBackground(urls[key]);
+          results[key] = processed;
+        })
+      );
+
+      if (active) {
+        setProcessedLayers(results);
+      }
+    };
+
+    processAll();
+    return () => {
+      active = false;
+    };
+  }, [bodyImg, bottomImg, shoesImg, topImg, hairImg]);
+
+  const allProcessed = 
+    processedLayers.body && 
+    processedLayers.bottom && 
+    processedLayers.shoes && 
+    processedLayers.top && 
+    processedLayers.hair;
+
   // Breathing offset
   const breathOffset =
-    c.viewMode === "animation"
+    !profileView && c.viewMode === "animation"
       ? Math.sin((breathPhase * Math.PI) / 180) * 3
       : 0;
 
@@ -153,11 +233,11 @@ export function LayeredAvatarRenderer({
 
   // Layer definitions in render order (bottom → top)
   const layers = [
-    { id: "body", src: bodyImg, pos: LAYER_POSITIONS.body, zIndex: 1 },
-    { id: "bottom", src: bottomImg, pos: LAYER_POSITIONS.bottom, zIndex: 2 },
-    { id: "shoes", src: shoesImg, pos: LAYER_POSITIONS.shoes, zIndex: 3 },
-    { id: "top", src: topImg, pos: LAYER_POSITIONS.top, zIndex: 4 },
-    { id: "hair", src: hairImg, pos: LAYER_POSITIONS.hair, zIndex: 5 },
+    { id: "body", src: processedLayers.body || bodyImg, pos: LAYER_POSITIONS.body, zIndex: 1 },
+    { id: "bottom", src: processedLayers.bottom || bottomImg, pos: LAYER_POSITIONS.bottom, zIndex: 2 },
+    { id: "shoes", src: processedLayers.shoes || shoesImg, pos: LAYER_POSITIONS.shoes, zIndex: 3 },
+    { id: "top", src: processedLayers.top || topImg, pos: LAYER_POSITIONS.top, zIndex: 4 },
+    { id: "hair", src: processedLayers.hair || hairImg, pos: LAYER_POSITIONS.hair, zIndex: 5 },
   ];
 
   return (
@@ -165,8 +245,8 @@ export function LayeredAvatarRenderer({
       ref={containerRef}
       className={`relative flex flex-col items-center justify-center select-none w-full h-full overflow-hidden ${profileView ? "min-h-0" : "min-h-[360px]"}`}
       style={{
-        opacity: loaded ? 1 : 0,
-        transition: "opacity 0.6s ease-out",
+        opacity: loaded && allProcessed ? 1 : 0,
+        transition: "opacity 0.4s ease-out",
       }}
     >
       {/* Hologram platform glow */}
@@ -305,9 +385,8 @@ export function LayeredAvatarRenderer({
                 height: layer.pos.height,
                 zIndex: layer.zIndex,
                 objectFit: "contain",
-                // Use mix-blend-mode: lighten so black BG becomes transparent
-                // The base body renders normally, layers on top blend
-                mixBlendMode: layer.id === "body" ? "normal" : "lighten",
+                // Render normally on top of body (black background removed client-side)
+                mixBlendMode: "normal",
                 // Subtle highlight when category matches this layer
                 filter:
                   hoveredLayer === layer.id
