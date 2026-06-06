@@ -61,11 +61,11 @@ interface LayerPosition {
 
 // Positions calibrated so layers align over the A-pose base body
 const LAYER_POSITIONS: Record<string, LayerPosition> = {
-  body: { top: "0%", left: "0%", width: "100%", height: "100%" },
-  hair: { top: "-8%", left: "5%", width: "90%", height: "52%" },
+  body: { top: "0%", left: "5%", width: "90%", height: "100%" },
+  hair: { top: "-1.5%", left: "5%", width: "90%", height: "52%" },
   top: { top: "34%", left: "5%", width: "90%", height: "38%" },
-  bottom: { top: "54%", left: "12%", width: "76%", height: "32%" },
-  shoes: { top: "78%", left: "15%", width: "70%", height: "22%" },
+  bottom: { top: "54%", left: "5%", width: "90%", height: "32%" },
+  shoes: { top: "78%", left: "5%", width: "90%", height: "22%" },
 };
 
 // ─────────────────────────────────────────────────────
@@ -276,13 +276,52 @@ export function LayeredAvatarRenderer({
     height: isLongHair ? "52%" : "48%", // Height calibration
   };
 
-  // Layer definitions in render order (bottom → top)
-  const layers = [
-    { id: "body", src: processedLayers.body || bodyImg, pos: LAYER_POSITIONS.body, zIndex: 1 },
-    { id: "bottom", src: processedLayers.bottom || bottomImg, pos: LAYER_POSITIONS.bottom, zIndex: 2 },
-    { id: "shoes", src: processedLayers.shoes || shoesImg, pos: LAYER_POSITIONS.shoes, zIndex: 3 },
-    { id: "top", src: processedLayers.top || topImg, pos: LAYER_POSITIONS.top, zIndex: 4 },
-    { id: "hair", src: processedLayers.hair || hairImg, pos: hairPosition, zIndex: 5 },
+  // Head Group Layers (head of base body + hair layer)
+  // body_head: clipped to top 42% of image height
+  const headLayers = [
+    { 
+      id: "body_head", 
+      src: processedLayers.body || bodyImg, 
+      pos: LAYER_POSITIONS.body, 
+      zIndex: 1, 
+      clipPath: "inset(0% 0% 58% 0%)" 
+    },
+    { 
+      id: "hair", 
+      src: processedLayers.hair || hairImg, 
+      pos: hairPosition, 
+      zIndex: 2 
+    },
+  ];
+
+  // Body Group Layers (torso downwards + clothes + shoes)
+  // body_torso: clipped to bottom 58% of image height
+  const bodyLayers = [
+    { 
+      id: "body_torso", 
+      src: processedLayers.body || bodyImg, 
+      pos: LAYER_POSITIONS.body, 
+      zIndex: 1, 
+      clipPath: "inset(42% 0% 0% 0%)" 
+    },
+    { 
+      id: "bottom", 
+      src: processedLayers.bottom || bottomImg, 
+      pos: LAYER_POSITIONS.bottom, 
+      zIndex: 2 
+    },
+    { 
+      id: "shoes", 
+      src: processedLayers.shoes || shoesImg, 
+      pos: LAYER_POSITIONS.shoes, 
+      zIndex: 3 
+    },
+    { 
+      id: "top", 
+      src: processedLayers.top || topImg, 
+      pos: LAYER_POSITIONS.top, 
+      zIndex: 4 
+    },
   ];
 
   return (
@@ -416,7 +455,8 @@ export function LayeredAvatarRenderer({
             height: profileView ? "100%" : "min(90%, 400px)",
           }}
         >
-          {layers.map((layer) => (
+          {/* BODY & CLOTHES GROUP (torso, pants, shoes, top) */}
+          {bodyLayers.map((layer) => (
             <img
               key={layer.id}
               src={layer.src}
@@ -430,18 +470,56 @@ export function LayeredAvatarRenderer({
                 height: layer.pos.height,
                 zIndex: layer.zIndex,
                 objectFit: "contain",
-                // Render normally on top of body (black background removed client-side)
                 mixBlendMode: "normal",
-                // Subtle highlight when category matches this layer
+                clipPath: layer.clipPath,
+                // Highlight when hovered
                 filter:
-                  hoveredLayer === layer.id
+                  hoveredLayer === (layer.id === "body_torso" ? "body" : layer.id)
                     ? `drop-shadow(0 0 8px ${accent})`
                     : "none",
               }}
-              onMouseEnter={() => setHoveredLayer(layer.id)}
+              onMouseEnter={() => setHoveredLayer(layer.id === "body_torso" ? "body" : layer.id)}
               onMouseLeave={() => setHoveredLayer(null)}
             />
           ))}
+
+          {/* HEAD & HAIR GROUP (head base, hair) */}
+          <div 
+            className="absolute inset-0"
+            style={{ 
+              zIndex: 5,
+              // Grouped head Bobbing/Translation relative to body
+              transform: `translateY(${profileView ? "0px" : "-1px"})`, 
+              transition: "transform 0.2s ease-out" 
+            }}
+          >
+            {headLayers.map((layer) => (
+              <img
+                key={layer.id}
+                src={layer.src}
+                alt={`Avatar layer: ${layer.id}`}
+                draggable={false}
+                className="absolute transition-all duration-300"
+                style={{
+                  top: layer.pos.top,
+                  left: layer.pos.left,
+                  width: layer.pos.width,
+                  height: layer.pos.height,
+                  zIndex: layer.zIndex,
+                  objectFit: "contain",
+                  mixBlendMode: "normal",
+                  clipPath: layer.clipPath,
+                  // Highlight when hovered
+                  filter:
+                    hoveredLayer === (layer.id === "body_head" ? "body" : layer.id)
+                      ? `drop-shadow(0 0 8px ${accent})`
+                      : "none",
+                }}
+                onMouseEnter={() => setHoveredLayer(layer.id === "body_head" ? "body" : layer.id)}
+                onMouseLeave={() => setHoveredLayer(null)}
+              />
+            ))}
+          </div>
 
           {/* Shadow under character */}
           <div
