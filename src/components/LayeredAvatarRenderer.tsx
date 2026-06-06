@@ -189,9 +189,8 @@ export function LayeredAvatarRenderer({
     return () => clearTimeout(timer);
   }, []);
 
-  // Resolve image paths from config
+  // Resolve image paths from config (hairImg is removed)
   const bodyImg = BODY_MAP[c.gender] || BODY_MAP.boy;
-  const hairImg = HAIR_MAP[c.hairStyle] || HAIR_MAP["hair-short"];
   const topImg = TOP_MAP[c.shirt] || TOP_MAP["shirt-academic-jacket"];
   const bottomImg = BOTTOM_MAP[c.pants] || BOTTOM_MAP["pants-basic-jeans"];
   const shoesImg = SHOES_MAP[c.shoes] || SHOES_MAP["shoes-basic-shoes"];
@@ -200,13 +199,12 @@ export function LayeredAvatarRenderer({
   useEffect(() => {
     let active = true;
     const processAll = async () => {
-      const keys = ["body", "bottom", "shoes", "top", "hair"];
+      const keys = ["body", "bottom", "shoes", "top"];
       const urls: Record<string, string> = {
         body: bodyImg,
         bottom: bottomImg,
         shoes: shoesImg,
         top: topImg,
-        hair: hairImg,
       };
 
       const results: Record<string, string> = {};
@@ -226,14 +224,13 @@ export function LayeredAvatarRenderer({
     return () => {
       active = false;
     };
-  }, [bodyImg, bottomImg, shoesImg, topImg, hairImg]);
+  }, [bodyImg, bottomImg, shoesImg, topImg]);
 
   const allProcessed = 
     processedLayers.body && 
     processedLayers.bottom && 
     processedLayers.shoes && 
-    processedLayers.top && 
-    processedLayers.hair;
+    processedLayers.top;
 
   // Breathing offset
   const breathOffset =
@@ -244,13 +241,12 @@ export function LayeredAvatarRenderer({
   // Accent color based on gender
   const accent = c.gender === "boy" ? "#3B6DE8" : "#E83B8E";
 
-  // Unified Layer Stack (1:1 aligned layers stacked in zIndex order)
+  // Unified Layer Stack (1:1 aligned layers stacked in zIndex order) - hair layer removed
   const layers = [
     { id: "body", src: processedLayers.body || bodyImg, pos: LAYER_POSITIONS.body, zIndex: 1 },
     { id: "bottom", src: processedLayers.bottom || bottomImg, pos: LAYER_POSITIONS.bottom, zIndex: 2 },
     { id: "shoes", src: processedLayers.shoes || shoesImg, pos: LAYER_POSITIONS.shoes, zIndex: 3 },
     { id: "top", src: processedLayers.top || topImg, pos: LAYER_POSITIONS.top, zIndex: 4 },
-    { id: "hair", src: processedLayers.hair || hairImg, pos: LAYER_POSITIONS.hair, zIndex: 5 },
   ];
 
   return (

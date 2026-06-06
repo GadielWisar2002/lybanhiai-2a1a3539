@@ -348,8 +348,8 @@ export function RobloxAvatarRenderer({
             ======================================================= */}
         <g className="anime-rig-body" filter="url(#rim-light-shadow)" transform={`scale(${bodyWidthScale}, ${bodyHeightScale}) translate(${100 * (1 - bodyWidthScale) / bodyWidthScale}, ${380 * (1 - bodyHeightScale) / bodyHeightScale})`}>
           
-          {/* 1. BACK HAIR LAYER (Behind everything) */}
-          {isFront && (
+          {/* 1. BACK HAIR LAYER (Behind everything) - DISABLED */}
+          {false && isFront && (
             <g transform={`translate(${hairBackX}, 0)`} className="anime-hair-sway">
               {(c.hairStyle === "hair-long" || c.hairStyle === "hair-wavy" || c.hairStyle === "hair-pigtails" || c.hairStyle === "hair-braids" || c.hairStyle === "hair-female-modern") && (
                 <g>
@@ -740,121 +740,121 @@ export function RobloxAvatarRenderer({
             </g>
           </g>
 
-          {/* =======================================================
-              7. HAIR LAYER (Layered ON TOP of head for 3D volume)
-              ======================================================= */}
-          <g transform={`translate(${hairFrontX}, 0)`} className="anime-hair-sway">
-            
-            {/* Main Hair Volume Base */}
-            <path
-              d="M 69,72 C 69,38 131,38 131,72 C 131,78 126,80 122,76 C 114,64 110,64 100,74 C 92,64 88,64 80,76 C 76,80 69,78 69,72 Z"
-              fill="url(#hair-main-grad)"
-              stroke={hairShadow}
-              strokeWidth="0.6"
-            />
+          {/* 7. HAIR LAYER (Layered ON TOP of head for 3D volume) - DISABLED */}
+          {false && (
+            <g transform={`translate(${hairFrontX}, 0)`} className="anime-hair-sway">
+              
+              {/* Main Hair Volume Base */}
+              <path
+                d="M 69,72 C 69,38 131,38 131,72 C 131,78 126,80 122,76 C 114,64 110,64 100,74 C 92,64 88,64 80,76 C 76,80 69,78 69,72 Z"
+                fill="url(#hair-main-grad)"
+                stroke={hairShadow}
+                strokeWidth="0.6"
+              />
 
-            {/* Specific Mechones (Individual Hair Locks) */}
-            {c.hairStyle === "hair-short" && (
-              <g>
-                {/* Short modern messy locks for boys */}
-                <path d="M 72,66 L 62,75 L 72,76 Z" fill="url(#hair-main-grad)" stroke={hairShadow} strokeWidth="0.5" />
-                <path d="M 80,58 L 74,68 L 84,66 Z" fill="url(#hair-main-grad)" stroke={hairShadow} strokeWidth="0.5" />
-                <path d="M 90,52 L 86,66 L 96,62 Z" fill="url(#hair-main-grad)" stroke={hairShadow} strokeWidth="0.5" />
-                <path d="M 110,52 L 114,66 L 104,62 Z" fill="url(#hair-main-grad)" stroke={hairShadow} strokeWidth="0.5" />
-                <path d="M 120,58 L 126,68 L 116,66 Z" fill="url(#hair-main-grad)" stroke={hairShadow} strokeWidth="0.5" />
-                <path d="M 128,66 L 138,75 L 128,76 Z" fill="url(#hair-main-grad)" stroke={hairShadow} strokeWidth="0.5" />
-                {/* Bangs falling over forehead */}
-                <path d="M 82,75 C 85,85 88,88 92,85 C 90,80 86,76 82,75 Z" fill={hairBase} />
-                <path d="M 118,75 C 115,85 112,88 108,85 C 110,80 114,76 118,75 Z" fill={hairBase} />
-                <path d="M 100,74 C 98,88 102,88 100,92 C 102,86 102,78 100,74 Z" fill={hairShadow} />
-              </g>
-            )}
+              {/* Specific Mechones (Individual Hair Locks) */}
+              {c.hairStyle === "hair-short" && (
+                <g>
+                  {/* Short modern messy locks for boys */}
+                  <path d="M 72,66 L 62,75 L 72,76 Z" fill="url(#hair-main-grad)" stroke={hairShadow} strokeWidth="0.5" />
+                  <path d="M 80,58 L 74,68 L 84,66 Z" fill="url(#hair-main-grad)" stroke={hairShadow} strokeWidth="0.5" />
+                  <path d="M 90,52 L 86,66 L 96,62 Z" fill="url(#hair-main-grad)" stroke={hairShadow} strokeWidth="0.5" />
+                  <path d="M 110,52 L 114,66 L 104,62 Z" fill="url(#hair-main-grad)" stroke={hairShadow} strokeWidth="0.5" />
+                  <path d="M 120,58 L 126,68 L 116,66 Z" fill="url(#hair-main-grad)" stroke={hairShadow} strokeWidth="0.5" />
+                  <path d="M 128,66 L 138,75 L 128,76 Z" fill="url(#hair-main-grad)" stroke={hairShadow} strokeWidth="0.5" />
+                  {/* Bangs falling over forehead */}
+                  <path d="M 82,75 C 85,85 88,88 92,85 C 90,80 86,76 82,75 Z" fill={hairBase} />
+                  <path d="M 118,75 C 115,85 112,88 108,85 C 110,80 114,76 118,75 Z" fill={hairBase} />
+                  <path d="M 100,74 C 98,88 102,88 100,92 C 102,86 102,78 100,74 Z" fill={hairShadow} />
+                </g>
+              )}
 
-            {c.hairStyle === "hair-wavy" && (
-              <g>
-                {/* Flowing side locks down shoulder */}
-                <path d="M 70,72 C 60,95 58,125 64,150 C 68,140 70,120 72,90 Z" fill="url(#hair-main-grad)" />
-                <path d="M 130,72 C 140,95 142,125 136,150 C 132,140 130,120 128,90 Z" fill="url(#hair-main-grad)" />
-                {/* Wavy bangs */}
-                <path d="M 78,74 C 84,84 94,84 98,76 Z" fill={hairBase} stroke={hairShadow} strokeWidth="0.5" />
-                <path d="M 102,76 C 106,84 116,84 122,74 Z" fill={hairBase} stroke={hairShadow} strokeWidth="0.5" />
-              </g>
-            )}
+              {c.hairStyle === "hair-wavy" && (
+                <g>
+                  {/* Flowing side locks down shoulder */}
+                  <path d="M 70,72 C 60,95 58,125 64,150 C 68,140 70,120 72,90 Z" fill="url(#hair-main-grad)" />
+                  <path d="M 130,72 C 140,95 142,125 136,150 C 132,140 130,120 128,90 Z" fill="url(#hair-main-grad)" />
+                  {/* Wavy bangs */}
+                  <path d="M 78,74 C 84,84 94,84 98,76 Z" fill={hairBase} stroke={hairShadow} strokeWidth="0.5" />
+                  <path d="M 102,76 C 106,84 116,84 122,74 Z" fill={hairBase} stroke={hairShadow} strokeWidth="0.5" />
+                </g>
+              )}
 
-            {c.hairStyle === "hair-straight" && (
-              <g>
-                {/* Straight shoulder-length hair locks */}
-                <path d="M 69,72 L 64,130 L 74,130 L 73,85 Z" fill="url(#hair-main-grad)" />
-                <path d="M 131,72 L 136,130 L 126,130 L 127,85 Z" fill="url(#hair-main-grad)" />
-                {/* Neat straight bangs */}
-                <path d="M 78,74 L 78,88 L 86,88 L 84,74 Z" fill={hairBase} />
-                <path d="M 122,74 L 122,88 L 114,88 L 116,74 Z" fill={hairBase} />
-                <path d="M 86,74 L 88,89 L 112,89 L 114,74 Z" fill={hairBase} />
-              </g>
-            )}
+              {c.hairStyle === "hair-straight" && (
+                <g>
+                  {/* Straight shoulder-length hair locks */}
+                  <path d="M 69,72 L 64,130 L 74,130 L 73,85 Z" fill="url(#hair-main-grad)" />
+                  <path d="M 131,72 L 136,130 L 126,130 L 127,85 Z" fill="url(#hair-main-grad)" />
+                  {/* Neat straight bangs */}
+                  <path d="M 78,74 L 78,88 L 86,88 L 84,74 Z" fill={hairBase} />
+                  <path d="M 122,74 L 122,88 L 114,88 L 116,74 Z" fill={hairBase} />
+                  <path d="M 86,74 L 88,89 L 112,89 L 114,74 Z" fill={hairBase} />
+                </g>
+              )}
 
-            {c.hairStyle === "hair-mohawk" && (
-              <g>
-                {/* Central tall crest spikes */}
-                <path d="M 94,42 Q 100,10 106,42 L 100,50 Z" fill="url(#hair-main-grad)" stroke={hairShadow} strokeWidth="0.6" />
-                <path d="M 96,48 Q 100,20 104,48 L 100,54 Z" fill={hairHighlight} />
-              </g>
-            )}
+              {c.hairStyle === "hair-mohawk" && (
+                <g>
+                  {/* Central tall crest spikes */}
+                  <path d="M 94,42 Q 100,10 106,42 L 100,50 Z" fill="url(#hair-main-grad)" stroke={hairShadow} strokeWidth="0.6" />
+                  <path d="M 96,48 Q 100,20 104,48 L 100,54 Z" fill={hairHighlight} />
+                </g>
+              )}
 
-            {c.hairStyle === "hair-afro" && (
-              <g>
-                {/* Rounded modular cloud hair */}
-                <circle cx="100" cy="56" r="28" fill="url(#hair-main-grad)" stroke={hairShadow} strokeWidth="0.8" />
-                <circle cx="82" cy="65" r="22" fill="url(#hair-main-grad)" />
-                <circle cx="118" cy="65" r="22" fill="url(#hair-main-grad)" />
-                <circle cx="72" cy="80" r="14" fill="url(#hair-main-grad)" />
-                <circle cx="128" cy="80" r="14" fill="url(#hair-main-grad)" />
-              </g>
-            )}
+              {c.hairStyle === "hair-afro" && (
+                <g>
+                  {/* Rounded modular cloud hair */}
+                  <circle cx="100" cy="56" r="28" fill="url(#hair-main-grad)" stroke={hairShadow} strokeWidth="0.8" />
+                  <circle cx="82" cy="65" r="22" fill="url(#hair-main-grad)" />
+                  <circle cx="118" cy="65" r="22" fill="url(#hair-main-grad)" />
+                  <circle cx="72" cy="80" r="14" fill="url(#hair-main-grad)" />
+                  <circle cx="128" cy="80" r="14" fill="url(#hair-main-grad)" />
+                </g>
+              )}
 
-            {c.hairStyle === "hair-pigtails" && (
-              <g>
-                {/* Two cute puff extensions left and right */}
-                <circle cx="60" cy="58" r="14" fill="url(#hair-main-grad)" stroke={hairShadow} strokeWidth="0.5" />
-                <circle cx="140" cy="58" r="14" fill="url(#hair-main-grad)" stroke={hairShadow} strokeWidth="0.5" />
-                {/* Hair ties */}
-                <circle cx="66" cy="64" r="3.5" fill="#E83B8E" />
-                <circle cx="134" cy="64" r="3.5" fill="#E83B8E" />
-              </g>
-            )}
+              {c.hairStyle === "hair-pigtails" && (
+                <g>
+                  {/* Two cute puff extensions left and right */}
+                  <circle cx="60" cy="58" r="14" fill="url(#hair-main-grad)" stroke={hairShadow} strokeWidth="0.5" />
+                  <circle cx="140" cy="58" r="14" fill="url(#hair-main-grad)" stroke={hairShadow} strokeWidth="0.5" />
+                  {/* Hair ties */}
+                  <circle cx="66" cy="64" r="3.5" fill="#E83B8E" />
+                  <circle cx="134" cy="64" r="3.5" fill="#E83B8E" />
+                </g>
+              )}
 
-            {c.hairStyle === "hair-braids" && (
-              <g>
-                {/* Side braids */}
-                <path d="M 68,75 Q 52,90 54,140 Q 56,150 50,152 Q 58,154 58,140 Z" fill="url(#hair-main-grad)" stroke={hairShadow} strokeWidth="0.5" />
-                <path d="M 132,75 Q 148,90 146,140 Q 144,150 150,152 Q 142,154 142,140 Z" fill="url(#hair-main-grad)" stroke={hairShadow} strokeWidth="0.5" />
-                {/* Ties */}
-                <rect x="48" y="146" width="6" height="3" rx="1" fill="#3B6DE8" />
-                <rect x="146" y="146" width="6" height="3" rx="1" fill="#3B6DE8" />
-              </g>
-            )}
+              {c.hairStyle === "hair-braids" && (
+                <g>
+                  {/* Side braids */}
+                  <path d="M 68,75 Q 52,90 54,140 Q 56,150 50,152 Q 58,154 58,140 Z" fill="url(#hair-main-grad)" stroke={hairShadow} strokeWidth="0.5" />
+                  <path d="M 132,75 Q 148,90 146,140 Q 144,150 150,152 Q 142,154 142,140 Z" fill="url(#hair-main-grad)" stroke={hairShadow} strokeWidth="0.5" />
+                  {/* Ties */}
+                  <rect x="48" y="146" width="6" height="3" rx="1" fill="#3B6DE8" />
+                  <rect x="146" y="146" width="6" height="3" rx="1" fill="#3B6DE8" />
+                </g>
+              )}
 
-            {c.hairStyle === "hair-female-modern" && (
-              <g>
-                {/* Curly modern fringe and sides */}
-                <path d="M 72,75 C 64,90 62,110 66,130 Q 72,120 72,90 Z" fill="url(#hair-main-grad)" />
-                <path d="M 128,75 C 136,90 138,110 134,130 Q 128,120 128,90 Z" fill="url(#hair-main-grad)" />
-                {/* Small buns */}
-                <circle cx="82" cy="45" r="9" fill="url(#hair-main-grad)" />
-                <circle cx="118" cy="45" r="9" fill="url(#hair-main-grad)" />
-              </g>
-            )}
+              {c.hairStyle === "hair-female-modern" && (
+                <g>
+                  {/* Curly modern fringe and sides */}
+                  <path d="M 72,75 C 64,90 62,110 66,130 Q 72,120 72,90 Z" fill="url(#hair-main-grad)" />
+                  <path d="M 128,75 C 136,90 138,110 134,130 Q 128,120 128,90 Z" fill="url(#hair-main-grad)" />
+                  {/* Small buns */}
+                  <circle cx="82" cy="45" r="9" fill="url(#hair-main-grad)" />
+                  <circle cx="118" cy="45" r="9" fill="url(#hair-main-grad)" />
+                </g>
+              )}
 
-            {/* Specular Highlight ring (Anime-style glossy light reflection) */}
-            <path
-              d="M 76,55 Q 100,45 124,55"
-              fill="none"
-              stroke="#FFFFFF"
-              strokeWidth="2.8"
-              strokeLinecap="round"
-              opacity="0.32"
-            />
-          </g>
+              {/* Specular Highlight ring (Anime-style glossy light reflection) */}
+              <path
+                d="M 76,55 Q 100,45 124,55"
+                fill="none"
+                stroke="#FFFFFF"
+                strokeWidth="2.8"
+                strokeLinecap="round"
+                opacity="0.32"
+              />
+            </g>
+          )}
 
           {/* 8. ACCESSORIES / HEADWEAR LAYER (mortarboard, crown, glasses) */}
           {isFront && (
