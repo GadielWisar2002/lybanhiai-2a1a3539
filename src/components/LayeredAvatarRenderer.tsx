@@ -127,7 +127,7 @@ function removeBlackBackground(src: string): Promise<string> {
           if (src.includes("/hair/")) {
             // For short hair styles: remove the mannequin face/chin/neck below the scalp/ears line
             if (src.includes("hair-short")) {
-              if (y > height * 0.58) {
+              if (y > height * 0.65) {
                 data[i + 3] = 0; // Force transparent
                 continue;
               }
@@ -139,7 +139,7 @@ function removeBlackBackground(src: string): Promise<string> {
               src.includes("hair-pigtails") ||
               src.includes("hair-braids")
             ) {
-              if (y > height * 0.60 && x > width * 0.20 && x < width * 0.80) {
+              if (y > height * 0.65 && x > width * 0.20 && x < width * 0.80) {
                 data[i + 3] = 0; // Force transparent
                 continue;
               }
