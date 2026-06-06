@@ -19,7 +19,7 @@ import { createPrefabBuilding } from "@/components/mundo-constructor/PrefabBuild
 import { Minimap } from "@/components/mundo-constructor/Minimap";
 import { NPCSystem } from "@/components/mundo-constructor/NPCSystem";
 import { ConstructionSystem, PlacedBlock } from "@/components/mundo-constructor/ConstructionSystem";
-import { MissionSystem, Quest, Achievement } from "@/components/mundo-constructor/MissionSystem";
+import { MissionSystem, Quest, Achievement, INITIAL_QUESTS } from "@/components/mundo-constructor/MissionSystem";
 
 export const Route = createFileRoute("/_authenticated/games/mundo-constructor")({
   head: () => ({ meta: [{ title: "Mundo Constructor 3D — Lybanhi" }] }),
