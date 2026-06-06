@@ -606,139 +606,142 @@ export function RobloxAvatarRenderer({
                 <path d="M 142,211 Q 144,213 142,215" stroke={skinShadow} strokeWidth="0.8" fill="none" />
               </g>
             </g>
+          {/* 5. VISIBLE DEFINED NECK - DISABLED */}
+          {false && (
+            <>
+              <path d="M 94,115 L 106,115 L 105,142 L 95,142 Z" fill="url(#skin-neck-grad)" transform={`translate(${headX}, 0)`} />
+              <path d="M 94,122 Q 100,129 106,122 L 105,142 L 95,142 Z" fill={skinShadow} opacity="0.45" transform={`translate(${headX}, 0)`} />
+            </>
           )}
 
-          {/* 5. VISIBLE DEFINED NECK */}
-          <path d="M 94,115 L 106,115 L 105,142 L 95,142 Z" fill="url(#skin-neck-grad)" transform={`translate(${headX}, 0)`} />
-          {/* Neck shadow under jaw */}
-          <path d="M 94,122 Q 100,129 106,122 L 105,142 L 95,142 Z" fill={skinShadow} opacity="0.45" transform={`translate(${headX}, 0)`} />
-
           {/* =======================================================
-              6. HEAD GROUP (Skin, Face, Detailed Anime Eyes, Mouth)
+              6. HEAD GROUP (Skin, Face, Detailed Anime Eyes, Mouth) - DISABLED
               ======================================================= */}
-          <g transform={`translate(${headX}, 0)`}>
-            
-            {/* Vertical Oval Head (Humanoid Anime Ratio 1:5.5) */}
-            <path
-              d="M 72,82 C 72,52 128,52 128,82 C 128,105 116,120 100,120 C 84,120 72,105 72,82 Z"
-              fill="url(#skin-face-grad)"
-              stroke={skinShadow}
-              strokeWidth="0.8"
-            />
-            {/* Subtle ear loops */}
-            <path d="M 72,82 Q 67,82 69,89 Q 71,93 73,91" fill={skinBase} stroke={skinShadow} strokeWidth="0.6" />
-            <path d="M 128,82 Q 133,82 131,89 Q 129,93 127,91" fill={skinBase} stroke={skinShadow} strokeWidth="0.6" />
-
-            {/* Subsurface scattering (SSS) soft cheeks pink glow */}
-            <g opacity="0.35">
-              <ellipse cx="80" cy="94" rx="7.5" ry="4" fill="#FF8A80" />
-              <ellipse cx="120" cy="94" rx="7.5" ry="4" fill="#FF8A80" />
-            </g>
-
-            {/* Detailed Anime Eyes (Not Roblox blocky) */}
-            <g className="anime-eye-blink" transform={`translate(${eyesX - headX}, 0)`}>
+          {false && (
+            <g transform={`translate(${headX}, 0)`}>
               
-              {/* Left Eye */}
-              <g>
-                {/* White sclera */}
-                <path d="M 78,88 C 81,84 89,84 92,88 C 92,92 81,94 78,88 Z" fill="#FFFFFF" />
-                {/* Iris with radial gradient */}
-                <ellipse cx="85.5" cy="88" rx="4.8" ry="4.4" fill="url(#iris-grad)" />
-                {/* Inner black pupil */}
-                <circle cx="85.5" cy="88" r="2" fill="#000000" />
-                {/* Specular main highlight */}
-                <ellipse cx="84" cy="86.2" rx="1.3" ry="1.0" fill="#FFFFFF" />
-                {/* Specular secondary tiny highlight */}
-                <circle cx="87.5" cy="89.8" r="0.5" fill="#FFFFFF" />
-                {/* Thick upper lash line curve */}
-                <path d="M 76.5,87.5 C 79.5,83.5 89.5,83.5 93,87" fill="none" stroke="#1A1C23" strokeWidth="2.4" strokeLinecap="round" />
-                {/* Eyelash curves (3-4 strokes) */}
-                <path d="M 77,85.5 Q 74,83 75.5,81" fill="none" stroke="#1A1C23" strokeWidth="0.8" />
-                <path d="M 91,85 Q 94,82.5 92.5,80.5" fill="none" stroke="#1A1C23" strokeWidth="0.8" />
-                {/* Under eye fine lash line */}
-                <path d="M 79,91.5 Q 85,93 91.5,91.5" fill="none" stroke="#1A1C23" strokeWidth="0.8" />
+              {/* Vertical Oval Head (Humanoid Anime Ratio 1:5.5) */}
+              <path
+                d="M 72,82 C 72,52 128,52 128,82 C 128,105 116,120 100,120 C 84,120 72,105 72,82 Z"
+                fill="url(#skin-face-grad)"
+                stroke={skinShadow}
+                strokeWidth="0.8"
+              />
+              {/* Subtle ear loops */}
+              <path d="M 72,82 Q 67,82 69,89 Q 71,93 73,91" fill={skinBase} stroke={skinShadow} strokeWidth="0.6" />
+              <path d="M 128,82 Q 133,82 131,89 Q 129,93 127,91" fill={skinBase} stroke={skinShadow} strokeWidth="0.6" />
+
+              {/* Subsurface scattering (SSS) soft cheeks pink glow */}
+              <g opacity="0.35">
+                <ellipse cx="80" cy="94" rx="7.5" ry="4" fill="#FF8A80" />
+                <ellipse cx="120" cy="94" rx="7.5" ry="4" fill="#FF8A80" />
               </g>
 
-              {/* Right Eye */}
+              {/* Detailed Anime Eyes (Not Roblox blocky) */}
+              <g className="anime-eye-blink" transform={`translate(${eyesX - headX}, 0)`}>
+                
+                {/* Left Eye */}
+                <g>
+                  {/* White sclera */}
+                  <path d="M 78,88 C 81,84 89,84 92,88 C 92,92 81,94 78,88 Z" fill="#FFFFFF" />
+                  {/* Iris with radial gradient */}
+                  <ellipse cx="85.5" cy="88" rx="4.8" ry="4.4" fill="url(#iris-grad)" />
+                  {/* Inner black pupil */}
+                  <circle cx="85.5" cy="88" r="2" fill="#000000" />
+                  {/* Specular main highlight */}
+                  <ellipse cx="84" cy="86.2" rx="1.3" ry="1.0" fill="#FFFFFF" />
+                  {/* Specular secondary tiny highlight */}
+                  <circle cx="87.5" cy="89.8" r="0.5" fill="#FFFFFF" />
+                  {/* Thick upper lash line curve */}
+                  <path d="M 76.5,87.5 C 79.5,83.5 89.5,83.5 93,87" fill="none" stroke="#1A1C23" strokeWidth="2.4" strokeLinecap="round" />
+                  {/* Eyelash curves (3-4 strokes) */}
+                  <path d="M 77,85.5 Q 74,83 75.5,81" fill="none" stroke="#1A1C23" strokeWidth="0.8" />
+                  <path d="M 91,85 Q 94,82.5 92.5,80.5" fill="none" stroke="#1A1C23" strokeWidth="0.8" />
+                  {/* Under eye fine lash line */}
+                  <path d="M 79,91.5 Q 85,93 91.5,91.5" fill="none" stroke="#1A1C23" strokeWidth="0.8" />
+                </g>
+
+                {/* Right Eye */}
+                <g>
+                  {/* White sclera */}
+                  <path d="M 108,88 C 111,84 119,84 122,88 C 122,92 111,94 108,88 Z" fill="#FFFFFF" />
+                  {/* Iris with radial gradient */}
+                  <ellipse cx="114.5" cy="88" rx="4.8" ry="4.4" fill="url(#iris-grad)" />
+                  {/* Inner black pupil */}
+                  <circle cx="114.5" cy="88" r="2" fill="#000000" />
+                  {/* Specular main highlight */}
+                  <ellipse cx="113" cy="86.2" rx="1.3" ry="1.0" fill="#FFFFFF" />
+                  {/* Specular secondary tiny highlight */}
+                  <circle cx="116.5" cy="89.8" r="0.5" fill="#FFFFFF" />
+                  {/* Thick upper lash line curve */}
+                  <path d="M 107,87 C 110.5,83.5 120.5,83.5 123.5,87.5" fill="none" stroke="#1A1C23" strokeWidth="2.4" strokeLinecap="round" />
+                  {/* Eyelash curves */}
+                  <path d="M 123,85.5 Q 126,83 124.5,81" fill="none" stroke="#1A1C23" strokeWidth="0.8" />
+                  <path d="M 109,85 Q 106,82.5 107.5,80.5" fill="none" stroke="#1A1C23" strokeWidth="0.8" />
+                  {/* Under eye fine lash line */}
+                  <path d="M 108.5,91.5 Q 115,93 121,91.5" fill="none" stroke="#1A1C23" strokeWidth="0.8" />
+                </g>
+              </g>
+
+              {/* Cejas (Curved parallel lines, thick for boys, thin for girls) */}
+              <g transform={`translate(${eyesX - headX}, 0)`}>
+                {/* Left eyebrow */}
+                <path
+                  d="M 76,78 Q 85,73 92.5,77"
+                  fill="none"
+                  stroke={hairShadow}
+                  strokeWidth={isGirl ? "1.2" : "2.2"}
+                  strokeLinecap="round"
+                />
+                {/* Right eyebrow */}
+                <path
+                  d="M 107.5,77 Q 115,73 124,78"
+                  fill="none"
+                  stroke={hairShadow}
+                  strokeWidth={isGirl ? "1.2" : "2.2"}
+                  strokeLinecap="round"
+                />
+              </g>
+
+              {/* Nariz Refinada (Subtle shadow dot/lines) */}
+              <path d="M 99.5,95 Q 100,99 101,98.5" fill="none" stroke={skinShadow} strokeWidth="1.2" strokeLinecap="round" />
+
+              {/* Boca (Cupids bow & anime lip lines) */}
               <g>
-                {/* White sclera */}
-                <path d="M 108,88 C 111,84 119,84 122,88 C 122,92 111,94 108,88 Z" fill="#FFFFFF" />
-                {/* Iris with radial gradient */}
-                <ellipse cx="114.5" cy="88" rx="4.8" ry="4.4" fill="url(#iris-grad)" />
-                {/* Inner black pupil */}
-                <circle cx="114.5" cy="88" r="2" fill="#000000" />
-                {/* Specular main highlight */}
-                <ellipse cx="113" cy="86.2" rx="1.3" ry="1.0" fill="#FFFFFF" />
-                {/* Specular secondary tiny highlight */}
-                <circle cx="116.5" cy="89.8" r="0.5" fill="#FFFFFF" />
-                {/* Thick upper lash line curve */}
-                <path d="M 107,87 C 110.5,83.5 120.5,83.5 123.5,87.5" fill="none" stroke="#1A1C23" strokeWidth="2.4" strokeLinecap="round" />
-                {/* Eyelash curves */}
-                <path d="M 123,85.5 Q 126,83 124.5,81" fill="none" stroke="#1A1C23" strokeWidth="0.8" />
-                <path d="M 109,85 Q 106,82.5 107.5,80.5" fill="none" stroke="#1A1C23" strokeWidth="0.8" />
-                {/* Under eye fine lash line */}
-                <path d="M 108.5,91.5 Q 115,93 121,91.5" fill="none" stroke="#1A1C23" strokeWidth="0.8" />
+                {c.face === "face-happy" && (
+                  <g>
+                    {/* Subtle lips separation line */}
+                    <path d="M 94,106 Q 100,111 106,106" fill="none" stroke="#6D28D9" strokeWidth="1.0" opacity="0.3" />
+                    {/* Main smiling line */}
+                    <path d="M 93,105 Q 100,113 107,105" fill="none" stroke="#B91C1C" strokeWidth="1.8" strokeLinecap="round" />
+                    {/* Soft pink lip fill for girls */}
+                    {isGirl && (
+                      <path d="M 95,106 Q 100,112 105,106 Q 100,107 95,106 Z" fill="#D4607A" opacity="0.85" />
+                    )}
+                  </g>
+                )}
+                {c.face === "face-studying" && (
+                  <g>
+                    {/* Focused expression mouth */}
+                    <path d="M 96,107 L 104,107" stroke="#B91C1C" strokeWidth="2.0" strokeLinecap="round" />
+                  </g>
+                )}
+                {c.face === "face-excited" && (
+                  <g>
+                    {/* Wide open happy mouth */}
+                    <path d="M 93,103 Q 100,115 107,103 Z" fill="#B91C1C" />
+                    <path d="M 96,108 Q 100,114 104,108 Z" fill="#FFA0A0" /> {/* Tongue */}
+                  </g>
+                )}
+                {c.face === "face-cool" && (
+                  <g>
+                    {/* Smirk mouth */}
+                    <path d="M 94,106 Q 102,109 107,103" fill="none" stroke="#B91C1C" strokeWidth="2.0" strokeLinecap="round" />
+                  </g>
+                )}
               </g>
             </g>
-
-            {/* Cejas (Curved parallel lines, thick for boys, thin for girls) */}
-            <g transform={`translate(${eyesX - headX}, 0)`}>
-              {/* Left eyebrow */}
-              <path
-                d="M 76,78 Q 85,73 92.5,77"
-                fill="none"
-                stroke={hairShadow}
-                strokeWidth={isGirl ? "1.2" : "2.2"}
-                strokeLinecap="round"
-              />
-              {/* Right eyebrow */}
-              <path
-                d="M 107.5,77 Q 115,73 124,78"
-                fill="none"
-                stroke={hairShadow}
-                strokeWidth={isGirl ? "1.2" : "2.2"}
-                strokeLinecap="round"
-              />
-            </g>
-
-            {/* Nariz Refinada (Subtle shadow dot/lines) */}
-            <path d="M 99.5,95 Q 100,99 101,98.5" fill="none" stroke={skinShadow} strokeWidth="1.2" strokeLinecap="round" />
-
-            {/* Boca (Cupids bow & anime lip lines) */}
-            <g>
-              {c.face === "face-happy" && (
-                <g>
-                  {/* Subtle lips separation line */}
-                  <path d="M 94,106 Q 100,111 106,106" fill="none" stroke="#6D28D9" strokeWidth="1.0" opacity="0.3" />
-                  {/* Main smiling line */}
-                  <path d="M 93,105 Q 100,113 107,105" fill="none" stroke="#B91C1C" strokeWidth="1.8" strokeLinecap="round" />
-                  {/* Soft pink lip fill for girls */}
-                  {isGirl && (
-                    <path d="M 95,106 Q 100,112 105,106 Q 100,107 95,106 Z" fill="#D4607A" opacity="0.85" />
-                  )}
-                </g>
-              )}
-              {c.face === "face-studying" && (
-                <g>
-                  {/* Focused expression mouth */}
-                  <path d="M 96,107 L 104,107" stroke="#B91C1C" strokeWidth="2.0" strokeLinecap="round" />
-                </g>
-              )}
-              {c.face === "face-excited" && (
-                <g>
-                  {/* Wide open happy mouth */}
-                  <path d="M 93,103 Q 100,115 107,103 Z" fill="#B91C1C" />
-                  <path d="M 96,108 Q 100,114 104,108 Z" fill="#FFA0A0" /> {/* Tongue */}
-                </g>
-              )}
-              {c.face === "face-cool" && (
-                <g>
-                  {/* Smirk mouth */}
-                  <path d="M 94,106 Q 102,109 107,103" fill="none" stroke="#B91C1C" strokeWidth="2.0" strokeLinecap="round" />
-                </g>
-              )}
-            </g>
-          </g>
+          )}
 
           {/* 7. HAIR LAYER (Layered ON TOP of head for 3D volume) - DISABLED */}
           {false && (

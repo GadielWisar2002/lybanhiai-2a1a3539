@@ -37,57 +37,6 @@ interface AvatarCustomizerProps {
 
 const CATEGORIES = [
   {
-    id: "rostro",
-    label: "Rostro",
-    icon: (color: string) => (
-      <svg viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-4.5 h-4.5 shrink-0">
-        <path d="M18 10a6 6 0 0 1-12 0c0-4 3-7 6-7s6 3 6 7z" />
-        <path d="M12 13v2" />
-        <path d="M10 17h4" />
-      </svg>
-    ),
-  },
-  {
-    id: "ojos",
-    label: "Ojos",
-    icon: (color: string) => (
-      <svg viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-4.5 h-4.5 shrink-0">
-        <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" />
-        <circle cx="12" cy="12" r="3.5" />
-        <circle cx="13" cy="11" r="1" fill={color} />
-      </svg>
-    ),
-  },
-  {
-    id: "cejas",
-    label: "Cejas",
-    icon: (color: string) => (
-      <svg viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-4.5 h-4.5 shrink-0">
-        <path d="M3 10c1.5-2.5 5.5-2.5 7.5-.5M13.5 9.5c2-2 6-2 7.5.5" />
-      </svg>
-    ),
-  },
-  {
-    id: "boca",
-    label: "Boca",
-    icon: (color: string) => (
-      <svg viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-4.5 h-4.5 shrink-0">
-        <path d="M5 11c3.5 4.5 10.5 4.5 14 0" />
-        <path d="M7 11.5c2 2 8 2 10 0" />
-      </svg>
-    ),
-  },
-  {
-    id: "piel",
-    label: "Piel",
-    icon: (color: string) => (
-      <svg viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-4.5 h-4.5 shrink-0">
-        <rect x="3" y="10" width="18" height="11" rx="2" />
-        <path d="M12 2a4 4 0 0 0-4 4v4h8V6a4 4 0 0 0-4-4z" />
-      </svg>
-    ),
-  },
-  {
     id: "ropa",
     label: "Ropa",
     icon: (color: string) => (
@@ -112,49 +61,6 @@ const CATEGORIES = [
       <svg viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-4.5 h-4.5 shrink-0">
         <path d="M4 16v-1a3 3 0 0 1 3-3h3l7 1.5 3 2.5v2a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z" />
         <path d="M12 12v3" />
-      </svg>
-    ),
-  },
-  {
-    id: "accesorios",
-    label: "Accesorios",
-    icon: (color: string) => (
-      <svg viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-4.5 h-4.5 shrink-0">
-        <circle cx="6" cy="12" r="3" />
-        <circle cx="18" cy="12" r="3" />
-        <path d="M9 12h6" />
-        <path d="M12 9v6" />
-      </svg>
-    ),
-  },
-  {
-    id: "mochilas",
-    label: "Mochilas",
-    icon: (color: string) => (
-      <svg viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-4.5 h-4.5 shrink-0">
-        <rect x="5" y="8" width="14" height="12" rx="2" />
-        <path d="M9 8V5a3 3 0 0 1 6 0v3" />
-        <path d="M5 12h14" />
-      </svg>
-    ),
-  },
-  {
-    id: "mascotas",
-    label: "Mascotas",
-    icon: (color: string) => (
-      <svg viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-4.5 h-4.5 shrink-0">
-        <path d="M12 14c-2.2 0-4-1.8-4-4 0-1.5 1.5-3 4-3s4 1.5 4 3c0 2.2-1.8 4-4 4z" />
-        <circle cx="8" cy="6" r="1.5" />
-        <circle cx="16" cy="6" r="1.5" />
-      </svg>
-    ),
-  },
-  {
-    id: "efectos",
-    label: "Efectos",
-    icon: (color: string) => (
-      <svg viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-4.5 h-4.5 shrink-0">
-        <path d="M12 2v4M12 18v4M4 12h4M16 12h4M4.9 4.9l2.8 2.8M16.3 16.3l2.8 2.8M19.1 4.9l-2.8 2.8M7.7 16.3l-2.8 2.8" />
       </svg>
     ),
   },

@@ -243,7 +243,7 @@ export function LayeredAvatarRenderer({
 
   // Unified Layer Stack (1:1 aligned layers stacked in zIndex order) - hair layer removed
   const layers = [
-    { id: "body", src: processedLayers.body || bodyImg, pos: LAYER_POSITIONS.body, zIndex: 1 },
+    { id: "body", src: processedLayers.body || bodyImg, pos: LAYER_POSITIONS.body, zIndex: 1, clipPath: "inset(28% 0% 0% 0%)" },
     { id: "bottom", src: processedLayers.bottom || bottomImg, pos: LAYER_POSITIONS.bottom, zIndex: 2 },
     { id: "shoes", src: processedLayers.shoes || shoesImg, pos: LAYER_POSITIONS.shoes, zIndex: 3 },
     { id: "top", src: processedLayers.top || topImg, pos: LAYER_POSITIONS.top, zIndex: 4 },
@@ -396,6 +396,7 @@ export function LayeredAvatarRenderer({
                 zIndex: layer.zIndex,
                 objectFit: "contain",
                 mixBlendMode: "normal",
+                clipPath: layer.clipPath,
                 // Highlight when hovered
                 filter:
                   hoveredLayer === layer.id
