@@ -39,6 +39,7 @@ function Profile() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [updatingPassword, setUpdatingPassword] = useState(false);
   const [updatingGender, setUpdatingGender] = useState(false);
+  const [showPasswordFields, setShowPasswordFields] = useState(false);
 
   const currentGender = user?.user_metadata?.gender || "other";
 
@@ -76,6 +77,7 @@ function Profile() {
       toast.success(t("profile.passwordUpdateSuccess"));
       setNewPassword("");
       setConfirmPassword("");
+      setShowPasswordFields(false);
     }
   };
 
@@ -217,46 +219,72 @@ function Profile() {
             <Lock className="size-4 text-primary" />
             <h2 className="font-semibold">{t("profile.security")}</h2>
           </div>
-          <form onSubmit={handleChangePassword} className="space-y-3">
-            <div>
-              <input
-                type="password"
-                required
-                minLength={6}
-                value={newPassword}
-                onChange={e => setNewPassword(e.target.value)}
-                placeholder={t("profile.newPassword")}
-                className="h-11 w-full rounded-xl border border-input bg-card px-3.5 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none"
-              />
+
+          {!showPasswordFields ? (
+            <div className="space-y-3">
+              <button
+                type="button"
+                onClick={() => setShowPasswordFields(true)}
+                className="h-11 w-full rounded-xl bg-primary text-sm font-semibold text-primary-foreground transition hover:opacity-90 active:scale-[0.99] cursor-pointer"
+              >
+                {t("profile.changePassword")}
+              </button>
+              <div className="text-center">
+                <button
+                  type="button"
+                  onClick={handleForgotPassword}
+                  className="text-xs font-semibold text-primary hover:underline transition cursor-pointer"
+                >
+                  {t("profile.forgotPassword")}
+                </button>
+              </div>
             </div>
-            <div>
-              <input
-                type="password"
-                required
-                minLength={6}
-                value={confirmPassword}
-                onChange={e => setConfirmPassword(e.target.value)}
-                placeholder={t("profile.confirmPassword")}
-                className="h-11 w-full rounded-xl border border-input bg-card px-3.5 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none"
-              />
-            </div>
-            <button
-              type="submit"
-              disabled={updatingPassword || !newPassword || confirmPassword.length < 6}
-              className="h-11 w-full rounded-xl bg-primary text-sm font-semibold text-primary-foreground transition hover:opacity-90 active:scale-[0.99] disabled:opacity-50"
-            >
-              {updatingPassword ? t("common.loading") : t("profile.changePassword")}
-            </button>
-          </form>
-          <div className="mt-3 text-center">
-            <button
-              type="button"
-              onClick={handleForgotPassword}
-              className="text-xs font-semibold text-primary hover:underline transition"
-            >
-              {t("profile.forgotPassword")}
-            </button>
-          </div>
+          ) : (
+            <form onSubmit={handleChangePassword} className="space-y-3">
+              <div>
+                <input
+                  type="password"
+                  required
+                  minLength={6}
+                  value={newPassword}
+                  onChange={e => setNewPassword(e.target.value)}
+                  placeholder={t("profile.newPassword")}
+                  className="h-11 w-full rounded-xl border border-input bg-card px-3.5 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none"
+                />
+              </div>
+              <div>
+                <input
+                  type="password"
+                  required
+                  minLength={6}
+                  value={confirmPassword}
+                  onChange={e => setConfirmPassword(e.target.value)}
+                  placeholder={t("profile.confirmPassword")}
+                  className="h-11 w-full rounded-xl border border-input bg-card px-3.5 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none"
+                />
+              </div>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowPasswordFields(false);
+                    setNewPassword("");
+                    setConfirmPassword("");
+                  }}
+                  className="h-11 flex-1 rounded-xl border border-input bg-card text-sm font-semibold text-foreground transition hover:bg-muted/30 cursor-pointer"
+                >
+                  {t("common.cancel")}
+                </button>
+                <button
+                  type="submit"
+                  disabled={updatingPassword || !newPassword || confirmPassword.length < 6}
+                  className="h-11 flex-1 rounded-xl bg-primary text-sm font-semibold text-primary-foreground transition hover:opacity-90 active:scale-[0.99] disabled:opacity-50 cursor-pointer"
+                >
+                  {updatingPassword ? t("common.loading") : t("common.save")}
+                </button>
+              </div>
+            </form>
+          )}
         </section>
 
         <button onClick={signOut} className="mt-6 inline-flex h-12 w-full items-center justify-center gap-2 rounded-2xl border border-destructive/30 bg-card font-semibold text-destructive">

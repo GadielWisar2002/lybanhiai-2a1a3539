@@ -2,7 +2,7 @@
   "app": { "name": "Lybanhi", "tagline": "Découvre quoi étudier et prépare-toi à réussir" },
   "nav": { "dashboard": "Accueil", "library": "Bibliothèque", "prep": "Prep", "games": "Jeux", "profile": "Profil" },
   "common": {
-    "continue": "Continuer", "back": "Précédent", "next": "Suivant", "save": "Enregistrer",
+    "continue": "Continuer", "back": "Précédent", "next": "Suivant", "save": "Enregistrer", "cancel": "Annuler",
     "loading": "Chargement…", "error": "Une erreur s'est produite", "retry": "Réessayer",
     "start": "Commencer", "viewAll": "Tout voir", "language": "Langue",
     "signOut": "Se déconnecter", "days": "jours", "xp": "XP", "match": "compatibilité"
