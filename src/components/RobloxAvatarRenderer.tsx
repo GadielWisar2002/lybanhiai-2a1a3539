@@ -606,6 +606,7 @@ export function RobloxAvatarRenderer({
                 <path d="M 142,211 Q 144,213 142,215" stroke={skinShadow} strokeWidth="0.8" fill="none" />
               </g>
             </g>
+          )}
           {/* 5. VISIBLE DEFINED NECK - DISABLED */}
           {false && (
             <>
