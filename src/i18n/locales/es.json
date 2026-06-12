@@ -149,7 +149,21 @@
   },
   "profile": {
     "title": "Perfil", "language": "Idioma de la app", "streak": "Racha actual",
-    "longestStreak": "Racha más larga", "totalXp": "XP total", "noBlook": "Sin Blook equipado"
+    "longestStreak": "Racha más larga", "totalXp": "XP total", "noBlook": "Sin Blook equipado",
+    "gender": "Género",
+    "genderMale": "Hombre",
+    "genderFemale": "Mujer",
+    "genderOther": "Prefiero no decir",
+    "genderUpdated": "¡Género actualizado con éxito!",
+    "security": "Seguridad",
+    "newPassword": "Nueva contraseña",
+    "confirmPassword": "Confirmar contraseña",
+    "changePassword": "Cambiar contraseña",
+    "forgotPassword": "¿Olvidaste tu contraseña?",
+    "passwordsDontMatch": "Las contraseñas no coinciden",
+    "passwordMinLength": "La contraseña debe tener al menos 6 caracteres",
+    "passwordUpdateSuccess": "¡Contraseña actualizada con éxito!",
+    "resetEmailSent": "Se ha enviado un enlace de recuperación a tu correo"
   },
   "library": { "title": "Biblioteca", "empty": "Próximamente: recursos guardados y materiales de estudio.", "recentQuizzes": "Tus quizzes recientes", "questions": "preguntas" },
   "games": {

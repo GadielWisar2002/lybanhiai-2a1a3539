@@ -142,7 +142,21 @@
   },
   "profile": {
     "title": "Profile", "language": "App language", "streak": "Current streak",
-    "longestStreak": "Longest streak", "totalXp": "Total XP", "noBlook": "No Blook equipped"
+    "longestStreak": "Longest streak", "totalXp": "Total XP", "noBlook": "No Blook equipped",
+    "gender": "Gender",
+    "genderMale": "Male",
+    "genderFemale": "Female",
+    "genderOther": "Prefer not to say",
+    "genderUpdated": "Gender updated successfully!",
+    "security": "Security",
+    "newPassword": "New password",
+    "confirmPassword": "Confirm password",
+    "changePassword": "Change password",
+    "forgotPassword": "Forgot your password?",
+    "passwordsDontMatch": "Passwords do not match",
+    "passwordMinLength": "Password must be at least 6 characters",
+    "passwordUpdateSuccess": "Password updated successfully!",
+    "resetEmailSent": "A password reset link has been sent to your email"
   },
   "library": { "title": "Library", "empty": "Coming soon: saved resources and study materials.", "recentQuizzes": "Your recent quizzes", "questions": "questions" },
   "games": {

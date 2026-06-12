@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, Link, useRouter } from "@tanstack/react-router";
 import { AvatarCustomizer } from "@/components/AvatarCustomizer";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -10,11 +10,13 @@ import { translateRecommendations } from "@/lib/recommendations.functions";
 import { AppHeader } from "@/components/AppHeader";
 import { supabase } from "@/integrations/supabase/client";
 import { StreakBadge } from "@/components/StreakBadge";
-import { LogOut, Globe, Trophy } from "lucide-react";
+import { LogOut, Globe, Trophy, Lock, User } from "lucide-react";
 import { BLOOKS } from "@/lib/games.functions";
 import { RobloxAvatarRenderer } from "@/components/RobloxAvatarRenderer";
 import { LayeredAvatarRenderer } from "@/components/LayeredAvatarRenderer";
 import { getPrestigeTitle, getPrestigeBadge } from "@/lib/avatar.functions";
+import { useAuth } from "@/hooks/use-auth";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/profile")({
   head: () => ({ meta: [{ title: "Profile — Lybanhi" }] }),
@@ -24,13 +26,70 @@ export const Route = createFileRoute("/_authenticated/profile")({
 function Profile() {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
+  const router = useRouter();
   const qc = useQueryClient();
+  const { user } = useAuth();
   const fn = useServerFn(getDashboard);
   const updLang = useServerFn(updateLanguage);
   const trans = useServerFn(translateRecommendations);
   const { data, isLoading } = useQuery({ queryKey: ["dashboard"], queryFn: () => fn() });
 
   const [loadingLang, setLoadingLang] = useState(false);
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [updatingPassword, setUpdatingPassword] = useState(false);
+  const [updatingGender, setUpdatingGender] = useState(false);
+
+  const currentGender = user?.user_metadata?.gender || "other";
+
+  const handleGenderChange = async (nextGender: "male" | "female" | "other") => {
+    setUpdatingGender(true);
+    const { error } = await supabase.auth.updateUser({
+      data: { gender: nextGender }
+    });
+    setUpdatingGender(false);
+    if (error) {
+      toast.error(error.message);
+    } else {
+      toast.success(t("profile.genderUpdated"));
+      router.invalidate();
+      qc.invalidateQueries({ queryKey: ["dashboard"] });
+    }
+  };
+
+  const handleChangePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (newPassword !== confirmPassword) {
+      toast.error(t("profile.passwordsDontMatch"));
+      return;
+    }
+    if (newPassword.length < 6) {
+      toast.error(t("profile.passwordMinLength"));
+      return;
+    }
+    setUpdatingPassword(true);
+    const { error } = await supabase.auth.updateUser({ password: newPassword });
+    setUpdatingPassword(false);
+    if (error) {
+      toast.error(error.message);
+    } else {
+      toast.success(t("profile.passwordUpdateSuccess"));
+      setNewPassword("");
+      setConfirmPassword("");
+    }
+  };
+
+  const handleForgotPassword = async () => {
+    if (!user?.email) return;
+    const { error } = await supabase.auth.resetPasswordForEmail(user.email, {
+      redirectTo: window.location.origin + "/reset-password",
+    });
+    if (error) {
+      toast.error(error.message);
+    } else {
+      toast.success(t("profile.resetEmailSent"));
+    }
+  };
 
   const setLang = async (l: "es"|"en"|"fr") => {
     setLoadingLang(true);
@@ -121,6 +180,82 @@ function Profile() {
                 {t(`language.${l}`)}
               </button>
             ))}
+          </div>
+        </section>
+
+        {/* Sección de Género */}
+        <section className="mt-6 rounded-2xl border border-border bg-card p-4">
+          <div className="mb-3 flex items-center gap-2">
+            <User className="size-4 text-primary" />
+            <h2 className="font-semibold">{t("profile.gender")}</h2>
+          </div>
+          <div className="grid grid-cols-3 gap-2">
+            {[
+              { id: "male", key: "genderMale" },
+              { id: "female", key: "genderFemale" },
+              { id: "other", key: "genderOther" },
+            ].map(opt => (
+              <button
+                key={opt.id}
+                disabled={updatingGender}
+                onClick={() => handleGenderChange(opt.id as any)}
+                className={`rounded-xl border px-2 py-2.5 text-xs font-semibold transition ${
+                  currentGender === opt.id
+                    ? "border-primary bg-primary text-primary-foreground shadow-sm"
+                    : "border-input bg-card text-foreground hover:bg-muted/30"
+                } disabled:opacity-60`}
+              >
+                {t(`profile.${opt.key}`)}
+              </button>
+            ))}
+          </div>
+        </section>
+
+        {/* Sección de Seguridad */}
+        <section className="mt-6 rounded-2xl border border-border bg-card p-4">
+          <div className="mb-3 flex items-center gap-2">
+            <Lock className="size-4 text-primary" />
+            <h2 className="font-semibold">{t("profile.security")}</h2>
+          </div>
+          <form onSubmit={handleChangePassword} className="space-y-3">
+            <div>
+              <input
+                type="password"
+                required
+                minLength={6}
+                value={newPassword}
+                onChange={e => setNewPassword(e.target.value)}
+                placeholder={t("profile.newPassword")}
+                className="h-11 w-full rounded-xl border border-input bg-card px-3.5 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none"
+              />
+            </div>
+            <div>
+              <input
+                type="password"
+                required
+                minLength={6}
+                value={confirmPassword}
+                onChange={e => setConfirmPassword(e.target.value)}
+                placeholder={t("profile.confirmPassword")}
+                className="h-11 w-full rounded-xl border border-input bg-card px-3.5 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none"
+              />
+            </div>
+            <button
+              type="submit"
+              disabled={updatingPassword || !newPassword || confirmPassword.length < 6}
+              className="h-11 w-full rounded-xl bg-primary text-sm font-semibold text-primary-foreground transition hover:opacity-90 active:scale-[0.99] disabled:opacity-50"
+            >
+              {updatingPassword ? t("common.loading") : t("profile.changePassword")}
+            </button>
+          </form>
+          <div className="mt-3 text-center">
+            <button
+              type="button"
+              onClick={handleForgotPassword}
+              className="text-xs font-semibold text-primary hover:underline transition"
+            >
+              {t("profile.forgotPassword")}
+            </button>
           </div>
         </section>
 

@@ -142,7 +142,21 @@
   },
   "profile": {
     "title": "Profil", "language": "Langue de l'app", "streak": "Série actuelle",
-    "longestStreak": "Plus longue série", "totalXp": "XP total", "noBlook": "Aucun Blook équipé"
+    "longestStreak": "Plus longue série", "totalXp": "XP total", "noBlook": "Aucun Blook équipé",
+    "gender": "Genre",
+    "genderMale": "Homme",
+    "genderFemale": "Femme",
+    "genderOther": "Je préfère ne pas le dire",
+    "genderUpdated": "Genre mis à jour avec succès !",
+    "security": "Sécurité",
+    "newPassword": "Nouveau mot de passe",
+    "confirmPassword": "Confirmer le mot de passe",
+    "changePassword": "Changer le mot de passe",
+    "forgotPassword": "Mot de passe oublié ?",
+    "passwordsDontMatch": "Les mots de passe ne correspondent pas",
+    "passwordMinLength": "Le mot de passe doit comporter au moins 6 caractères",
+    "passwordUpdateSuccess": "Mot de passe mis à jour avec succès !",
+    "resetEmailSent": "Un lien de réinitialisation a été envoyé à votre adresse e-mail"
   },
   "library": { "title": "Bibliothèque", "empty": "Bientôt : ressources sauvegardées et matériels d'étude.", "recentQuizzes": "Tes quiz récents", "questions": "questions" },
   "games": {
