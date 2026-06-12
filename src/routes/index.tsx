@@ -205,15 +205,15 @@ function Landing() {
           <div className="flex flex-wrap items-center justify-center lg:justify-start gap-6 pt-8 text-xs text-muted-foreground font-semibold">
             <div className="flex items-center gap-2">
               <span className="flex size-2 rounded-full bg-emerald-500" />
-              <span>Vocación Certificada con IA</span>
+              <span>Carrera Ideal con IA</span>
             </div>
             <div className="flex items-center gap-2">
               <span className="flex size-2 rounded-full bg-indigo-500" />
-              <span>Preparación TOEFL / Cambridge</span>
+              <span>Entrenamiento TOEFL / Cambridge</span>
             </div>
             <div className="flex items-center gap-2">
               <span className="flex size-2 rounded-full bg-amber-500" />
-              <span>Gamificación Integrada</span>
+              <span>Juegos y Recompensas</span>
             </div>
           </div>
         </div>
@@ -288,7 +288,7 @@ function Landing() {
         <div className="mx-auto max-w-7xl px-6">
           
           <div className="text-center max-w-3xl mx-auto space-y-4 mb-16">
-            <span className="text-primary font-bold text-sm uppercase tracking-wider">Orientación Vocacional</span>
+            <span className="text-primary font-bold text-sm uppercase tracking-wider">Descubre tu Carrera</span>
             <h2 className="font-display text-3xl sm:text-4xl font-extrabold text-foreground tracking-tight">
               {t("landing.featuresTitle")}
             </h2>
@@ -309,7 +309,7 @@ function Landing() {
                     <span className="grid size-6 place-items-center rounded-full bg-primary/10 text-xs font-bold text-primary">1</span>
                     {t("landing.step1Title")}
                   </h3>
-                  <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Paso Activo</span>
+                  <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Paso Actual</span>
                 </div>
                 <p className="text-xs text-muted-foreground">{t("landing.step1Desc")}</p>
                 <div className="flex flex-wrap gap-2 pt-1">
@@ -402,7 +402,7 @@ function Landing() {
 
                 <div className="space-y-4">
                   <div>
-                    <h5 className="text-xs font-extrabold uppercase tracking-wider text-muted-foreground mb-1">Por Qué Encaja</h5>
+                    <h5 className="text-xs font-extrabold uppercase tracking-wider text-muted-foreground mb-1">¿Por qué es para ti?</h5>
                     <p className="text-sm text-foreground leading-relaxed">
                       Tu interés en <strong className="text-primary">programar videojuegos</strong> coincide al 98% con el perfil tecnológico. Tus habilidades en <strong className="text-primary">{selectedSkills.join(", ") || "Habilidades"}</strong> complementan el desarrollo creativo e ingeniería.
                     </p>
@@ -448,7 +448,7 @@ function Landing() {
         <div className="mx-auto max-w-7xl px-6">
           
           <div className="text-center max-w-3xl mx-auto space-y-4 mb-16">
-            <span className="text-primary font-bold text-sm uppercase tracking-wider">Preparación Inteligente</span>
+            <span className="text-primary font-bold text-sm uppercase tracking-wider">Prepárate y Aprueba</span>
             <h2 className="font-display text-3xl sm:text-4xl font-extrabold text-foreground tracking-tight">
               {t("landing.prepTitle")}
             </h2>
@@ -677,7 +677,7 @@ function Landing() {
         <div className="mx-auto max-w-7xl px-6">
           
           <div className="text-center max-w-3xl mx-auto space-y-4 mb-16">
-            <span className="text-primary font-bold text-sm uppercase tracking-wider">Gamificación y Diversión</span>
+            <span className="text-primary font-bold text-sm uppercase tracking-wider">Juegos y Premios</span>
             <h2 className="font-display text-3xl sm:text-4xl font-extrabold text-foreground tracking-tight">
               {t("landing.gamesTitle")}
             </h2>
@@ -830,7 +830,7 @@ function Landing() {
         <div className="mx-auto max-w-7xl px-6">
           
           <div className="text-center max-w-3xl mx-auto space-y-4 mb-16">
-            <span className="text-primary font-bold text-sm uppercase tracking-wider">Economía Escolar</span>
+            <span className="text-primary font-bold text-sm uppercase tracking-wider">Premios y Monedas</span>
             <h2 className="font-display text-3xl sm:text-4xl font-extrabold text-foreground tracking-tight">
               {t("landing.economyTitle")}
             </h2>
