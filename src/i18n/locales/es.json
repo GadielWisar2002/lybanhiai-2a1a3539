@@ -73,7 +73,7 @@
     "heroFeature3Desc": "Gana puntos al responder, canjéalos por monedas en el banco y personaliza tu avatar."
   },
   "auth": {
-    "loginTitle": "Bienvenido de vuelta", "signupTitle": "Crea tu cuenta",
+    "loginTitle": "Te damos la bienvenida", "signupTitle": "Crea tu cuenta",
     "email": "Correo electrónico", "password": "Contraseña", "fullName": "Nombre completo",
     "login": "Iniciar sesión", "signup": "Crear cuenta", "google": "Continuar con Google",
     "noAccount": "¿No tienes cuenta?", "haveAccount": "¿Ya tienes cuenta?",
@@ -109,7 +109,10 @@
     }
   },
   "dashboard": {
-    "hello": "Hola, {{name}}", "ready": "¿Listo para alcanzar tus metas hoy?",
+    "hello": "Hola, {{name}}", 
+    "ready": "¿Listo para alcanzar tus metas hoy?",
+    "ready_female": "¿Lista para alcanzar tus metas hoy?",
+    "ready_other": "¿Listx para alcanzar tus metas hoy?",
     "streak": "Racha", "nextChallenge": "Tu próximo desafío",
     "progress": "Tu Progreso", "viewDetails": "Ver análisis detallado",
     "recommended": "Carreras Recomendadas", "noRecsYet": "Genera tus primeras recomendaciones",
@@ -192,8 +195,10 @@
       "desc": "Responde preguntas rápidamente para abrir cofres misteriosos. ¡Duplica tu oro o róbale a los bots de IA!",
       "free": "Entrada Gratis",
       "bonus": "Gana sombreritos extra",
-      "start": "Iniciar Búsqueda",
+       "start": "Iniciar Búsqueda",
       "welcome": "¡Bienvenido a Búsqueda de Oro!",
+      "welcome_female": "¡Bienvenida a Búsqueda de Oro!",
+      "welcome_other": "¡Bienvenidx a Búsqueda de Oro!",
       "welcomeDesc": "Responde las preguntas lo más rápido posible, abre cofres para multiplicar tu oro y roba a los bots para ganar.",
       "startGame": "Iniciar Juego (60s)",
       "goldCount": "{{count}} de Oro",

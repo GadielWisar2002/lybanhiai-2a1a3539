@@ -102,7 +102,10 @@
     }
   },
   "dashboard": {
-    "hello": "Salut, {{name}}", "ready": "Prêt à atteindre tes objectifs aujourd'hui ?",
+    "hello": "Salut, {{name}}", 
+    "ready": "Prêt à atteindre tes objectifs aujourd'hui ?",
+    "ready_female": "Prête à atteindre tes objectifs aujourd'hui ?",
+    "ready_other": "Prêtx à atteindre tes objectifs aujourd'hui ?",
     "streak": "Série", "nextChallenge": "Ton prochain défi",
     "progress": "Ton Progrès", "viewDetails": "Voir l'analyse détaillée",
     "recommended": "Carrières Recommandées", "noRecsYet": "Génère tes premières recommandations",
@@ -187,6 +190,8 @@
       "bonus": "Gagne des diplômes bonus",
       "start": "Lancer la Quête",
       "welcome": "Bienvenue dans la Quête d'Or !",
+      "welcome_female": "Bienvenue dans la Quête d'Or !",
+      "welcome_other": "Bienvenue dans la Quête d'Or !",
       "welcomeDesc": "Réponds aux questions le plus vite possible, ouvre des coffres pour multiplier ton or et vole les bots IA pour gagner !",
       "startGame": "Démarrer (60s)",
       "goldCount": "{{count}} Or",

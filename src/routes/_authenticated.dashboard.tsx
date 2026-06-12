@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useTranslation } from "react-i18next";
 import { useEffect } from "react";
+import { useAuth } from "@/hooks/use-auth";
 import { getDashboard } from "@/lib/quiz.functions";
 import { translateRecommendations } from "@/lib/recommendations.functions";
 import { AppHeader } from "@/components/AppHeader";
@@ -19,6 +20,7 @@ export const Route = createFileRoute("/_authenticated/dashboard")({
 
 function Dashboard() {
   const { t, i18n } = useTranslation();
+  const { user } = useAuth();
   const qc = useQueryClient();
   const fn = useServerFn(getDashboard);
   const trans = useServerFn(translateRecommendations);
@@ -45,6 +47,7 @@ function Dashboard() {
 
   const name = data?.profile?.full_name?.split(" ")[0] ?? "";
   const activeBlook = data?.profile?.active_blook_id ? BLOOKS[data.profile.active_blook_id] : null;
+  const gender = user?.user_metadata?.gender || "other";
 
   return (
     <>
@@ -54,7 +57,7 @@ function Dashboard() {
           {activeBlook && <span className="text-3xl select-none">{activeBlook.emoji}</span>}
           <span>{t("dashboard.hello", { name })}</span>
         </h1>
-        <p className="mt-1 text-sm text-muted-foreground">{t("dashboard.ready")}</p>
+        <p className="mt-1 text-sm text-muted-foreground">{t("dashboard.ready", { context: gender })}</p>
 
         <section className="mt-5 overflow-hidden rounded-3xl bg-[linear-gradient(135deg,_var(--primary),_var(--primary-glow))] p-5 text-primary-foreground shadow-[var(--shadow-elegant)]">
           <span className="inline-block rounded-full bg-white/15 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider">{t("dashboard.nextChallenge")}</span>

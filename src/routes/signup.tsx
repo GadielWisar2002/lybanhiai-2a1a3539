@@ -16,6 +16,7 @@ function Signup() {
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [gender, setGender] = useState<"male" | "female" | "other">("other");
   const [busy, setBusy] = useState(false);
 
   const onSubmit = async (e: React.FormEvent) => {
@@ -23,7 +24,10 @@ function Signup() {
     setBusy(true);
     const { data, error } = await supabase.auth.signUp({
       email, password,
-      options: { emailRedirectTo: window.location.origin, data: { full_name: fullName } },
+      options: { 
+        emailRedirectTo: window.location.origin, 
+        data: { full_name: fullName, gender } 
+      },
     });
     setBusy(false);
     if (error) return toast.error(error.message);
@@ -41,9 +45,35 @@ function Signup() {
     <main className="min-h-screen bg-background px-5 py-10">
       <div className="mx-auto max-w-md">
         <h1 className="font-display text-3xl font-bold text-foreground">{t("auth.signupTitle")}</h1>
-        <form onSubmit={onSubmit} className="mt-6 space-y-3">
+        <form onSubmit={onSubmit} className="mt-6 space-y-4">
           <input required value={fullName} onChange={e => setFullName(e.target.value)} placeholder={t("auth.fullName")} maxLength={80}
             className="h-12 w-full rounded-2xl border border-input bg-card px-4 text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none" />
+          
+          {/* Selector de Género */}
+          <div className="space-y-1.5">
+            <label className="text-xs font-bold text-muted-foreground block px-1">¿Cómo te identificas?</label>
+            <div className="grid grid-cols-3 gap-2">
+              {[
+                { id: "male", name: "Hombre 👦" },
+                { id: "female", name: "Mujer 👧" },
+                { id: "other", name: "Privado 🤐" }
+              ].map(opt => (
+                <button
+                  type="button"
+                  key={opt.id}
+                  onClick={() => setGender(opt.id as any)}
+                  className={`h-11 rounded-xl border font-semibold text-xs transition ${
+                    gender === opt.id
+                      ? "border-primary bg-primary/5 text-primary shadow-sm"
+                      : "border-input bg-card text-foreground hover:bg-muted/30"
+                  }`}
+                >
+                  {opt.name}
+                </button>
+              ))}
+            </div>
+          </div>
+
           <input type="email" required value={email} onChange={e => setEmail(e.target.value)} placeholder={t("auth.email")}
             className="h-12 w-full rounded-2xl border border-input bg-card px-4 text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none" />
           <input type="password" required minLength={6} value={password} onChange={e => setPassword(e.target.value)} placeholder={t("auth.password")}

@@ -102,7 +102,10 @@
     }
   },
   "dashboard": {
-    "hello": "Hi, {{name}}", "ready": "Ready to reach your goals today?",
+    "hello": "Hi, {{name}}", 
+    "ready": "Ready to reach your goals today?",
+    "ready_female": "Ready to reach your goals today?",
+    "ready_other": "Ready to reach your goals today?",
     "streak": "Streak", "nextChallenge": "Your next challenge",
     "progress": "Your Progress", "viewDetails": "View detailed analysis",
     "recommended": "Recommended Careers", "noRecsYet": "Generate your first recommendations",
@@ -187,6 +190,8 @@
       "bonus": "Win bonus coins",
       "start": "Start Quest",
       "welcome": "Welcome to Gold Quest!",
+      "welcome_female": "Welcome to Gold Quest!",
+      "welcome_other": "Welcome to Gold Quest!",
       "welcomeDesc": "Answer the questions as fast as possible, open chest cards to multiply your gold, and steal from AI bots to win!",
       "startGame": "Start Game (60s)",
       "goldCount": "{{count}} Gold",

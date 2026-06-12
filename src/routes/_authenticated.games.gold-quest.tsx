@@ -3,6 +3,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useTranslation } from "react-i18next";
 import { useState, useEffect } from "react";
+import { useAuth } from "@/hooks/use-auth";
 import { rewardGameCoins } from "@/lib/games.functions";
 import { AppHeader } from "@/components/AppHeader";
 import { ArrowLeft, Check, Trophy, X } from "lucide-react";
@@ -41,6 +42,7 @@ const SAMPLE_QUESTIONS: Question[] = [
 
 function GoldQuestGame() {
   const { t } = useTranslation();
+  const { user } = useAuth();
   const navigate = useNavigate();
   const qc = useQueryClient();
   const claimRewards = useServerFn(rewardGameCoins);
@@ -226,7 +228,7 @@ function GoldQuestGame() {
             <div className="size-24 grid place-items-center rounded-3xl bg-amber-400/20 text-5xl mb-6 shadow-md select-none animate-bounce">
               👑
             </div>
-            <h2 className="font-display text-2xl font-extrabold">{t("games.goldQuest.welcome", { defaultValue: "Welcome to Gold Quest!" })}</h2>
+            <h2 className="font-display text-2xl font-extrabold">{t("games.goldQuest.welcome", { context: user?.user_metadata?.gender || "other", defaultValue: "Welcome to Gold Quest!" })}</h2>
             <p className="mt-2 text-sm text-muted-foreground max-w-xs">
               {t("games.goldQuest.welcomeDesc", { defaultValue: "Answer the questions as fast as possible, open chest cards to multiply your gold, and steal from AI bots to win!" })}
             </p>
