@@ -58,6 +58,7 @@ function buildAvatarMesh(playerGroup: THREE.Group, config: any) {
   const matHair = new THREE.MeshLambertMaterial({ color: config.hairColor || "#000000" });
   const matAccessory = new THREE.MeshLambertMaterial({ color: 0x3e2723 });
   const matGlass = new THREE.MeshLambertMaterial({ color: 0x00e5ff, transparent: true, opacity: 0.6 });
+  const matSteel = new THREE.MeshLambertMaterial({ color: 0x90a4ae });
 
   if (config.type === "human") {
     // 1. Head
@@ -317,6 +318,11 @@ function MundoConstructorGame() {
     const camera = new THREE.PerspectiveCamera(50, width / height, 0.1, 1000);
     const cameraController = new CameraController(camera, canvasRef.current);
     cameraCtrlRef.current = cameraController;
+
+    // Renderer
+    const renderer = new THREE.WebGLRenderer({ canvas: canvasRef.current, antialias: true });
+    renderer.setPixelRatio(window.devicePixelRatio);
+    renderer.setSize(width, height, false);
 
     // C. Setup Lights
     const ambientLight = new THREE.AmbientLight(0xffffff, 0.85);
