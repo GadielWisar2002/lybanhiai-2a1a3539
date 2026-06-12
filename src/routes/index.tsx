@@ -21,6 +21,7 @@ import {
   Coins, 
   ChevronRight,
   Lightbulb,
+  Hammer,
   Flame,
   Award
 } from "lucide-react";
