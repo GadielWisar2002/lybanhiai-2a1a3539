@@ -319,6 +319,11 @@ function MundoConstructorGame() {
     const cameraController = new CameraController(camera, canvasRef.current);
     cameraCtrlRef.current = cameraController;
 
+    // Renderer
+    const renderer = new THREE.WebGLRenderer({ canvas: canvasRef.current, antialias: true });
+    renderer.setPixelRatio(window.devicePixelRatio);
+    renderer.setSize(width, height, false);
+
     // C. Setup Lights
     const ambientLight = new THREE.AmbientLight(0xffffff, 0.85);
     scene.add(ambientLight);
