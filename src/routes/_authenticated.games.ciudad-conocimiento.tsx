@@ -755,7 +755,7 @@ function CiudadConocimientoGame() {
 
           {/* Sub-HUD Time info status */}
           <div className="bg-slate-950/80 border border-slate-800 p-3 rounded-xl z-10 flex justify-between items-center text-[10px] uppercase font-black tracking-widest text-slate-400 pointer-events-none">
-            <span>Rango: <span className="text-emerald-400 font-bold">{getCityLevelName(cityLevel)} (Lv.{cityLevel})</span></span>
+            <span>Rango: <span className="text-emerald-400 font-bold">Lv.{cityLevel}</span></span>
             <span>{tText.month}: {month}</span>
           </div>
         </div>
