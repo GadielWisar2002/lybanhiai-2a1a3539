@@ -51,12 +51,12 @@ function Signup() {
           
           {/* Selector de Género */}
           <div className="space-y-1.5">
-            <label className="text-xs font-bold text-muted-foreground block px-1">¿Cómo te identificas?</label>
+            <label className="text-xs font-bold text-muted-foreground block px-1">Género</label>
             <div className="grid grid-cols-3 gap-2">
               {[
-                { id: "male", name: "Hombre 👦" },
-                { id: "female", name: "Mujer 👧" },
-                { id: "other", name: "Privado 🤐" }
+                { id: "male", name: "Hombre" },
+                { id: "female", name: "Mujer" },
+                { id: "other", name: "Prefiero no decir" }
               ].map(opt => (
                 <button
                   type="button"
