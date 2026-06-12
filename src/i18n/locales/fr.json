@@ -64,7 +64,13 @@
     "economy3Desc": "Achète des ensembles de vêtements à la mode et des animaux de compagnie pour avoir un look incroyable.",
     "footerTitle": "Prêt à planifier ta carrière vers le succès ?",
     "footerCta": "Commencer Gratuitement - C'est Rapide",
-    "footerRights": "Tous droits réservés."
+    "footerRights": "Tous droits réservés.",
+    "heroFeature1Title": "Orientation Vocative par IA",
+    "heroFeature1Desc": "Analyse tes hobbies, compétences et budget pour te recommander la carrière idéale.",
+    "heroFeature2Title": "Préparation aux Examens",
+    "heroFeature2Desc": "Maîtrise les examens d'admission et les certifications comme le TOEFL ou Cambridge.",
+    "heroFeature3Title": "Récompenses d'Étude",
+    "heroFeature3Desc": "Gagne des XP, convertis-les en pièces et débloque des mini-jeux et des avatars."
   },
   "auth": {
     "loginTitle": "Bon retour", "signupTitle": "Créer ton compte",

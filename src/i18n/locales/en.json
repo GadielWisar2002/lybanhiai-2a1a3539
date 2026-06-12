@@ -64,7 +64,13 @@
     "economy3Desc": "Buy fashionable clothing sets and pets to look amazing.",
     "footerTitle": "Ready to map out your career success?",
     "footerCta": "Get Started Free - It's Fast",
-    "footerRights": "All rights reserved."
+    "footerRights": "All rights reserved.",
+    "heroFeature1Title": "AI Career Guidance",
+    "heroFeature1Desc": "Analyze your hobbies, skills, and budget to find your ideal career path.",
+    "heroFeature2Title": "Smart Exam Prep",
+    "heroFeature2Desc": "Master admission exams and certifications like TOEFL or Cambridge with smart reviews.",
+    "heroFeature3Title": "Gamified Study Rewards",
+    "heroFeature3Desc": "Earn XP, convert it to coins, and unlock minigames and collectible avatars."
   },
   "auth": {
     "loginTitle": "Welcome back", "signupTitle": "Create your account",

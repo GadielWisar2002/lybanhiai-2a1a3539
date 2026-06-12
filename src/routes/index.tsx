@@ -21,12 +21,10 @@ import {
   Coins, 
   ChevronRight,
   Lightbulb,
-  Hammer,
   Flame,
   Award
 } from "lucide-react";
 import { useState } from "react";
-import { LayeredAvatarRenderer } from "@/components/LayeredAvatarRenderer";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -40,55 +38,12 @@ export const Route = createFileRoute("/")({
   component: Landing,
 });
 
-const PRESETS = [
-  {
-    id: "academic",
-    name: "Académico 🎓",
-    config: {
-      gender: "girl",
-      shirt: "shirt-academic-jacket",
-      pants: "pants-basic-skirt",
-      shoes: "shoes-lowtop",
-      viewMode: "animation",
-      zoom: 1.05
-    }
-  },
-  {
-    id: "deportivo",
-    name: "Casual / Activo 👟",
-    config: {
-      gender: "boy",
-      shirt: "shirt-basic-hoodie",
-      pants: "pants-basic-jeans",
-      shoes: "shoes-hightop",
-      viewMode: "animation",
-      zoom: 1.05
-    }
-  },
-  {
-    id: "cientifico",
-    name: "Científico 🧪",
-    config: {
-      gender: "boy",
-      shirt: "shirt-lab-coat",
-      pants: "pants-basic-jeans",
-      shoes: "shoes-lowtop",
-      viewMode: "animation",
-      zoom: 1.05
-    }
-  }
-];
-
 function Landing() {
   const { t, i18n } = useTranslation();
   const { user, loading } = useAuth();
   
   // Navigation State
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  
-  // Avatar Customizer Preview State
-  const [selectedPreset, setSelectedPreset] = useState("academic");
-  const currentAvatarConfig = PRESETS.find(p => p.id === selectedPreset)?.config || PRESETS[0].config;
 
   // Interactive Recommender State
   const [selectedSkills, setSelectedSkills] = useState<string[]>(["Creatividad", "Resolución de problemas"]);
@@ -262,47 +217,67 @@ function Landing() {
           </div>
         </div>
 
-        {/* Right Side: Interactive Headless Avatar Showcase */}
-        <div className="lg:col-span-5 flex flex-col items-center">
-          <div className="relative w-full max-w-sm rounded-[2.5rem] border border-border bg-card/60 backdrop-blur-sm p-6 shadow-xl hover:shadow-2xl transition duration-500 flex flex-col items-center">
+        {/* Right Side: Features/App Pillars Showcase (Balanced & Explained) */}
+        <div className="lg:col-span-5 flex flex-col justify-center animate-fade-in">
+          <div className="relative w-full max-w-md mx-auto rounded-[2rem] border border-border bg-card/75 backdrop-blur-sm p-6 md:p-8 shadow-xl flex flex-col gap-6 hover:shadow-2xl transition duration-300">
             
             {/* Soft background glow */}
-            <div className="absolute inset-0 bg-gradient-to-tr from-primary/5 to-gold/5 rounded-[2.5rem] -z-10" />
+            <div className="absolute inset-0 bg-gradient-to-tr from-primary/5 to-indigo-50 rounded-[2rem] -z-10 pointer-events-none" />
 
-            {/* Presets tab Selector */}
-            <div className="w-full grid grid-cols-3 gap-1.5 rounded-2xl bg-muted p-1 text-xs font-bold mb-4 z-10">
-              {PRESETS.map(preset => (
-                <button
-                  key={preset.id}
-                  onClick={() => setSelectedPreset(preset.id)}
-                  className={`rounded-xl py-2 transition ${
-                    selectedPreset === preset.id
-                      ? "bg-card text-foreground shadow-sm"
-                      : "text-muted-foreground hover:text-foreground"
-                  }`}
-                >
-                  {preset.name}
-                </button>
-              ))}
+            {/* Title / Heading inside the card */}
+            <div className="space-y-1">
+              <h3 className="font-display font-extrabold text-lg text-foreground">¿Cómo funciona Lybanhi?</h3>
+              <p className="text-xs text-muted-foreground font-medium">Explora los tres pilares de nuestro ecosistema inteligente:</p>
             </div>
 
-            {/* Avatar Frame */}
-            <div className="w-full h-80 rounded-2xl bg-background border border-border/80 overflow-hidden flex items-center justify-center relative">
-              <div className="absolute inset-x-0 bottom-3 flex justify-center pointer-events-none">
-                <span className="px-3 py-1 rounded-full text-[10px] font-bold tracking-widest bg-emerald-100 text-emerald-800 uppercase shadow-sm">
-                  Cuerpo Modular 3D
-                </span>
+            <div className="space-y-4">
+              {/* Pillar 1 */}
+              <div className="flex gap-4 p-2.5 rounded-2xl hover:bg-muted/30 transition duration-200">
+                <div className="grid size-12 shrink-0 place-items-center rounded-xl bg-blue-50 text-blue-600 shadow-sm border border-blue-100/50">
+                  <Compass className="size-6" />
+                </div>
+                <div>
+                  <h4 className="font-display font-bold text-sm text-foreground">{t("landing.heroFeature1Title")}</h4>
+                  <p className="text-xs text-muted-foreground mt-1 leading-relaxed font-medium">
+                    {t("landing.heroFeature1Desc")}
+                  </p>
+                </div>
               </div>
-              <LayeredAvatarRenderer config={currentAvatarConfig} />
+
+              {/* Pillar 2 */}
+              <div className="flex gap-4 p-2.5 rounded-2xl hover:bg-muted/30 transition duration-200">
+                <div className="grid size-12 shrink-0 place-items-center rounded-xl bg-indigo-50 text-indigo-600 shadow-sm border border-indigo-100/50">
+                  <Brain className="size-6" />
+                </div>
+                <div>
+                  <h4 className="font-display font-bold text-sm text-foreground">{t("landing.heroFeature2Title")}</h4>
+                  <p className="text-xs text-muted-foreground mt-1 leading-relaxed font-medium">
+                    {t("landing.heroFeature2Desc")}
+                  </p>
+                </div>
+              </div>
+
+              {/* Pillar 3 */}
+              <div className="flex gap-4 p-2.5 rounded-2xl hover:bg-muted/30 transition duration-200">
+                <div className="grid size-12 shrink-0 place-items-center rounded-xl bg-amber-50 text-amber-600 shadow-sm border border-amber-100/50">
+                  <Gamepad2 className="size-6" />
+                </div>
+                <div>
+                  <h4 className="font-display font-bold text-sm text-foreground">{t("landing.heroFeature3Title")}</h4>
+                  <p className="text-xs text-muted-foreground mt-1 leading-relaxed font-medium">
+                    {t("landing.heroFeature3Desc")}
+                  </p>
+                </div>
+              </div>
             </div>
 
-            {/* Interactive features card caption */}
-            <div className="w-full mt-4 text-center">
-              <h4 className="font-display font-bold text-foreground">Avatar Modular Personalizable</h4>
-              <p className="text-xs text-muted-foreground mt-1">
-                Equipa prendas coleccionables desbloqueadas con tu XP de estudio. ¡Sin cabello, enfocado en tus conjuntos!
-              </p>
+            <div className="h-px bg-border/60 my-1" />
+
+            <div className="flex items-center justify-between text-xs font-bold text-muted-foreground px-2">
+              <span className="flex items-center gap-1">✨ Acceso Completo</span>
+              <span className="text-primary hover:text-primary-glow cursor-pointer transition">Comenzar Gratis</span>
             </div>
+
           </div>
         </div>
       </section>

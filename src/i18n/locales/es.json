@@ -64,7 +64,13 @@
     "economy3Desc": "Compra prendas de moda y mascotas para lucir increíble.",
     "footerTitle": "¿Listo para empezar a planificar tu éxito?",
     "footerCta": "Comenzar Gratis - Es Rápido",
-    "footerRights": "Todos los derechos reservados."
+    "footerRights": "Todos los derechos reservados.",
+    "heroFeature1Title": "Orientación Vocacional con IA",
+    "heroFeature1Desc": "Analiza tus hobbies, habilidades y presupuesto para recomendarte la carrera ideal.",
+    "heroFeature2Title": "Preparación Inteligente",
+    "heroFeature2Desc": "Domina exámenes de admisión y certificaciones como TOEFL o Cambridge con repaso inteligente.",
+    "heroFeature3Title": "Gamificación Escolar",
+    "heroFeature3Desc": "Gana XP, conviértela en monedas y desbloquea minijuegos y coleccionables."
   },
   "auth": {
     "loginTitle": "Bienvenido de vuelta", "signupTitle": "Crea tu cuenta",
