@@ -121,13 +121,19 @@
     "title": "Préparation", "subtitle": "Quiz pour ta carrière et examens d'anglais",
     "career": "Carrière", "english": "Anglais", "toefl": "TOEFL", "cambridge": "Cambridge",
     "logic": "Logique", "math": "Maths", "language": "Langue", "modules": "modules",
+    "book": "Mes Livres",
     "startQuiz": "Commencer le quiz", "generateQuiz": "Générer un quiz par IA",
     "formTitle": "Générateur de quiz",
     "formSubtitle": "Personnalisez votre quiz · Propulsé par l'IA",
     "level": "Niveau scolaire",
     "count": "Nombre de questions",
     "questionsWord": "questions",
-    "topicPick": "Sujet (choisissez-en un)"
+    "topicPick": "Sujet (choisissez-en un)",
+    "selectBook": "Sélectionner un livre",
+    "selectChapter": "Sélectionner un chapitre",
+    "noBooksAvailable": "Aucun livre disponible. Chargez-les via Supabase.",
+    "loadingBooks": "Chargement des livres...",
+    "bookTopic": "Livre / Chapitre"
   },
   "quiz": {
     "questionOf": "QUESTION {{n}} SUR {{total}}", "progress": "TON PROGRÈS",

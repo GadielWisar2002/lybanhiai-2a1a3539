@@ -1,9 +1,9 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useTranslation } from "react-i18next";
 import { useState, useEffect } from "react";
-import { generateQuiz } from "@/lib/quiz.functions";
+import { generateQuiz, listBooks, generateBookQuiz } from "@/lib/quiz.functions";
 import { AppHeader } from "@/components/AppHeader";
 import { Brain, Calculator, Languages, GraduationCap, BookOpen, Sparkles, X, ArrowUpRight } from "lucide-react";
 import { toast } from "sonner";
@@ -21,19 +21,31 @@ function Prep() {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const gen = useServerFn(generateQuiz);
+  const genBook = useServerFn(generateBookQuiz);
+  const listBks = useServerFn(listBooks);
   const lang = (i18n.language.slice(0, 2) as Lang) in TOPICS.math ? (i18n.language.slice(0, 2) as Lang) : "es";
 
-  const [openCat, setOpenCat] = useState<Cat | null>(null);
+  const [openCat, setOpenCat] = useState<Cat | "book" | null>(null);
   const [level, setLevel] = useState(LEVELS[lang][1].value);
   const [count, setCount] = useState<number>(5);
   const [topic, setTopic] = useState<string>("");
+  const [selectedBookTitle, setSelectedBookTitle] = useState<string>("");
+  const [selectedChapterId, setSelectedChapterId] = useState<string>("");
 
   useEffect(() => {
     setLevel(LEVELS[lang][1].value);
-    if (openCat) {
+    if (openCat && openCat !== "book") {
       setTopic(TOPICS[openCat][lang][0]);
     }
   }, [lang, openCat]);
+
+  const { data: books, isLoading: loadingBks } = useQuery({
+    queryKey: ["books"],
+    queryFn: () => listBks(),
+    enabled: openCat === "book",
+  });
+
+  const uniqueBooks = Array.from(new Set((books ?? []).map(b => b.title)));
 
   const mut = useMutation({
     mutationFn: (vars: { category: Cat; topic: string; level: string; count: number }) =>
@@ -45,18 +57,35 @@ function Prep() {
     onError: (e) => toast.error(e instanceof Error ? e.message : "Error"),
   });
 
-  const cats: { Icon: typeof Brain; label: string; cat: Cat; color: string }[] = [
+  const mutBook = useMutation({
+    mutationFn: (vars: { bookId: string; count: number; level: string }) =>
+      genBook({ data: { ...vars, language: lang } }),
+    onSuccess: ({ quizId }) => {
+      setOpenCat(null);
+      navigate({ to: "/prep/quiz/$quizId", params: { quizId } });
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Error"),
+  });
+
+  const cats: { Icon: typeof Brain; label: string; cat: Cat | "book"; color: string }[] = [
     { Icon: Brain, label: t("prep.logic"), cat: "logic", color: "bg-primary/10 text-primary" },
     { Icon: Calculator, label: t("prep.math"), cat: "math", color: "bg-gold/20 text-gold-foreground" },
     { Icon: Languages, label: t("prep.language"), cat: "language", color: "bg-success/15 text-success" },
     { Icon: GraduationCap, label: "TOEFL", cat: "toefl", color: "bg-primary/10 text-primary" },
     { Icon: BookOpen, label: "Cambridge", cat: "cambridge", color: "bg-gold/20 text-gold-foreground" },
     { Icon: Sparkles, label: t("prep.career"), cat: "career", color: "bg-success/15 text-success" },
+    { Icon: BookOpen, label: t("prep.book", { defaultValue: "Mis Libros" }), cat: "book", color: "bg-primary/10 text-primary" },
   ];
 
-  const openForm = (cat: Cat) => {
+  const openForm = (cat: Cat | "book") => {
     setOpenCat(cat);
-    setTopic(TOPICS[cat][lang][0]);
+    if (cat !== "book") {
+      setTopic(TOPICS[cat][lang][0]);
+    } else {
+      setTopic("");
+      setSelectedBookTitle("");
+      setSelectedChapterId("");
+    }
   };
 
   const activeCatLabel = openCat ? cats.find((c) => c.cat === openCat)?.label ?? "" : "";
@@ -112,75 +141,176 @@ function Prep() {
               </button>
             </div>
 
-            <div className="mt-5 grid grid-cols-2 gap-3">
-              <label className="rounded-2xl border border-border p-3">
-                <span className="block text-[10px] font-semibold tracking-wider text-muted-foreground">
-                  {t("prep.level", { defaultValue: "NIVEL ESCOLAR" }).toUpperCase()}
-                </span>
-                <select
-                  value={level}
-                  onChange={(e) => setLevel(e.target.value)}
-                  className="mt-1 w-full bg-transparent text-sm font-medium outline-none"
-                >
-                  {LEVELS[lang].map((l) => (
-                    <option key={l.value} value={l.value}>{l.label}</option>
-                  ))}
-                </select>
-              </label>
-              <label className="rounded-2xl border border-border p-3">
-                <span className="block text-[10px] font-semibold tracking-wider text-muted-foreground">
-                  {t("prep.count", { defaultValue: "NÚMERO DE PREGUNTAS" }).toUpperCase()}
-                </span>
-                <select
-                  value={count}
-                  onChange={(e) => setCount(Number(e.target.value))}
-                  className="mt-1 w-full bg-transparent text-sm font-medium outline-none"
-                >
-                  {COUNTS.map((n) => (
-                    <option key={n} value={n}>
-                      {n} {t("prep.questionsWord", { defaultValue: "preguntas" })}
-                    </option>
-                  ))}
-                </select>
-              </label>
-            </div>
+            {openCat === "book" ? (
+              <div className="space-y-4 mt-4">
+                {loadingBks ? (
+                  <div className="py-8 text-center text-sm text-muted-foreground">
+                    <div className="size-6 animate-spin rounded-full border-2 border-primary border-t-transparent mx-auto mb-2" />
+                    {t("prep.loadingBooks", { defaultValue: "Cargando libros..." })}
+                  </div>
+                ) : !books || books.length === 0 ? (
+                  <div className="py-6 text-center text-sm text-muted-foreground border border-dashed border-border rounded-2xl p-4">
+                    {t("prep.noBooksAvailable", { defaultValue: "No hay libros disponibles. Súbelos desde el panel de Supabase." })}
+                  </div>
+                ) : (
+                  <>
+                    <label className="block rounded-2xl border border-border p-3">
+                      <span className="block text-[10px] font-semibold tracking-wider text-muted-foreground uppercase">
+                        {t("prep.selectBook", { defaultValue: "Seleccionar libro" })}
+                      </span>
+                      <select
+                        value={selectedBookTitle}
+                        onChange={(e) => {
+                          setSelectedBookTitle(e.target.value);
+                          setSelectedChapterId("");
+                        }}
+                        className="mt-1 w-full bg-transparent text-sm font-medium outline-none"
+                      >
+                        <option value="">-- {t("prep.selectBook", { defaultValue: "Seleccionar libro" })} --</option>
+                        {uniqueBooks.map(title => (
+                          <option key={title} value={title}>{title}</option>
+                        ))}
+                      </select>
+                    </label>
 
-            <div className="mt-3 rounded-2xl border border-border p-3">
-              <span className="block text-[10px] font-semibold tracking-wider text-muted-foreground">
-                {t("prep.topicPick", { defaultValue: "TEMA (ELIGE UNO)" }).toUpperCase()}
-              </span>
-              <div className="mt-2 flex flex-wrap gap-2">
-                {TOPICS[openCat][lang].map((tp) => {
-                  const on = topic === tp;
-                  return (
+                    {selectedBookTitle && (
+                      <label className="block rounded-2xl border border-border p-3 animate-fade-in">
+                        <span className="block text-[10px] font-semibold tracking-wider text-muted-foreground uppercase">
+                          {t("prep.selectChapter", { defaultValue: "Seleccionar capítulo" })}
+                        </span>
+                        <select
+                          value={selectedChapterId}
+                          onChange={(e) => setSelectedChapterId(e.target.value)}
+                          className="mt-1 w-full bg-transparent text-sm font-medium outline-none"
+                        >
+                          <option value="">-- {t("prep.selectChapter", { defaultValue: "Seleccionar capítulo" })} --</option>
+                          {(books ?? [])
+                            .filter(b => b.title === selectedBookTitle)
+                            .map(b => (
+                              <option key={b.id} value={b.id}>{b.chapter_name}</option>
+                            ))}
+                        </select>
+                      </label>
+                    )}
+
+                    <div className="grid grid-cols-2 gap-3 mt-3">
+                      <label className="rounded-2xl border border-border p-3">
+                        <span className="block text-[10px] font-semibold tracking-wider text-muted-foreground uppercase">
+                          {t("prep.level", { defaultValue: "Nivel escolar" }).toUpperCase()}
+                        </span>
+                        <select
+                          value={level}
+                          onChange={(e) => setLevel(e.target.value)}
+                          className="mt-1 w-full bg-transparent text-sm font-medium outline-none"
+                        >
+                          {LEVELS[lang].map((l) => (
+                            <option key={l.value} value={l.value}>{l.label}</option>
+                          ))}
+                        </select>
+                      </label>
+                      <label className="rounded-2xl border border-border p-3">
+                        <span className="block text-[10px] font-semibold tracking-wider text-muted-foreground uppercase">
+                          {t("prep.count", { defaultValue: "Número de preguntas" }).toUpperCase()}
+                        </span>
+                        <select
+                          value={count}
+                          onChange={(e) => setCount(Number(e.target.value))}
+                          className="mt-1 w-full bg-transparent text-sm font-medium outline-none"
+                        >
+                          {COUNTS.map((n) => (
+                            <option key={n} value={n}>
+                              {n} {t("prep.questionsWord", { defaultValue: "preguntas" })}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                    </div>
+
                     <button
-                      key={tp}
-                      onClick={() => setTopic(tp)}
-                      className={`rounded-full border px-3 py-1.5 text-xs font-medium transition ${
-                        on ? "border-primary bg-primary/10 text-primary" : "border-border bg-card text-foreground"
-                      }`}
+                      disabled={mutBook.isPending || !selectedChapterId}
+                      onClick={() => mutBook.mutate({ bookId: selectedChapterId, count, level })}
+                      className="mt-4 inline-flex h-12 w-full items-center justify-center gap-2 rounded-2xl border border-border bg-card font-semibold transition active:scale-[0.99] disabled:opacity-60 cursor-pointer"
                     >
-                      {tp}
+                      <Sparkles className="size-4" />
+                      {t("prep.generateQuiz")}
+                      <ArrowUpRight className="size-4" />
                     </button>
-                  );
-                })}
+                  </>
+                )}
               </div>
-            </div>
+            ) : (
+              <>
+                <div className="mt-5 grid grid-cols-2 gap-3">
+                  <label className="rounded-2xl border border-border p-3">
+                    <span className="block text-[10px] font-semibold tracking-wider text-muted-foreground">
+                      {t("prep.level", { defaultValue: "NIVEL ESCOLAR" }).toUpperCase()}
+                    </span>
+                    <select
+                      value={level}
+                      onChange={(e) => setLevel(e.target.value)}
+                      className="mt-1 w-full bg-transparent text-sm font-medium outline-none"
+                    >
+                      {LEVELS[lang].map((l) => (
+                        <option key={l.value} value={l.value}>{l.label}</option>
+                      ))}
+                    </select>
+                  </label>
+                  <label className="rounded-2xl border border-border p-3">
+                    <span className="block text-[10px] font-semibold tracking-wider text-muted-foreground">
+                      {t("prep.count", { defaultValue: "NÚMERO DE PREGUNTAS" }).toUpperCase()}
+                    </span>
+                    <select
+                      value={count}
+                      onChange={(e) => setCount(Number(e.target.value))}
+                      className="mt-1 w-full bg-transparent text-sm font-medium outline-none"
+                    >
+                      {COUNTS.map((n) => (
+                        <option key={n} value={n}>
+                          {n} {t("prep.questionsWord", { defaultValue: "preguntas" })}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                </div>
 
-            <button
-              disabled={mut.isPending || !topic}
-              onClick={() => mut.mutate({ category: openCat, topic, level, count })}
-              className="mt-4 inline-flex h-12 w-full items-center justify-center gap-2 rounded-2xl border border-border bg-card font-semibold transition active:scale-[0.99] disabled:opacity-60"
-            >
-              <Sparkles className="size-4" />
-              {t("prep.generateQuiz")}
-              <ArrowUpRight className="size-4" />
-            </button>
+                <div className="mt-3 rounded-2xl border border-border p-3">
+                  <span className="block text-[10px] font-semibold tracking-wider text-muted-foreground">
+                    {t("prep.topicPick", { defaultValue: "TEMA (ELIGE UNO)" }).toUpperCase()}
+                  </span>
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {TOPICS[openCat as Cat][lang].map((tp) => {
+                      const on = topic === tp;
+                      return (
+                        <button
+                          key={tp}
+                          onClick={() => setTopic(tp)}
+                          className={`rounded-full border px-3 py-1.5 text-xs font-medium transition ${
+                            on ? "border-primary bg-primary/10 text-primary" : "border-border bg-card text-foreground"
+                          }`}
+                        >
+                          {tp}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <button
+                  disabled={mut.isPending || !topic}
+                  onClick={() => mut.mutate({ category: openCat as Cat, topic, level, count })}
+                  className="mt-4 inline-flex h-12 w-full items-center justify-center gap-2 rounded-2xl border border-border bg-card font-semibold transition active:scale-[0.99] disabled:opacity-60 cursor-pointer"
+                >
+                  <Sparkles className="size-4" />
+                  {t("prep.generateQuiz")}
+                  <ArrowUpRight className="size-4" />
+                </button>
+              </>
+            )}
           </div>
         </div>
       )}
 
-      {mut.isPending && (
+      {(mut.isPending || mutBook.isPending) && (
         <div className="fixed inset-0 z-50 grid place-items-center bg-background/80 backdrop-blur-sm">
           <div className="flex flex-col items-center gap-3 rounded-2xl border border-border bg-card px-6 py-5 shadow-[var(--shadow-card)]">
             <div className="size-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />

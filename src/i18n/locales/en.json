@@ -121,13 +121,19 @@
     "title": "Preparation", "subtitle": "Quizzes for your career and English exams",
     "career": "Career", "english": "English", "toefl": "TOEFL", "cambridge": "Cambridge",
     "logic": "Logic", "math": "Math", "language": "Language", "modules": "modules",
+    "book": "My Books",
     "startQuiz": "Start quiz", "generateQuiz": "Generate quiz with AI",
     "formTitle": "Quiz Generator",
     "formSubtitle": "Customize your quiz · Powered by AI",
     "level": "School level",
     "count": "Number of questions",
     "questionsWord": "questions",
-    "topicPick": "Topic (choose one)"
+    "topicPick": "Topic (choose one)",
+    "selectBook": "Select book",
+    "selectChapter": "Select chapter",
+    "noBooksAvailable": "No books available. Upload them via Supabase.",
+    "loadingBooks": "Loading books...",
+    "bookTopic": "Book / Chapter"
   },
   "quiz": {
     "questionOf": "QUESTION {{n}} OF {{total}}", "progress": "YOUR PROGRESS",

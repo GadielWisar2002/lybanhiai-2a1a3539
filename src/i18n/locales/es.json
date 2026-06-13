@@ -128,13 +128,19 @@
     "title": "Preparación", "subtitle": "Quizzes para tu carrera y exámenes de inglés",
     "career": "Carrera", "english": "Inglés", "toefl": "TOEFL", "cambridge": "Cambridge",
     "logic": "Lógica", "math": "Matemáticas", "language": "Lenguaje", "modules": "módulos",
+    "book": "Mis Libros",
     "startQuiz": "Empezar quiz", "generateQuiz": "Generar quiz con IA",
     "formTitle": "Generador de quizzes",
     "formSubtitle": "Personaliza tu quiz · Impulsado por IA",
     "level": "Nivel escolar",
     "count": "Número de preguntas",
     "questionsWord": "preguntas",
-    "topicPick": "Tema (elige uno)"
+    "topicPick": "Tema (elige uno)",
+    "selectBook": "Seleccionar libro",
+    "selectChapter": "Seleccionar capítulo",
+    "noBooksAvailable": "No hay libros disponibles. Súbelos desde el panel de Supabase.",
+    "loadingBooks": "Cargando libros...",
+    "bookTopic": "Libro / Capítulo"
   },
   "quiz": {
     "questionOf": "PREGUNTA {{n}} DE {{total}}", "progress": "TU PROGRESO",

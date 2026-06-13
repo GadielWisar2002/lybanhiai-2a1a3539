@@ -366,3 +366,132 @@ export const getDashboard = createServerFn({ method: "GET" })
       recommendations: recsRes.data ?? [],
     };
   });
+
+export const listBooks = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabase } = context;
+    const { data, error } = await supabase
+      .from("books")
+      .select("id, title, chapter_name, created_at")
+      .order("title", { ascending: true })
+      .order("created_at", { ascending: true });
+    if (error) throw new Error(error.message);
+    return (data ?? []).map(b => ({
+      id: b.id as string,
+      title: b.title as string,
+      chapter_name: b.chapter_name as string,
+      created_at: b.created_at as string,
+    }));
+  });
+
+const BookGenSchema = z.object({
+  bookId: z.string().uuid(),
+  count: z.number().int().min(3).max(10).default(5),
+  level: z.string().max(60).optional(),
+  language: z.enum(["es", "en", "fr"]).default("es"),
+});
+
+export const generateBookQuiz = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => BookGenSchema.parse(input))
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey) throw new Error("Google AI Studio API Key (GEMINI_API_KEY) no está configurada en las variables de entorno.");
+
+    // Fetch the book content
+    const { data: book, error: be } = await supabase
+      .from("books")
+      .select("title, chapter_name, content")
+      .eq("id", data.bookId)
+      .single();
+    if (be || !book) throw new Error("Libro o capítulo no encontrado.");
+
+    const langLabel = data.language === "es" ? "Spanish" : data.language === "fr" ? "French" : "English";
+    const levelClause = data.level ? ` Target school level: ${data.level}.` : "";
+    
+    const systemInstruction = `Eres un creador de exámenes académicos profesional. Genera un examen estructurado de opción múltiple de ${data.count} preguntas en el idioma ${langLabel}.${levelClause} Cada pregunta debe tener 4 opciones, y exactamente una de ellas debe ser correcta.`;
+    const userPrompt = `Basándote únicamente en el siguiente texto del capítulo "${book.chapter_name}" del libro "${book.title}", genera el examen:\n\n${book.content}`;
+
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+    const res = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        contents: [
+          {
+            role: "user",
+            parts: [
+              { text: `${systemInstruction}\n\n${userPrompt}` }
+            ]
+          }
+        ],
+        generationConfig: {
+          responseMimeType: "application/json",
+          responseSchema: {
+            type: "object",
+            properties: {
+              questions: {
+                type: "array",
+                items: {
+                  type: "object",
+                  properties: {
+                    q: { type: "string" },
+                    options: {
+                      type: "array",
+                      items: { type: "string" },
+                      minItems: 4,
+                      maxItems: 4
+                    },
+                    correctIndex: { type: "integer", minimum: 0, maximum: 3 },
+                    explanation: { type: "string" }
+                  },
+                  required: ["q", "options", "correctIndex", "explanation"]
+                }
+              }
+            },
+            required: ["questions"]
+          }
+        }
+      })
+    });
+
+    if (res.status === 429) throw new Error("Demasiadas solicitudes. Intenta de nuevo en un momento.");
+    if (!res.ok) {
+      const t = await res.text().catch(() => "");
+      console.error("Gemini API error", res.status, t);
+      throw new Error(`Error en la API de Gemini (${res.status})`);
+    }
+
+    const json = await res.json();
+    const text = json.candidates?.[0]?.content?.parts?.[0]?.text;
+    if (!text) {
+      console.error("Gemini API returned no content", JSON.stringify(json));
+      throw new Error("La IA no devolvió un quiz válido. Intenta de nuevo.");
+    }
+
+    let parsed: { questions: unknown[] } | null = null;
+    try {
+      parsed = JSON.parse(text);
+    } catch (e) {
+      console.error("Failed to parse JSON response from Gemini", text, e);
+      throw new Error("La respuesta de la IA no pudo ser analizada como un examen válido.");
+    }
+
+    if (!parsed?.questions?.length) {
+      throw new Error("El examen devuelto por la IA no tiene preguntas válidas.");
+    }
+
+    const quizTopic = `${book.title} - ${book.chapter_name}`;
+    const { data: row, error } = await supabase.from("quizzes").insert({
+      user_id: userId,
+      category: "language",
+      topic: quizTopic,
+      language: data.language,
+      questions: parsed.questions as never,
+    }).select("id").single();
+
+    if (error) throw new Error(error.message);
+    return { quizId: row.id };
+  });
