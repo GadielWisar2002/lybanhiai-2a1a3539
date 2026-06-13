@@ -374,7 +374,7 @@ export const listBooks = createServerFn({ method: "GET" })
     const { supabase } = context;
     const { data, error } = await supabase
       .from("books")
-      .select("id, title, chapter_name, created_at")
+      .select("id, title, chapter_name, created_at, grade, subject")
       .order("title", { ascending: true })
       .order("created_at", { ascending: true });
     if (error) throw new Error(error.message);
@@ -383,6 +383,8 @@ export const listBooks = createServerFn({ method: "GET" })
       title: b.title as string,
       chapter_name: b.chapter_name as string,
       created_at: b.created_at as string,
+      grade: b.grade as string | null,
+      subject: b.subject as string | null,
     }));
   });
 
@@ -404,15 +406,17 @@ export const generateBookQuiz = createServerFn({ method: "POST" })
     // Fetch the book content
     const { data: book, error: be } = await supabase
       .from("books")
-      .select("title, chapter_name, content")
+      .select("title, chapter_name, content, grade, subject")
       .eq("id", data.bookId)
       .single();
     if (be || !book) throw new Error("Libro o capítulo no encontrado.");
 
     const langLabel = data.language === "es" ? "Spanish" : data.language === "fr" ? "French" : "English";
     const levelClause = data.level ? ` Target school level: ${data.level}.` : "";
+    const gradeClause = book.grade ? ` Target school grade: ${book.grade}.` : "";
+    const subjectClause = book.subject ? ` Academic subject field: ${book.subject}.` : "";
     
-    const systemInstruction = `Eres un creador de exámenes académicos profesional. Genera un examen estructurado de opción múltiple de ${data.count} preguntas en el idioma ${langLabel}.${levelClause} Cada pregunta debe tener 4 opciones, y exactamente una de ellas debe ser correcta.`;
+    const systemInstruction = `Eres un creador de exámenes académicos profesional. Genera un examen estructurado de opción múltiple de ${data.count} preguntas en el idioma ${langLabel}.${levelClause}${gradeClause}${subjectClause} Cada pregunta debe tener 4 opciones, y exactamente una de ellas debe ser correcta.`;
     const userPrompt = `Basándote únicamente en el siguiente texto del capítulo "${book.chapter_name}" del libro "${book.title}", genera el examen:\n\n${book.content}`;
 
     const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
@@ -501,6 +505,8 @@ const CreateBookSchema = z.object({
   title: z.string().min(1).max(255),
   chapterName: z.string().min(1).max(255),
   content: z.string().min(1),
+  grade: z.string().optional().nullable(),
+  subject: z.string().optional().nullable(),
 });
 
 export const createBookChapter = createServerFn({ method: "POST" })
@@ -521,6 +527,8 @@ export const createBookChapter = createServerFn({ method: "POST" })
         title: data.title,
         chapter_name: data.chapterName,
         content: data.content,
+        grade: data.grade,
+        subject: data.subject,
       })
       .select("id")
       .single();
@@ -534,6 +542,8 @@ const UpdateBookSchema = z.object({
   title: z.string().min(1).max(255),
   chapterName: z.string().min(1).max(255),
   content: z.string().min(1),
+  grade: z.string().optional().nullable(),
+  subject: z.string().optional().nullable(),
 });
 
 export const updateBookChapter = createServerFn({ method: "POST" })
@@ -554,6 +564,8 @@ export const updateBookChapter = createServerFn({ method: "POST" })
         title: data.title,
         chapter_name: data.chapterName,
         content: data.content,
+        grade: data.grade,
+        subject: data.subject,
       })
       .eq("id", data.id);
 

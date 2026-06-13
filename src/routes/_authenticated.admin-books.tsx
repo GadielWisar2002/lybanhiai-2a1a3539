@@ -69,11 +69,13 @@ function AdminBooks() {
   const [title, setTitle] = useState("");
   const [chapterName, setChapterName] = useState("");
   const [content, setContent] = useState("");
+  const [grade, setGrade] = useState("");
+  const [subject, setSubject] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
 
   // Mutations
   const createMut = useMutation({
-    mutationFn: (vars: { title: string; chapterName: string; content: string }) => createChapter({ data: vars }),
+    mutationFn: (vars: { title: string; chapterName: string; content: string; grade?: string; subject?: string }) => createChapter({ data: vars }),
     onSuccess: () => {
       toast.success("Capítulo creado con éxito");
       resetForm();
@@ -83,7 +85,7 @@ function AdminBooks() {
   });
 
   const updateMut = useMutation({
-    mutationFn: (vars: { id: string; title: string; chapterName: string; content: string }) => updateChapter({ data: vars }),
+    mutationFn: (vars: { id: string; title: string; chapterName: string; content: string; grade?: string; subject?: string }) => updateChapter({ data: vars }),
     onSuccess: () => {
       toast.success("Capítulo actualizado con éxito");
       resetForm();
@@ -123,18 +125,19 @@ function AdminBooks() {
     setTitle("");
     setChapterName("");
     setContent("");
+    setGrade("");
+    setSubject("");
   };
 
   const handleEdit = async (bookId: string) => {
     // We need to fetch the full content of the chapter to edit it.
-    // The listBooks only returns id, title, chapter_name.
-    // Let's fetch it via supabase client directly or write a query.
-    // Actually, we can fetch it via supabase client directly client-side since read access is public-auth.
+    // The listBooks only returns id, title, chapter_name, grade, subject.
+    // Let's fetch it via supabase client directly client-side since read access is public-auth.
     try {
       const { supabase } = await import("@/integrations/supabase/client");
       const { data, error } = await supabase
         .from("books")
-        .select("title, chapter_name, content")
+        .select("title, chapter_name, content, grade, subject")
         .eq("id", bookId)
         .single();
       if (error) throw error;
@@ -143,6 +146,8 @@ function AdminBooks() {
         setTitle(data.title);
         setChapterName(data.chapter_name);
         setContent(data.content);
+        setGrade(data.grade ?? "");
+        setSubject(data.subject ?? "");
         window.scrollTo({ top: 0, behavior: 'smooth' });
       }
     } catch (err) {
@@ -164,9 +169,9 @@ function AdminBooks() {
       return;
     }
     if (editingId) {
-      updateMut.mutate({ id: editingId, title, chapterName, content });
+      updateMut.mutate({ id: editingId, title, chapterName, content, grade: grade.trim() || null, subject: subject.trim() || null });
     } else {
-      createMut.mutate({ title, chapterName, content });
+      createMut.mutate({ title, chapterName, content, grade: grade.trim() || null, subject: subject.trim() || null });
     }
   };
 
@@ -262,6 +267,42 @@ function AdminBooks() {
                       <option key={s} value={s} />
                     ))}
                   </datalist>
+                </div>
+
+                {/* Grado y Materia */}
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-bold text-muted-foreground block px-1">GRADO</label>
+                    <input
+                      type="text"
+                      value={grade}
+                      onChange={e => setGrade(e.target.value)}
+                      placeholder="Ej. Preparatoria"
+                      list="book-grades"
+                      className="h-11 w-full rounded-xl border border-input bg-card px-3.5 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none"
+                    />
+                    <datalist id="book-grades">
+                      {Array.from(new Set((books ?? []).map(b => b.grade).filter(Boolean))).map(g => (
+                        <option key={g} value={g!} />
+                      ))}
+                    </datalist>
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-bold text-muted-foreground block px-1">MATERIA</label>
+                    <input
+                      type="text"
+                      value={subject}
+                      onChange={e => setSubject(e.target.value)}
+                      placeholder="Ej. Biología"
+                      list="book-subjects"
+                      className="h-11 w-full rounded-xl border border-input bg-card px-3.5 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none"
+                    />
+                    <datalist id="book-subjects">
+                      {Array.from(new Set((books ?? []).map(b => b.subject).filter(Boolean))).map(s => (
+                        <option key={s} value={s!} />
+                      ))}
+                    </datalist>
+                  </div>
                 </div>
 
                 {/* Nombre de Capítulo */}
@@ -374,9 +415,21 @@ function AdminBooks() {
                         <li key={chapter.id} className="px-4 py-3 flex items-center justify-between gap-4 transition hover:bg-muted/10">
                           <div className="min-w-0 flex-1">
                             <p className="font-display text-sm font-semibold text-foreground truncate">{chapter.chapter_name}</p>
-                            <p className="text-[10px] text-muted-foreground mt-0.5">
-                              Creado: {new Date(chapter.created_at).toLocaleDateString()}
-                            </p>
+                            <div className="flex flex-wrap items-center gap-1.5 mt-1">
+                              {chapter.grade && (
+                                <span className="text-[9px] bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 px-1.5 py-0.5 rounded font-bold">
+                                  {chapter.grade}
+                                </span>
+                              )}
+                              {chapter.subject && (
+                                <span className="text-[9px] bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-300 px-1.5 py-0.5 rounded font-bold">
+                                  {chapter.subject}
+                                </span>
+                              )}
+                              <span className="text-[9px] text-muted-foreground">
+                                Creado: {new Date(chapter.created_at).toLocaleDateString()}
+                              </span>
+                            </div>
                           </div>
                           
                           <div className="flex items-center gap-1.5 shrink-0">

@@ -136,9 +136,11 @@
     "count": "Número de preguntas",
     "questionsWord": "preguntas",
     "topicPick": "Tema (elige uno)",
+    "selectGrade": "Seleccionar grado",
+    "selectSubject": "Seleccionar materia",
     "selectBook": "Seleccionar libro",
     "selectChapter": "Seleccionar capítulo",
-    "noBooksAvailable": "No hay libros disponibles. Súbelos desde el panel de Supabase.",
+    "noBooksAvailable": "No hay libros disponibles. Súbelos desde el panel de administración de libros.",
     "loadingBooks": "Cargando libros...",
     "bookTopic": "Libro / Capítulo"
   },

@@ -129,9 +129,11 @@
     "count": "Number of questions",
     "questionsWord": "questions",
     "topicPick": "Topic (choose one)",
+    "selectGrade": "Select grade",
+    "selectSubject": "Select subject",
     "selectBook": "Select book",
     "selectChapter": "Select chapter",
-    "noBooksAvailable": "No books available. Upload them via Supabase.",
+    "noBooksAvailable": "No books available. Upload them via the book admin panel.",
     "loadingBooks": "Loading books...",
     "bookTopic": "Book / Chapter"
   },
