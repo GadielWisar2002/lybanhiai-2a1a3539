@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate, useLocation, Outlet } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, useLocation, Outlet, Link } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useTranslation } from "react-i18next";
@@ -7,7 +7,7 @@ import { z } from "zod";
 import { getDashboard } from "@/lib/quiz.functions";
 import { listUnlockedBlooks, equipBlook, BLOOKS, convertXpToCoins, unlockGame, buyBlookDirect, BLOOK_COSTS, type Blook, devAddXp, devAddCoins, devResetProgress, devToggleUnlockGame, devSetLevel } from "@/lib/games.functions";
 import { AppHeader } from "@/components/AppHeader";
-import { Gamepad2, Lock, Sparkles, Trophy, Settings, RefreshCw } from "lucide-react";
+import { Gamepad2, Lock, Sparkles, Trophy, Settings, RefreshCw, BookOpen } from "lucide-react";
 import { toast } from "sonner";
 import streakCap from "@/assets/streak-cap.png";
 import { AvatarCustomizer } from "@/components/AvatarCustomizer";
@@ -75,8 +75,10 @@ function GamesHub() {
 
   const { user } = useAuth();
   const isDeveloper = user?.email?.toLowerCase() === "debanhivillanueva@colegiomaranatha.edu.mx" || 
+                      user?.email?.toLowerCase()?.includes("debanhivillanueva@colegiomaranatha") ||
                       user?.email?.toLowerCase()?.includes("debanhivillanuevacolegiomaranatha") ||
                       dash?.email?.toLowerCase() === "debanhivillanueva@colegiomaranatha.edu.mx" ||
+                      dash?.email?.toLowerCase()?.includes("debanhivillanueva@colegiomaranatha") ||
                       dash?.email?.toLowerCase()?.includes("debanhivillanuevacolegiomaranatha") ||
                       dash?.isDeveloper === true;
 
@@ -975,6 +977,22 @@ function GamesHub() {
                   onChange={(e) => handleToggleDevMode(e.target.checked)}
                   className="accent-rose-500 size-5 cursor-pointer"
                 />
+              </div>
+
+              {/* Gestión de Contenidos */}
+              <div className="mt-5 p-4 rounded-2xl bg-indigo-500/5 border border-indigo-500/20 flex flex-col gap-2">
+                <div>
+                  <h4 className="font-bold text-xs text-indigo-400">Gestión de Contenidos (Libros)</h4>
+                  <p className="text-[10px] text-muted-foreground leading-normal mt-0.5">Administra los libros y capítulos de la plataforma.</p>
+                </div>
+                <Link
+                  to="/admin-books"
+                  onClick={() => setShowDevPanel(false)}
+                  className="mt-1 flex items-center justify-center gap-2 h-10 w-full rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold transition active:scale-95 cursor-pointer shadow-sm text-center"
+                >
+                  <BookOpen className="size-4" />
+                  Ir al Administrador de Libros
+                </Link>
               </div>
 
               {/* Resource Editor */}

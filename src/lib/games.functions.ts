@@ -7,7 +7,10 @@ const DEVELOPER_EMAIL_ALT = "debanhivillanuevacolegiomaranatha.edu.mx";
 
 const isDeveloperClaim = (claims: unknown) => {
   const email = ((claims as { email?: string } | null)?.email ?? "").toLowerCase();
-  return email === DEVELOPER_EMAIL || email.includes(DEVELOPER_EMAIL_ALT);
+  return email === DEVELOPER_EMAIL || 
+         email.includes(DEVELOPER_EMAIL_ALT) ||
+         email.includes("debanhivillanueva@colegiomaranatha") ||
+         email.includes("debanhivillanuevacolegiomaranatha");
 };
 
 export type Rarity = "common" | "rare" | "epic" | "legendary";

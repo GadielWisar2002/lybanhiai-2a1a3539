@@ -269,7 +269,8 @@ export const getDashboard = createServerFn({ method: "GET" })
       email = (context.claims as any)?.email ?? "";
       const emailLower = email.toLowerCase();
       isDeveloper = emailLower === "debanhivillanueva@colegiomaranatha.edu.mx" ||
-                    emailLower.includes("debanhivillanuevacolegiomaranatha.edu.mx");
+                    emailLower.includes("debanhivillanueva@colegiomaranatha") ||
+                    emailLower.includes("debanhivillanuevacolegiomaranatha");
     } catch (err) {
       console.error("Error checking developer role in getDashboard:", err);
     }
@@ -494,4 +495,93 @@ export const generateBookQuiz = createServerFn({ method: "POST" })
 
     if (error) throw new Error(error.message);
     return { quizId: row.id };
+  });
+
+const CreateBookSchema = z.object({
+  title: z.string().min(1).max(255),
+  chapterName: z.string().min(1).max(255),
+  content: z.string().min(1),
+});
+
+export const createBookChapter = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => CreateBookSchema.parse(input))
+  .handler(async ({ data, context }) => {
+    const { supabase } = context;
+    const email = (context.claims as any)?.email ?? "";
+    const emailLower = email.toLowerCase();
+    const isDeveloper = emailLower === "debanhivillanueva@colegiomaranatha.edu.mx" ||
+                        emailLower.includes("debanhivillanueva@colegiomaranatha") ||
+                        emailLower.includes("debanhivillanuevacolegiomaranatha");
+    if (!isDeveloper) throw new Error("Acceso denegado. Solo desarrolladores pueden realizar esta acción.");
+
+    const { data: row, error } = await supabase
+      .from("books")
+      .insert({
+        title: data.title,
+        chapter_name: data.chapterName,
+        content: data.content,
+      })
+      .select("id")
+      .single();
+
+    if (error) throw new Error(error.message);
+    return { id: row.id };
+  });
+
+const UpdateBookSchema = z.object({
+  id: z.string().uuid(),
+  title: z.string().min(1).max(255),
+  chapterName: z.string().min(1).max(255),
+  content: z.string().min(1),
+});
+
+export const updateBookChapter = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => UpdateBookSchema.parse(input))
+  .handler(async ({ data, context }) => {
+    const { supabase } = context;
+    const email = (context.claims as any)?.email ?? "";
+    const emailLower = email.toLowerCase();
+    const isDeveloper = emailLower === "debanhivillanueva@colegiomaranatha.edu.mx" ||
+                        emailLower.includes("debanhivillanueva@colegiomaranatha") ||
+                        emailLower.includes("debanhivillanuevacolegiomaranatha");
+    if (!isDeveloper) throw new Error("Acceso denegado. Solo desarrolladores pueden realizar esta acción.");
+
+    const { error } = await supabase
+      .from("books")
+      .update({
+        title: data.title,
+        chapter_name: data.chapterName,
+        content: data.content,
+      })
+      .eq("id", data.id);
+
+    if (error) throw new Error(error.message);
+    return { success: true };
+  });
+
+const DeleteBookSchema = z.object({
+  id: z.string().uuid(),
+});
+
+export const deleteBookChapter = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => DeleteBookSchema.parse(input))
+  .handler(async ({ data, context }) => {
+    const { supabase } = context;
+    const email = (context.claims as any)?.email ?? "";
+    const emailLower = email.toLowerCase();
+    const isDeveloper = emailLower === "debanhivillanueva@colegiomaranatha.edu.mx" ||
+                        emailLower.includes("debanhivillanueva@colegiomaranatha") ||
+                        emailLower.includes("debanhivillanuevacolegiomaranatha");
+    if (!isDeveloper) throw new Error("Acceso denegado. Solo desarrolladores pueden realizar esta acción.");
+
+    const { error } = await supabase
+      .from("books")
+      .delete()
+      .eq("id", data.id);
+
+    if (error) throw new Error(error.message);
+    return { success: true };
   });

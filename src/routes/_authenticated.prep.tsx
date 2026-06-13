@@ -150,7 +150,7 @@ function Prep() {
                   </div>
                 ) : !books || books.length === 0 ? (
                   <div className="py-6 text-center text-sm text-muted-foreground border border-dashed border-border rounded-2xl p-4">
-                    {t("prep.noBooksAvailable", { defaultValue: "No hay libros disponibles. Súbelos desde el panel de Supabase." })}
+                    {t("prep.noBooksAvailable", { defaultValue: "No hay libros disponibles. Súbelos desde el panel de administración de libros." })}
                   </div>
                 ) : (
                   <>
