@@ -640,3 +640,117 @@ export const extractTextFromMedia = createServerFn({ method: "POST" })
     return { text: extracted.trim() };
   });
 
+async function fetchUrlContent(urlStr: string): Promise<string> {
+  try {
+    const response = await fetch(urlStr);
+    if (!response.ok) throw new Error("No se pudo obtener el contenido de la página.");
+    const html = await response.text();
+    // Simple text extraction from HTML
+    const cleanText = html
+      .replace(/<script[^>]*>([\s\S]*?)<\/script>/gi, "")
+      .replace(/<style[^>]*>([\s\S]*?)<\/style>/gi, "")
+      .replace(/<[^>]+>/g, " ")
+      .replace(/\s+/g, " ")
+      .trim();
+    if (!cleanText) throw new Error("La página no tiene texto legible.");
+    return cleanText.slice(0, 12000); // Limit to 12k characters
+  } catch (e) {
+    throw new Error(e instanceof Error ? e.message : "Error al descargar el contenido del enlace. Asegúrate de que la URL sea pública.");
+  }
+}
+
+const CustomQuizSchema = z.object({
+  content: z.string().min(1),
+  count: z.number().int().min(3).max(10).default(5),
+  level: z.string().max(60).optional(),
+  subject: z.string().max(60).optional(),
+  sourceType: z.enum(["text", "file", "link"]),
+  sourceName: z.string().optional(),
+});
+
+export const generateCustomQuiz = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => CustomQuizSchema.parse(input))
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey) throw new Error("API de Gemini no configurada en el servidor");
+
+    let finalContent = data.content;
+    if (data.sourceType === "link") {
+      finalContent = await fetchUrlContent(data.content);
+    }
+
+    const langLabel = "Spanish";
+    const levelClause = data.level ? ` Target school level: ${data.level}.` : "";
+    const subjectClause = data.subject ? ` Academic subject field: ${data.subject}.` : "";
+    
+    const systemInstruction = `Eres un creador de exámenes académicos profesional. Genera un examen estructurado de opción múltiple de ${data.count} preguntas en el idioma ${langLabel}.${levelClause}${subjectClause} Cada pregunta debe tener 4 opciones, y exactamente una de ellas debe ser correcta.`;
+    const userPrompt = `Basándote únicamente en el siguiente material académico provisto por el estudiante, genera el examen:\n\n${finalContent}`;
+
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+    const res = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        contents: [{ role: "user", parts: [{ text: userPrompt }] }],
+        generationConfig: {
+          responseMimeType: "application/json",
+          responseSchema: {
+            type: "OBJECT",
+            properties: {
+              questions: {
+                type: "ARRAY",
+                items: {
+                  type: "OBJECT",
+                  properties: {
+                    q: { type: "STRING" },
+                    options: { type: "ARRAY", items: { type: "STRING" } },
+                    correctIndex: { type: "INTEGER" },
+                    explanation: { type: "STRING" }
+                  },
+                  required: ["q", "options", "correctIndex", "explanation"]
+                }
+              }
+            },
+            required: ["questions"]
+          }
+        },
+        systemInstruction: { parts: [{ text: systemInstruction }] }
+      })
+    });
+
+    if (!res.ok) {
+      const errText = await res.text();
+      throw new Error(`Error de Gemini: ${res.statusText} - ${errText}`);
+    }
+
+    const json = await res.json() as any;
+    const questionsText = json.candidates?.[0]?.content?.parts?.[0]?.text;
+    if (!questionsText) throw new Error("La IA no generó ninguna respuesta.");
+
+    let parsed;
+    try {
+      parsed = JSON.parse(questionsText);
+    } catch (e) {
+      throw new Error("La IA devolvió un formato no válido.");
+    }
+
+    if (!parsed.questions || parsed.questions.length === 0) {
+      throw new Error("El examen devuelto por la IA no tiene preguntas válidas.");
+    }
+
+    const quizTopic = data.sourceName || "Material Personalizado (Pro)";
+    const { data: row, error } = await supabase.from("quizzes").insert({
+      user_id: userId,
+      category: "language",
+      topic: quizTopic,
+      questions: parsed.questions,
+      language: "es"
+    }).select("id").single();
+
+    if (error) throw new Error(error.message);
+    return { quizId: row.id };
+  });
+
+

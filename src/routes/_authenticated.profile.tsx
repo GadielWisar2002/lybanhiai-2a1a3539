@@ -48,6 +48,7 @@ function Profile() {
   const [updatingPassword, setUpdatingPassword] = useState(false);
   const [updatingGender, setUpdatingGender] = useState(false);
   const [showPasswordFields, setShowPasswordFields] = useState(false);
+  const [dummyState, setDummyState] = useState(0);
 
   const currentGender = user?.user_metadata?.gender || "other";
 
@@ -219,6 +220,40 @@ function Profile() {
               </button>
             ))}
           </div>
+        </section>
+
+        {/* Sección de Suscripción PRO */}
+        <section className="mt-6 rounded-2xl border border-border bg-card p-4 shadow-sm relative overflow-hidden">
+          <div className="absolute right-0 top-0 bg-primary/15 text-primary text-[10px] font-bold px-3 py-1 rounded-bl-xl uppercase tracking-wider">
+            Simulador
+          </div>
+          <div className="mb-3 flex items-center gap-2">
+            <Trophy className="size-4 text-gold-foreground" />
+            <h2 className="font-semibold">Membresía Lybanhi Pro</h2>
+          </div>
+          <p className="text-xs text-muted-foreground mb-3 leading-relaxed">
+            Activa el plan Pro para subir tus propios archivos (PDF, fotos de apuntes, texto copiado, links web) en la sección de quizzes.
+          </p>
+          <button
+            onClick={() => {
+              const currentPro = window.localStorage.getItem("lybanhi_pro_status") === "true";
+              const nextPro = !currentPro;
+              window.localStorage.setItem("lybanhi_pro_status", nextPro ? "true" : "false");
+              setDummyState(prev => prev + 1); // trigger state update
+              if (nextPro) {
+                toast.success("¡Plan Lybanhi Pro activado con éxito! ✨ (Modo pruebas)");
+              } else {
+                toast.success("Plan Lybanhi Pro desactivado.");
+              }
+            }}
+            className={`h-11 w-full rounded-xl text-sm font-semibold transition active:scale-[0.99] cursor-pointer text-center flex items-center justify-center gap-2 ${
+              window.localStorage.getItem("lybanhi_pro_status") === "true"
+                ? "bg-emerald-500/15 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/20"
+                : "bg-primary text-primary-foreground hover:opacity-90 shadow-sm"
+            }`}
+          >
+            {window.localStorage.getItem("lybanhi_pro_status") === "true" ? "Plan Pro Activo (Haz clic para desactivar)" : "Activar Plan Pro"}
+          </button>
         </section>
 
         {/* Sección de Seguridad */}

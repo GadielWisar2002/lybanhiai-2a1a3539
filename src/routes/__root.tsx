@@ -78,7 +78,8 @@ function LangSync() {
     const savedLanguage = window.localStorage.getItem("lybanhi_lang");
     const browserLanguage = window.navigator.language.slice(0, 2);
     const nextLanguage = savedLanguage ?? (["es", "en", "fr"].includes(browserLanguage) ? browserLanguage : "es");
-    if (nextLanguage !== i18n.language) void i18n.changeLanguage(nextLanguage);
+    const currentLang = i18n.language ? i18n.language.slice(0, 2) : "";
+    if (nextLanguage !== currentLang) void i18n.changeLanguage(nextLanguage);
   }, [i18n]);
 
   useEffect(() => {

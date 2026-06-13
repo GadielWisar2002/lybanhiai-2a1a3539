@@ -3,7 +3,7 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useTranslation } from "react-i18next";
 import { useState, useEffect } from "react";
-import { generateQuiz, listBooks, generateBookQuiz } from "@/lib/quiz.functions";
+import { generateQuiz, listBooks, generateBookQuiz, generateCustomQuiz, extractTextFromMedia } from "@/lib/quiz.functions";
 import { AppHeader } from "@/components/AppHeader";
 import { Brain, Calculator, Languages, GraduationCap, BookOpen, Sparkles, X, ArrowUpRight, FlaskConical } from "lucide-react";
 import { toast } from "sonner";
@@ -22,7 +22,9 @@ function Prep() {
   const navigate = useNavigate();
   const gen = useServerFn(generateQuiz);
   const genBook = useServerFn(generateBookQuiz);
+  const genCustom = useServerFn(generateCustomQuiz);
   const listBks = useServerFn(listBooks);
+  const getExtractTextFn = useServerFn(extractTextFromMedia);
   const lang = (i18n.language.slice(0, 2) as Lang) in TOPICS.math ? (i18n.language.slice(0, 2) as Lang) : "es";
 
   const [openCat, setOpenCat] = useState<Cat | "book" | null>(null);
@@ -32,6 +34,15 @@ function Prep() {
   const [selectedSubject, setSelectedSubject] = useState<string>("");
   const [selectedChapterId, setSelectedChapterId] = useState<string>("");
 
+  // Custom study materials states (PRO Feature)
+  const [isPro, setIsPro] = useState(false);
+  const [activeTab, setActiveTab] = useState<"school" | "custom">("school");
+  const [customType, setCustomType] = useState<"text" | "file" | "link">("text");
+  const [customText, setCustomText] = useState("");
+  const [customUrl, setCustomUrl] = useState("");
+  const [isExtracting, setIsExtracting] = useState(false);
+  const [materialName, setMaterialName] = useState("");
+
   useEffect(() => {
     setLevel(LEVELS[lang][1].value);
     if (openCat) {
@@ -40,6 +51,15 @@ function Prep() {
       } else {
         setSelectedSubject("");
         setSelectedChapterId("");
+        
+        // Sync PRO plan status and reset values when opening Books drawer
+        const proStatus = typeof window !== "undefined" && window.localStorage.getItem("lybanhi_pro_status") === "true";
+        setIsPro(proStatus);
+        setActiveTab("school");
+        setCustomType("text");
+        setCustomText("");
+        setCustomUrl("");
+        setMaterialName("");
       }
     }
   }, [lang, openCat]);
@@ -80,6 +100,16 @@ function Prep() {
   const mutBook = useMutation({
     mutationFn: (vars: { bookId: string; count: number; level: string }) =>
       genBook({ data: { ...vars, language: lang } }),
+    onSuccess: ({ quizId }) => {
+      setOpenCat(null);
+      navigate({ to: "/prep/quiz/$quizId", params: { quizId } });
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Error"),
+  });
+
+  const mutCustom = useMutation({
+    mutationFn: (vars: { content: string; count: number; level: string; subject: string; sourceType: "text" | "file" | "link"; sourceName: string }) =>
+      genCustom({ data: vars }),
     onSuccess: ({ quizId }) => {
       setOpenCat(null);
       navigate({ to: "/prep/quiz/$quizId", params: { quizId } });
@@ -162,111 +192,407 @@ function Prep() {
             </div>
 
             {openCat === "book" ? (
-              <div className="space-y-4 mt-4">
-                {loadingBks ? (
-                  <div className="py-8 text-center text-sm text-muted-foreground">
-                    <div className="size-6 animate-spin rounded-full border-2 border-primary border-t-transparent mx-auto mb-2" />
-                    {t("prep.loadingBooks", { defaultValue: "Cargando libros..." })}
-                  </div>
-                ) : !books || books.length === 0 ? (
-                  <div className="py-6 text-center text-sm text-muted-foreground border border-dashed border-border rounded-2xl p-4">
-                    {t("prep.noBooksAvailable", { defaultValue: "No hay libros disponibles. Súbelos desde el panel de administración de libros." })}
-                  </div>
-                ) : (
+              <div className="space-y-4 mt-4 animate-fade-in">
+                {/* Tab selector */}
+                <div className="grid grid-cols-2 gap-1 rounded-2xl bg-muted p-1 text-xs font-semibold">
+                  <button
+                    onClick={() => setActiveTab("school")}
+                    className={`rounded-xl py-2 transition active:scale-[0.98] ${
+                      activeTab === "school" 
+                        ? "bg-card text-foreground shadow-sm" 
+                        : "text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    Material escolar
+                  </button>
+                  <button
+                    onClick={() => setActiveTab("custom")}
+                    className={`rounded-xl py-2 transition active:scale-[0.98] flex items-center justify-center gap-1 ${
+                      activeTab === "custom" 
+                        ? "bg-card text-foreground shadow-sm" 
+                        : "text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    Mi Material {!isPro && "🔒"}
+                  </button>
+                </div>
+
+                {activeTab === "school" ? (
                   <>
-                    {/* Nivel escolar (Grado) */}
-                    <label className="block rounded-2xl border border-border p-3">
-                      <span className="block text-[10px] font-semibold tracking-wider text-muted-foreground uppercase">
-                        {t("prep.level", { defaultValue: "Nivel escolar" })}
-                      </span>
-                      <select
-                        value={level}
-                        onChange={(e) => {
-                          setLevel(e.target.value);
-                          setSelectedChapterId("");
-                        }}
-                        className="mt-1 w-full bg-transparent text-sm font-medium outline-none cursor-pointer"
-                      >
-                        {LEVELS[lang].map((l) => (
-                          <option key={l.value} value={l.value}>{l.label}</option>
-                        ))}
-                      </select>
-                    </label>
+                    {loadingBks ? (
+                      <div className="py-8 text-center text-sm text-muted-foreground">
+                        <div className="size-6 animate-spin rounded-full border-2 border-primary border-t-transparent mx-auto mb-2" />
+                        {t("prep.loadingBooks", { defaultValue: "Cargando libros..." })}
+                      </div>
+                    ) : !books || books.length === 0 ? (
+                      <div className="py-6 text-center text-sm text-muted-foreground border border-dashed border-border rounded-2xl p-4">
+                        {t("prep.noBooksAvailable", { defaultValue: "No hay libros disponibles. Súbelos desde el panel de administración de libros." })}
+                      </div>
+                    ) : (
+                      <>
+                        {/* Nivel escolar (Grado) */}
+                        <label className="block rounded-2xl border border-border p-3">
+                          <span className="block text-[10px] font-semibold tracking-wider text-muted-foreground uppercase">
+                            {t("prep.level", { defaultValue: "Nivel escolar" })}
+                          </span>
+                          <select
+                            value={level}
+                            onChange={(e) => {
+                              setLevel(e.target.value);
+                              setSelectedChapterId("");
+                            }}
+                            className="mt-1 w-full bg-transparent text-sm font-medium outline-none cursor-pointer"
+                          >
+                            {LEVELS[lang].map((l) => (
+                              <option key={l.value} value={l.value}>{l.label}</option>
+                            ))}
+                          </select>
+                        </label>
 
-                    {/* Materia (Categoría) */}
-                    <label className="block rounded-2xl border border-border p-3">
-                      <span className="block text-[10px] font-semibold tracking-wider text-muted-foreground uppercase">
-                        {t("prep.selectSubject", { defaultValue: "Seleccionar materia" })}
-                      </span>
-                      <select
-                        value={selectedSubject}
-                        onChange={(e) => {
-                          setSelectedSubject(e.target.value);
-                          setSelectedChapterId("");
-                        }}
-                        className="mt-1 w-full bg-transparent text-sm font-medium outline-none cursor-pointer"
-                      >
-                        <option value="">-- {t("prep.selectSubject", { defaultValue: "Seleccionar materia" })} --</option>
-                        {SUBJECTS.map(s => (
-                          <option key={s.value} value={s.value}>{s.label}</option>
-                        ))}
-                      </select>
-                    </label>
+                        {/* Materia (Categoría) */}
+                        <label className="block rounded-2xl border border-border p-3">
+                          <span className="block text-[10px] font-semibold tracking-wider text-muted-foreground uppercase">
+                            {t("prep.selectSubject", { defaultValue: "Seleccionar materia" })}
+                          </span>
+                          <select
+                            value={selectedSubject}
+                            onChange={(e) => {
+                              setSelectedSubject(e.target.value);
+                              setSelectedChapterId("");
+                            }}
+                            className="mt-1 w-full bg-transparent text-sm font-medium outline-none cursor-pointer"
+                          >
+                            <option value="">-- {t("prep.selectSubject", { defaultValue: "Seleccionar materia" })} --</option>
+                            {SUBJECTS.map(s => (
+                              <option key={s.value} value={s.value}>{s.label}</option>
+                            ))}
+                          </select>
+                        </label>
 
-                    {/* Texto de estudio */}
-                    {selectedSubject && (
-                      <label className="block rounded-2xl border border-border p-3 animate-fade-in">
-                        <span className="block text-[10px] font-semibold tracking-wider text-muted-foreground uppercase">
-                          {t("prep.selectText", { defaultValue: "Texto de estudio" })}
-                        </span>
-                        <select
-                          value={selectedChapterId}
-                          onChange={(e) => setSelectedChapterId(e.target.value)}
-                          className="mt-1 w-full bg-transparent text-sm font-medium outline-none cursor-pointer"
+                        {/* Texto de estudio */}
+                        {selectedSubject && (
+                          <label className="block rounded-2xl border border-border p-3 animate-fade-in">
+                            <span className="block text-[10px] font-semibold tracking-wider text-muted-foreground uppercase">
+                              {t("prep.selectText", { defaultValue: "Texto de estudio" })}
+                            </span>
+                            <select
+                              value={selectedChapterId}
+                              onChange={(e) => setSelectedChapterId(e.target.value)}
+                              className="mt-1 w-full bg-transparent text-sm font-medium outline-none cursor-pointer"
+                            >
+                              <option value="">-- {t("prep.selectTextPlaceholder", { defaultValue: "Seleccionar texto de estudio" })} --</option>
+                              {filteredTexts.map((txt, index) => {
+                                const contentSnippet = txt.content.length > 50 
+                                  ? txt.content.slice(0, 50) + "..." 
+                                  : txt.content;
+                                return (
+                                  <option key={txt.id} value={txt.id}>
+                                    Texto #{index + 1} ({contentSnippet})
+                                  </option>
+                                );
+                              })}
+                            </select>
+                          </label>
+                        )}
+
+                        <div className="mt-3">
+                          <label className="block rounded-2xl border border-border p-3">
+                            <span className="block text-[10px] font-semibold tracking-wider text-muted-foreground uppercase">
+                              {t("prep.count", { defaultValue: "Número de preguntas" })}
+                            </span>
+                            <select
+                              value={count}
+                              onChange={(e) => setCount(Number(e.target.value))}
+                              className="mt-1 w-full bg-transparent text-sm font-medium outline-none cursor-pointer"
+                            >
+                              {COUNTS.map((n) => (
+                                <option key={n} value={n}>
+                                  {n} {t("prep.questionsWord", { defaultValue: "preguntas" })}
+                                </option>
+                              ))}
+                            </select>
+                          </label>
+                        </div>
+
+                        <button
+                          disabled={mutBook.isPending || !selectedChapterId}
+                          onClick={() => mutBook.mutate({ bookId: selectedChapterId, count, level })}
+                          className="mt-4 inline-flex h-12 w-full items-center justify-center gap-2 rounded-2xl border border-border bg-card font-semibold transition active:scale-[0.99] disabled:opacity-60 cursor-pointer animate-fade-in"
                         >
-                          <option value="">-- {t("prep.selectTextPlaceholder", { defaultValue: "Seleccionar texto de estudio" })} --</option>
-                          {filteredTexts.map((txt, index) => {
-                            const contentSnippet = txt.content.length > 50 
-                              ? txt.content.slice(0, 50) + "..." 
-                              : txt.content;
-                            return (
-                              <option key={txt.id} value={txt.id}>
-                                Texto #{index + 1} ({contentSnippet})
-                              </option>
-                            );
-                          })}
-                        </select>
-                      </label>
+                          <Sparkles className="size-4" />
+                          {t("prep.generateQuiz")}
+                          <ArrowUpRight className="size-4" />
+                        </button>
+                      </>
                     )}
-
-                    <div className="mt-3">
-                      <label className="block rounded-2xl border border-border p-3">
-                        <span className="block text-[10px] font-semibold tracking-wider text-muted-foreground uppercase">
-                          {t("prep.count", { defaultValue: "Número de preguntas" })}
-                        </span>
-                        <select
-                          value={count}
-                          onChange={(e) => setCount(Number(e.target.value))}
-                          className="mt-1 w-full bg-transparent text-sm font-medium outline-none cursor-pointer"
+                  </>
+                ) : (
+                  /* Custom Material (PRO Feature) */
+                  <>
+                    {!isPro ? (
+                      <div className="rounded-2xl border border-border bg-card p-5 text-center shadow-[var(--shadow-card)] space-y-4 py-8 animate-fade-in">
+                        <div className="mx-auto grid size-12 place-items-center rounded-2xl bg-primary/10 text-primary">
+                          <Sparkles className="size-6 animate-pulse" />
+                        </div>
+                        <h3 className="font-display font-bold text-lg">Estudia a tu manera con Lybanhi Pro ✨</h3>
+                        <p className="text-xs text-muted-foreground max-w-xs mx-auto leading-relaxed">
+                          Sube tus propios archivos PDF, fotos de tus cuadernos/libros, copia y pega textos o ingresa enlaces de páginas web educativas.
+                        </p>
+                        <div className="grid grid-cols-2 gap-2 text-left text-[11px] font-semibold text-slate-600 dark:text-slate-300 max-w-xs mx-auto py-2">
+                          <div className="flex items-center gap-1.5">📸 Fotos e imágenes</div>
+                          <div className="flex items-center gap-1.5">📄 Documentos PDF</div>
+                          <div className="flex items-center gap-1.5">🔗 Enlaces Web</div>
+                          <div className="flex items-center gap-1.5">✍️ Copia y pega</div>
+                        </div>
+                        <button
+                          onClick={() => {
+                            window.localStorage.setItem("lybanhi_pro_status", "true");
+                            setIsPro(true);
+                            toast.success("¡Plan Lybanhi Pro activado con éxito! ✨ (Modo pruebas)");
+                          }}
+                          className="w-full h-11 rounded-xl bg-primary text-primary-foreground font-semibold text-sm transition hover:opacity-90 active:scale-95 flex items-center justify-center gap-2"
                         >
-                          {COUNTS.map((n) => (
-                            <option key={n} value={n}>
-                              {n} {t("prep.questionsWord", { defaultValue: "preguntas" })}
-                            </option>
-                          ))}
-                        </select>
-                      </label>
-                    </div>
+                          <Sparkles className="size-4" />
+                          Probar Pro Gratis
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="space-y-4 animate-fade-in">
+                        {/* Selector de tipo de material */}
+                        <div>
+                          <label className="text-[10px] font-bold text-muted-foreground block mb-2 uppercase px-0.5">Tipo de entrada</label>
+                          <div className="grid grid-cols-3 gap-2">
+                            {[
+                              { id: "text", label: "Texto", icon: Sparkles },
+                              { id: "file", label: "Foto / PDF", icon: BookOpen },
+                              { id: "link", label: "Enlace Web", icon: ArrowUpRight }
+                            ].map(type => (
+                              <button
+                                key={type.id}
+                                onClick={() => {
+                                  setCustomType(type.id as any);
+                                  setCustomText("");
+                                  setCustomUrl("");
+                                }}
+                                className={`flex items-center justify-center gap-1.5 h-10 rounded-xl border text-xs font-semibold transition ${
+                                  customType === type.id 
+                                    ? "border-primary bg-primary/10 text-primary" 
+                                    : "border-border bg-card text-muted-foreground hover:text-foreground"
+                                }`}
+                              >
+                                <type.icon className="size-3.5" />
+                                {type.label}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
 
-                    <button
-                      disabled={mutBook.isPending || !selectedChapterId}
-                      onClick={() => mutBook.mutate({ bookId: selectedChapterId, count, level })}
-                      className="mt-4 inline-flex h-12 w-full items-center justify-center gap-2 rounded-2xl border border-border bg-card font-semibold transition active:scale-[0.99] disabled:opacity-60 cursor-pointer"
-                    >
-                      <Sparkles className="size-4" />
-                      {t("prep.generateQuiz")}
-                      <ArrowUpRight className="size-4" />
-                    </button>
+                        {/* Input de Nombre del Material */}
+                        <label className="block rounded-2xl border border-border p-3">
+                          <span className="block text-[10px] font-semibold tracking-wider text-muted-foreground uppercase">
+                            Nombre del material
+                          </span>
+                          <input
+                            type="text"
+                            value={materialName}
+                            onChange={(e) => setMaterialName(e.target.value)}
+                            placeholder="Ej. Apuntes de Biología, Tarea de Química..."
+                            className="mt-1 w-full bg-transparent text-sm font-medium outline-none placeholder:text-muted-foreground"
+                          />
+                        </label>
+
+                        {/* Contexto a la IA */}
+                        <div className="grid grid-cols-2 gap-2">
+                          <label className="block rounded-2xl border border-border p-3">
+                            <span className="block text-[10px] font-semibold tracking-wider text-muted-foreground uppercase">
+                              Nivel escolar
+                            </span>
+                            <select
+                              value={level}
+                              onChange={(e) => setLevel(e.target.value)}
+                              className="mt-1 w-full bg-transparent text-sm font-medium outline-none cursor-pointer"
+                            >
+                              {LEVELS[lang].map((l) => (
+                                <option key={l.value} value={l.value}>{l.label}</option>
+                              ))}
+                            </select>
+                          </label>
+                          <label className="block rounded-2xl border border-border p-3">
+                            <span className="block text-[10px] font-semibold tracking-wider text-muted-foreground uppercase">
+                              Asignatura
+                            </span>
+                            <select
+                              value={selectedSubject}
+                              onChange={(e) => setSelectedSubject(e.target.value)}
+                              className="mt-1 w-full bg-transparent text-sm font-medium outline-none cursor-pointer"
+                            >
+                              <option value="">-- Seleccionar --</option>
+                              {SUBJECTS.map(s => (
+                                <option key={s.value} value={s.value}>{s.label}</option>
+                              ))}
+                            </select>
+                          </label>
+                        </div>
+
+                        {/* Formulario según tipo de material */}
+                        {customType === "text" && (
+                          <div className="space-y-1.5 animate-fade-in">
+                            <label className="text-[10px] font-bold text-muted-foreground block uppercase px-1">Pega tus apuntes o texto</label>
+                            <textarea
+                              required
+                              value={customText}
+                              onChange={(e) => setCustomText(e.target.value)}
+                              placeholder="Pega aquí el contenido que deseas estudiar..."
+                              className="h-32 w-full rounded-2xl border border-border bg-card p-3.5 text-sm text-foreground focus:border-primary focus:outline-none resize-none font-sans"
+                            />
+                          </div>
+                        )}
+
+                        {customType === "file" && (
+                          <div className="space-y-2 animate-fade-in">
+                            <div className="flex justify-between items-center px-1">
+                              <label className="text-[10px] font-bold text-muted-foreground block uppercase">Subir foto o PDF</label>
+                              <label className={`text-xs font-bold text-primary flex items-center gap-1 cursor-pointer hover:underline ${isExtracting ? "opacity-50 pointer-events-none" : ""}`}>
+                                <BookOpen className="size-3.5" />
+                                {isExtracting ? "Procesando..." : "Subir Archivo (Foto, PDF, TXT)"}
+                                <input
+                                  type="file"
+                                  accept=".txt,.pdf,.png,.jpg,.jpeg,.webp"
+                                  onChange={async (e) => {
+                                    const file = e.target.files?.[0];
+                                    if (!file) return;
+                                    const name = file.name.toLowerCase();
+                                    const isTxt = name.endsWith(".txt");
+                                    const isImage = /\.(png|jpe?g|webp)$/i.test(name);
+                                    const isPdf = name.endsWith(".pdf");
+
+                                    if (!isTxt && !isImage && !isPdf) {
+                                      toast.error("Formatos permitidos: .txt, .pdf, .png, .jpg, .jpeg, .webp");
+                                      return;
+                                    }
+
+                                    if (file.size > 10 * 1024 * 1024) {
+                                      toast.error("El archivo no debe superar los 10MB");
+                                      return;
+                                    }
+
+                                    if (!materialName) {
+                                      setMaterialName(file.name.replace(/\.[^/.]+$/, ""));
+                                    }
+
+                                    if (isTxt) {
+                                      const reader = new FileReader();
+                                      reader.onload = (evt) => {
+                                        setCustomText(evt.target?.result as string);
+                                        toast.success("Archivo de texto cargado con éxito");
+                                      };
+                                      reader.readAsText(file);
+                                    } else {
+                                      setIsExtracting(true);
+                                      const toastId = toast.loading("Extrayendo texto con Gemini...");
+                                      try {
+                                        const reader = new FileReader();
+                                        reader.onload = async (evt) => {
+                                          try {
+                                            const dataUrl = evt.target?.result as string;
+                                            const base64Parts = dataUrl.split(",");
+                                            const mType = base64Parts[0].match(/:(.*?);/)?.[1] || file.type;
+                                            const base64Data = base64Parts[1];
+
+                                            const result = await getExtractTextFn({ data: { base64Data, mimeType: mType } });
+                                            if (result?.text) {
+                                              setCustomText(result.text);
+                                              toast.success("Texto extraído con éxito", { id: toastId });
+                                            } else {
+                                              toast.error("No se pudo extraer texto del archivo.", { id: toastId });
+                                            }
+                                          } catch (err) {
+                                            toast.error(err instanceof Error ? err.message : "Error al procesar", { id: toastId });
+                                          } finally {
+                                            setIsExtracting(false);
+                                          }
+                                        };
+                                        reader.readAsDataURL(file);
+                                      } catch (err) {
+                                        toast.error("Error al leer el archivo", { id: toastId });
+                                        setIsExtracting(false);
+                                      }
+                                    }
+                                  }}
+                                  disabled={isExtracting}
+                                  className="hidden"
+                                />
+                              </label>
+                            </div>
+                            <textarea
+                              required
+                              value={customText}
+                              onChange={(e) => setCustomText(e.target.value)}
+                              disabled={isExtracting}
+                              placeholder={isExtracting ? "Extrayendo texto con la IA de Gemini..." : "Sube una imagen o PDF y se mostrará el texto aquí..."}
+                              className="h-32 w-full rounded-2xl border border-border bg-card p-3.5 text-sm text-foreground focus:border-primary focus:outline-none resize-none disabled:opacity-75 font-sans leading-relaxed"
+                            />
+                          </div>
+                        )}
+
+                        {customType === "link" && (
+                          <div className="space-y-1.5 animate-fade-in">
+                            <label className="text-[10px] font-bold text-muted-foreground block uppercase px-1">Enlace de página web</label>
+                            <input
+                              type="url"
+                              required
+                              value={customUrl}
+                              onChange={(e) => setCustomUrl(e.target.value)}
+                              placeholder="Pega la URL de Wikipedia, artículo o blog..."
+                              className="h-11 w-full rounded-2xl border border-border bg-card px-3.5 text-sm text-foreground focus:border-primary focus:outline-none"
+                            />
+                          </div>
+                        )}
+
+                        {/* Número de preguntas */}
+                        <label className="block rounded-2xl border border-border p-3">
+                          <span className="block text-[10px] font-semibold tracking-wider text-muted-foreground uppercase">
+                            Número de preguntas
+                          </span>
+                          <select
+                            value={count}
+                            onChange={(e) => setCount(Number(e.target.value))}
+                            className="mt-1 w-full bg-transparent text-sm font-medium outline-none cursor-pointer"
+                          >
+                            {COUNTS.map((n) => (
+                              <option key={n} value={n}>
+                                {n} preguntas
+                              </option>
+                            ))}
+                          </select>
+                        </label>
+
+                        {/* Botón de Generar Quiz */}
+                        <button
+                          disabled={
+                            mutCustom.isPending || 
+                            isExtracting || 
+                            (customType === "link" ? !customUrl : !customText)
+                          }
+                          onClick={() => {
+                            const contentStr = customType === "link" ? customUrl : customText;
+                            mutCustom.mutate({
+                              content: contentStr,
+                              count,
+                              level,
+                              subject: selectedSubject || "General",
+                              sourceType: customType,
+                              sourceName: materialName.trim() || undefined
+                            });
+                          }}
+                          className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-2xl border border-border bg-card font-semibold transition active:scale-[0.99] disabled:opacity-60 cursor-pointer shadow-sm animate-fade-in"
+                        >
+                          <Sparkles className="size-4" />
+                          Generar Quiz con mi Material ✨
+                          <ArrowUpRight className="size-4" />
+                        </button>
+                      </div>
+                    )}
                   </>
                 )}
               </div>
@@ -342,7 +668,7 @@ function Prep() {
         </div>
       )}
 
-      {(mut.isPending || mutBook.isPending) && (
+      {(mut.isPending || mutBook.isPending || mutCustom.isPending) && (
         <div className="fixed inset-0 z-50 grid place-items-center bg-background/80 backdrop-blur-sm">
           <div className="flex flex-col items-center gap-3 rounded-2xl border border-border bg-card px-6 py-5 shadow-[var(--shadow-card)]">
             <div className="size-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />

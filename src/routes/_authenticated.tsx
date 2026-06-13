@@ -60,7 +60,8 @@ function AuthLayout() {
             );
         }
       } else {
-        if (i18n.language !== profile.language) {
+        const currentLang = i18n.language ? i18n.language.slice(0, 2) : "";
+        if (currentLang !== profile.language) {
           i18n.changeLanguage(profile.language);
         }
       }
