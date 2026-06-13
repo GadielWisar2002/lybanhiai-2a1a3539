@@ -83,7 +83,7 @@ function AdminBooks() {
 
   // Mutations
   const createMut = useMutation({
-    mutationFn: (vars: { content: string; grade?: string; subject?: string }) => createChapter({ data: vars }),
+    mutationFn: (vars: { content: string; grade?: string | null; subject?: string | null }) => createChapter({ data: vars }),
     onSuccess: () => {
       toast.success("Texto guardado con éxito");
       resetForm();
@@ -93,7 +93,7 @@ function AdminBooks() {
   });
 
   const updateMut = useMutation({
-    mutationFn: (vars: { id: string; content: string; grade?: string; subject?: string }) => updateChapter({ data: vars }),
+    mutationFn: (vars: { id: string; content: string; grade?: string | null; subject?: string | null }) => updateChapter({ data: vars }),
     onSuccess: () => {
       toast.success("Texto actualizado con éxito");
       resetForm();
@@ -142,15 +142,17 @@ function AdminBooks() {
         .from("books")
         .select("content, grade, subject")
         .eq("id", bookId)
-        .single();
+        .maybeSingle();
       if (error) throw error;
-      if (data) {
-        setEditingId(bookId);
-        setContent(data.content);
-        setGrade(data.grade ?? "");
-        setSubject(data.subject ?? "");
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+      if (!data) {
+        toast.error("El texto ya no está disponible");
+        return;
       }
+      setEditingId(bookId);
+      setContent(data.content);
+      setGrade(data.grade ?? "");
+      setSubject(data.subject ?? "");
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     } catch (err) {
       toast.error("Error al cargar detalles del texto");
       console.error(err);
@@ -202,7 +204,8 @@ function AdminBooks() {
   }
 
   // Group books by Grade and Subject
-  const groupedByGradeAndSubject: Record<string, Record<string, typeof books>> = {};
+  type Book = NonNullable<typeof books>[number];
+  const groupedByGradeAndSubject: Record<string, Record<string, Book[]>> = {};
   
   (books ?? []).forEach(b => {
     const g = b.grade || "Sin grado";
@@ -219,7 +222,7 @@ function AdminBooks() {
   // Filter grouped books by search query
   const filteredGroupedBooks = Object.keys(groupedByGradeAndSubject).reduce((accGrade, gradeKey) => {
     const subjectsMap = groupedByGradeAndSubject[gradeKey];
-    const filteredSubjectsMap: Record<string, typeof books> = {};
+    const filteredSubjectsMap: Record<string, Book[]> = {};
     
     Object.keys(subjectsMap).forEach(subjectKey => {
       const textsList = subjectsMap[subjectKey];
@@ -244,7 +247,7 @@ function AdminBooks() {
       accGrade[gradeKey] = filteredSubjectsMap;
     }
     return accGrade;
-  }, {} as Record<string, Record<string, typeof books>>);
+  }, {} as Record<string, Record<string, Book[]>>);
 
   return (
     <>
