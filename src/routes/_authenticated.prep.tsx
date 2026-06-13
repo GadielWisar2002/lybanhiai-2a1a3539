@@ -29,7 +29,6 @@ function Prep() {
   const [level, setLevel] = useState(LEVELS[lang][1].value);
   const [count, setCount] = useState<number>(5);
   const [topic, setTopic] = useState<string>("");
-  const [selectedGrade, setSelectedGrade] = useState<string>("");
   const [selectedSubject, setSelectedSubject] = useState<string>("");
   const [selectedBookTitle, setSelectedBookTitle] = useState<string>("");
   const [selectedChapterId, setSelectedChapterId] = useState<string>("");
@@ -40,7 +39,6 @@ function Prep() {
       if (openCat !== "book") {
         setTopic(TOPICS[openCat][lang][0]);
       } else {
-        setSelectedGrade("");
         setSelectedSubject("");
         setSelectedBookTitle("");
         setSelectedChapterId("");
@@ -54,28 +52,23 @@ function Prep() {
     enabled: openCat === "book",
   });
 
-  // Unique list of grades
-  const uniqueGrades = Array.from(
-    new Set((books ?? []).map(b => b.grade || "Sin grado"))
-  ).filter(Boolean);
+  const SUBJECTS = [
+    { value: "math", label: t("prep.math") },
+    { value: "logic", label: t("prep.logic") },
+    { value: "language", label: t("prep.language") },
+    { value: "toefl", label: "TOEFL" },
+    { value: "cambridge", label: "Cambridge" },
+    { value: "career", label: t("prep.career") },
+  ];
 
-  // Unique list of subjects filtered by the selected grade
-  const filteredSubjects = Array.from(
-    new Set(
-      (books ?? [])
-        .filter(b => !selectedGrade || (b.grade || "Sin grado") === selectedGrade)
-        .map(b => b.subject || "Sin materia")
-    )
-  ).filter(Boolean);
-
-  // Unique list of books filtered by grade and subject
+  // Unique list of books filtered by standard level and subject
   const filteredBooks = Array.from(
     new Set(
       (books ?? [])
         .filter(b => {
-          const g = b.grade || "Sin grado";
-          const s = b.subject || "Sin materia";
-          return (!selectedGrade || g === selectedGrade) && (!selectedSubject || s === selectedSubject);
+          const matchesGrade = !level || b.grade === level;
+          const matchesSubject = !selectedSubject || b.subject === selectedSubject;
+          return matchesGrade && matchesSubject;
         })
         .map(b => b.title)
     )
@@ -188,50 +181,46 @@ function Prep() {
                   </div>
                 ) : (
                   <>
-                    {/* Grado */}
+                    {/* Nivel escolar (Grado) */}
                     <label className="block rounded-2xl border border-border p-3">
                       <span className="block text-[10px] font-semibold tracking-wider text-muted-foreground uppercase">
-                        {t("prep.selectGrade", { defaultValue: "Seleccionar grado" })}
+                        {t("prep.level", { defaultValue: "Nivel escolar" })}
                       </span>
                       <select
-                        value={selectedGrade}
+                        value={level}
                         onChange={(e) => {
-                          setSelectedGrade(e.target.value);
-                          setSelectedSubject("");
+                          setLevel(e.target.value);
                           setSelectedBookTitle("");
                           setSelectedChapterId("");
                         }}
-                        className="mt-1 w-full bg-transparent text-sm font-medium outline-none"
+                        className="mt-1 w-full bg-transparent text-sm font-medium outline-none cursor-pointer"
                       >
-                        <option value="">-- {t("prep.selectGrade", { defaultValue: "Seleccionar grado" })} --</option>
-                        {uniqueGrades.map(grade => (
-                          <option key={grade} value={grade}>{grade}</option>
+                        {LEVELS[lang].map((l) => (
+                          <option key={l.value} value={l.value}>{l.label}</option>
                         ))}
                       </select>
                     </label>
 
-                    {/* Materia */}
-                    {selectedGrade && (
-                      <label className="block rounded-2xl border border-border p-3 animate-fade-in">
-                        <span className="block text-[10px] font-semibold tracking-wider text-muted-foreground uppercase">
-                          {t("prep.selectSubject", { defaultValue: "Seleccionar materia" })}
-                        </span>
-                        <select
-                          value={selectedSubject}
-                          onChange={(e) => {
-                            setSelectedSubject(e.target.value);
-                            setSelectedBookTitle("");
-                            setSelectedChapterId("");
-                          }}
-                          className="mt-1 w-full bg-transparent text-sm font-medium outline-none"
-                        >
-                          <option value="">-- {t("prep.selectSubject", { defaultValue: "Seleccionar materia" })} --</option>
-                          {filteredSubjects.map(subject => (
-                            <option key={subject} value={subject}>{subject}</option>
-                          ))}
-                        </select>
-                      </label>
-                    )}
+                    {/* Materia (Categoría) */}
+                    <label className="block rounded-2xl border border-border p-3">
+                      <span className="block text-[10px] font-semibold tracking-wider text-muted-foreground uppercase">
+                        {t("prep.selectSubject", { defaultValue: "Seleccionar materia" })}
+                      </span>
+                      <select
+                        value={selectedSubject}
+                        onChange={(e) => {
+                          setSelectedSubject(e.target.value);
+                          setSelectedBookTitle("");
+                          setSelectedChapterId("");
+                        }}
+                        className="mt-1 w-full bg-transparent text-sm font-medium outline-none cursor-pointer"
+                      >
+                        <option value="">-- {t("prep.selectSubject", { defaultValue: "Seleccionar materia" })} --</option>
+                        {SUBJECTS.map(s => (
+                          <option key={s.value} value={s.value}>{s.label}</option>
+                        ))}
+                      </select>
+                    </label>
 
                     {/* Libro */}
                     {selectedSubject && (
@@ -245,7 +234,7 @@ function Prep() {
                             setSelectedBookTitle(e.target.value);
                             setSelectedChapterId("");
                           }}
-                          className="mt-1 w-full bg-transparent text-sm font-medium outline-none"
+                          className="mt-1 w-full bg-transparent text-sm font-medium outline-none cursor-pointer"
                         >
                           <option value="">-- {t("prep.selectBook", { defaultValue: "Seleccionar libro" })} --</option>
                           {filteredBooks.map(title => (
@@ -264,16 +253,14 @@ function Prep() {
                         <select
                           value={selectedChapterId}
                           onChange={(e) => setSelectedChapterId(e.target.value)}
-                          className="mt-1 w-full bg-transparent text-sm font-medium outline-none"
+                          className="mt-1 w-full bg-transparent text-sm font-medium outline-none cursor-pointer"
                         >
                           <option value="">-- {t("prep.selectChapter", { defaultValue: "Seleccionar capítulo" })} --</option>
                           {(books ?? [])
                             .filter(b => {
-                              const g = b.grade || "Sin grado";
-                              const s = b.subject || "Sin materia";
-                              return b.title === selectedBookTitle &&
-                                     (!selectedGrade || g === selectedGrade) &&
-                                     (!selectedSubject || s === selectedSubject);
+                              const matchesGrade = !level || b.grade === level;
+                              const matchesSubject = !selectedSubject || b.subject === selectedSubject;
+                              return b.title === selectedBookTitle && matchesGrade && matchesSubject;
                             })
                             .map(b => (
                               <option key={b.id} value={b.id}>{b.chapter_name}</option>
@@ -282,29 +269,15 @@ function Prep() {
                       </label>
                     )}
 
-                    <div className="grid grid-cols-2 gap-3 mt-3">
-                      <label className="rounded-2xl border border-border p-3">
+                    <div className="mt-3">
+                      <label className="block rounded-2xl border border-border p-3">
                         <span className="block text-[10px] font-semibold tracking-wider text-muted-foreground uppercase">
-                          {t("prep.level", { defaultValue: "Nivel escolar" }).toUpperCase()}
-                        </span>
-                        <select
-                          value={level}
-                          onChange={(e) => setLevel(e.target.value)}
-                          className="mt-1 w-full bg-transparent text-sm font-medium outline-none"
-                        >
-                          {LEVELS[lang].map((l) => (
-                            <option key={l.value} value={l.value}>{l.label}</option>
-                          ))}
-                        </select>
-                      </label>
-                      <label className="rounded-2xl border border-border p-3">
-                        <span className="block text-[10px] font-semibold tracking-wider text-muted-foreground uppercase">
-                          {t("prep.count", { defaultValue: "Número de preguntas" }).toUpperCase()}
+                          {t("prep.count", { defaultValue: "Número de preguntas" })}
                         </span>
                         <select
                           value={count}
                           onChange={(e) => setCount(Number(e.target.value))}
-                          className="mt-1 w-full bg-transparent text-sm font-medium outline-none"
+                          className="mt-1 w-full bg-transparent text-sm font-medium outline-none cursor-pointer"
                         >
                           {COUNTS.map((n) => (
                             <option key={n} value={n}>

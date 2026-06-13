@@ -5,6 +5,16 @@ import { useTranslation } from "react-i18next";
 import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { AppHeader } from "@/components/AppHeader";
+import { LEVELS } from "@/lib/topics";
+
+const SUBJECTS = [
+  { value: "math", label: "Matemáticas" },
+  { value: "logic", label: "Lógica" },
+  { value: "language", label: "Lenguaje" },
+  { value: "toefl", label: "TOEFL" },
+  { value: "cambridge", label: "Cambridge" },
+  { value: "career", label: "Carrera" },
+];
 import { 
   listBooks, 
   createBookChapter, 
@@ -273,35 +283,29 @@ function AdminBooks() {
                 <div className="grid grid-cols-2 gap-2">
                   <div className="space-y-1.5">
                     <label className="text-[10px] font-bold text-muted-foreground block px-1">GRADO</label>
-                    <input
-                      type="text"
+                    <select
                       value={grade}
                       onChange={e => setGrade(e.target.value)}
-                      placeholder="Ej. Preparatoria"
-                      list="book-grades"
-                      className="h-11 w-full rounded-xl border border-input bg-card px-3.5 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none"
-                    />
-                    <datalist id="book-grades">
-                      {Array.from(new Set((books ?? []).map(b => b.grade).filter(Boolean))).map(g => (
-                        <option key={g} value={g!} />
+                      className="h-11 w-full rounded-xl border border-input bg-card px-3.5 text-sm text-foreground focus:border-primary focus:outline-none cursor-pointer"
+                    >
+                      <option value="">-- Seleccionar grado --</option>
+                      {LEVELS["es"].map(l => (
+                        <option key={l.value} value={l.value}>{l.label}</option>
                       ))}
-                    </datalist>
+                    </select>
                   </div>
                   <div className="space-y-1.5">
                     <label className="text-[10px] font-bold text-muted-foreground block px-1">MATERIA</label>
-                    <input
-                      type="text"
+                    <select
                       value={subject}
                       onChange={e => setSubject(e.target.value)}
-                      placeholder="Ej. Biología"
-                      list="book-subjects"
-                      className="h-11 w-full rounded-xl border border-input bg-card px-3.5 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none"
-                    />
-                    <datalist id="book-subjects">
-                      {Array.from(new Set((books ?? []).map(b => b.subject).filter(Boolean))).map(s => (
-                        <option key={s} value={s!} />
+                      className="h-11 w-full rounded-xl border border-input bg-card px-3.5 text-sm text-foreground focus:border-primary focus:outline-none cursor-pointer"
+                    >
+                      <option value="">-- Seleccionar materia --</option>
+                      {SUBJECTS.map(s => (
+                        <option key={s.value} value={s.value}>{s.label}</option>
                       ))}
-                    </datalist>
+                    </select>
                   </div>
                 </div>
 
@@ -411,26 +415,29 @@ function AdminBooks() {
                     </div>
 
                     <ul className="divide-y divide-border">
-                      {filteredGroupedBooks[bookTitle].map(chapter => (
-                        <li key={chapter.id} className="px-4 py-3 flex items-center justify-between gap-4 transition hover:bg-muted/10">
-                          <div className="min-w-0 flex-1">
-                            <p className="font-display text-sm font-semibold text-foreground truncate">{chapter.chapter_name}</p>
-                            <div className="flex flex-wrap items-center gap-1.5 mt-1">
-                              {chapter.grade && (
-                                <span className="text-[9px] bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 px-1.5 py-0.5 rounded font-bold">
-                                  {chapter.grade}
+                      {filteredGroupedBooks[bookTitle].map(chapter => {
+                        const gradeLabel = LEVELS["es"].find(l => l.value === chapter.grade)?.label || chapter.grade;
+                        const subjectLabel = SUBJECTS.find(s => s.value === chapter.subject)?.label || chapter.subject;
+                        return (
+                          <li key={chapter.id} className="px-4 py-3 flex items-center justify-between gap-4 transition hover:bg-muted/10">
+                            <div className="min-w-0 flex-1">
+                              <p className="font-display text-sm font-semibold text-foreground truncate">{chapter.chapter_name}</p>
+                              <div className="flex flex-wrap items-center gap-1.5 mt-1">
+                                {chapter.grade && (
+                                  <span className="text-[9px] bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 px-1.5 py-0.5 rounded font-bold">
+                                    {gradeLabel}
+                                  </span>
+                                )}
+                                {chapter.subject && (
+                                  <span className="text-[9px] bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-300 px-1.5 py-0.5 rounded font-bold">
+                                    {subjectLabel}
+                                  </span>
+                                )}
+                                <span className="text-[9px] text-muted-foreground">
+                                  Creado: {new Date(chapter.created_at).toLocaleDateString()}
                                 </span>
-                              )}
-                              {chapter.subject && (
-                                <span className="text-[9px] bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-300 px-1.5 py-0.5 rounded font-bold">
-                                  {chapter.subject}
-                                </span>
-                              )}
-                              <span className="text-[9px] text-muted-foreground">
-                                Creado: {new Date(chapter.created_at).toLocaleDateString()}
-                              </span>
+                              </div>
                             </div>
-                          </div>
                           
                           <div className="flex items-center gap-1.5 shrink-0">
                             <button
@@ -449,8 +456,9 @@ function AdminBooks() {
                             </button>
                           </div>
                         </li>
-                      ))}
-                    </ul>
+                      );
+                    })}
+                  </ul>
                   </div>
                 ))}
               </div>
