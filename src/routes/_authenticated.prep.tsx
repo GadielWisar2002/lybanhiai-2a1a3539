@@ -5,7 +5,7 @@ import { useTranslation } from "react-i18next";
 import { useState, useEffect } from "react";
 import { generateQuiz, listBooks, generateBookQuiz } from "@/lib/quiz.functions";
 import { AppHeader } from "@/components/AppHeader";
-import { Brain, Calculator, Languages, GraduationCap, BookOpen, Sparkles, X, ArrowUpRight } from "lucide-react";
+import { Brain, Calculator, Languages, GraduationCap, BookOpen, Sparkles, X, ArrowUpRight, FlaskConical } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/prep")({
@@ -54,6 +54,7 @@ function Prep() {
     { value: "math", label: t("prep.math") },
     { value: "logic", label: t("prep.logic") },
     { value: "language", label: t("prep.language") },
+    { value: "chemistry", label: t("prep.chemistry", { defaultValue: "Química" }) },
     { value: "toefl", label: "TOEFL" },
     { value: "cambridge", label: "Cambridge" },
     { value: "career", label: t("prep.career") },
@@ -90,6 +91,7 @@ function Prep() {
     { Icon: Brain, label: t("prep.logic"), cat: "logic", color: "bg-primary/10 text-primary" },
     { Icon: Calculator, label: t("prep.math"), cat: "math", color: "bg-gold/20 text-gold-foreground" },
     { Icon: Languages, label: t("prep.language"), cat: "language", color: "bg-success/15 text-success" },
+    { Icon: FlaskConical, label: t("prep.chemistry", { defaultValue: "Química" }), cat: "chemistry", color: "bg-purple-500/10 text-purple-500" },
     { Icon: GraduationCap, label: "TOEFL", cat: "toefl", color: "bg-primary/10 text-primary" },
     { Icon: BookOpen, label: "Cambridge", cat: "cambridge", color: "bg-gold/20 text-gold-foreground" },
     { Icon: Sparkles, label: t("prep.career"), cat: "career", color: "bg-success/15 text-success" },

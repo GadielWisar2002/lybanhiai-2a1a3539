@@ -3,7 +3,7 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 const GenSchema = z.object({
-  category: z.enum(["career", "toefl", "cambridge", "logic", "math", "language"]),
+  category: z.enum(["career", "toefl", "cambridge", "logic", "math", "language", "chemistry"]),
   topic: z.string().max(120),
   language: z.enum(["es", "en", "fr"]).default("es"),
   level: z.string().max(60).optional(),

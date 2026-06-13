@@ -1,4 +1,4 @@
-export type Cat = "career" | "toefl" | "cambridge" | "logic" | "math" | "language";
+export type Cat = "career" | "toefl" | "cambridge" | "logic" | "math" | "language" | "chemistry";
 export type Lang = "es" | "en" | "fr";
 
 export const LEVELS: Record<Lang, { value: string; label: string }[]> = {
@@ -37,6 +37,11 @@ export const TOPICS: Record<Cat, Record<Lang, string[]>> = {
     es: ["Comprensión lectora", "Sinónimos y antónimos", "Gramática", "Ortografía", "Vocabulario"],
     en: ["Reading comprehension", "Synonyms and antonyms", "Grammar", "Spelling", "Vocabulary"],
     fr: ["Compréhension écrite", "Synonymes et antonymes", "Grammaire", "Orthographe", "Vocabulaire"],
+  },
+  chemistry: {
+    es: ["Estructura atómica", "Tabla periódica", "Enlaces químicos", "Reacciones químicas", "Estequiometría", "Estados de la materia", "Ácidos y bases", "Química orgánica básica"],
+    en: ["Atomic structure", "Periodic table", "Chemical bonds", "Chemical reactions", "Stoichiometry", "States of matter", "Acids and bases", "Basic organic chemistry"],
+    fr: ["Structure atomique", "Tableau périodique", "Liaisons chimiques", "Réactions chimiques", "Stoechiométrie", "États de la matière", "Acides et bases", "Chimie organique de base"],
   },
   toefl: {
     es: ["Reading", "Listening", "Grammar", "Vocabulary", "Idioms"],

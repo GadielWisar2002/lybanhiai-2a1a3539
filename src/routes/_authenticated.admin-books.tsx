@@ -11,6 +11,7 @@ const SUBJECTS = [
   { value: "math", label: "Matemáticas" },
   { value: "logic", label: "Lógica" },
   { value: "language", label: "Lenguaje" },
+  { value: "chemistry", label: "Química" },
   { value: "toefl", label: "TOEFL" },
   { value: "cambridge", label: "Cambridge" },
   { value: "career", label: "Carrera" },

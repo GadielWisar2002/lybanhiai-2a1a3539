@@ -120,7 +120,7 @@
   "prep": {
     "title": "Préparation", "subtitle": "Quiz pour ta carrière et examens d'anglais",
     "career": "Carrière", "english": "Anglais", "toefl": "TOEFL", "cambridge": "Cambridge",
-    "logic": "Logique", "math": "Maths", "language": "Langue", "modules": "modules",
+    "logic": "Logique", "math": "Maths", "language": "Langue", "chemistry": "Chimie", "modules": "modules",
     "book": "Mes Livres",
     "startQuiz": "Commencer le quiz", "generateQuiz": "Générer un quiz par IA",
     "formTitle": "Générateur de quiz",
