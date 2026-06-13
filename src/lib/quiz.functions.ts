@@ -590,3 +590,53 @@ export const deleteBookChapter = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     return { success: true };
   });
+
+const ExtractSchema = z.object({
+  base64Data: z.string(),
+  mimeType: z.string(),
+});
+
+export const extractTextFromMedia = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => ExtractSchema.parse(input))
+  .handler(async ({ data }) => {
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey) throw new Error("API de Gemini no configurada en el servidor");
+
+    // Gemini API endpoint for 1.5 Flash
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+
+    const promptText = "Extrae todo el texto de esta imagen o documento de manera exacta. No agregues comentarios, explicaciones, introducciones, firmas ni formato markdown. Solo devuelve el texto plano tal como aparece en el archivo. Si está vacío o no contiene texto legible, responde únicamente con un espacio en blanco.";
+
+    const res = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        contents: [
+          {
+            parts: [
+              {
+                inlineData: {
+                  mimeType: data.mimeType,
+                  data: data.base64Data,
+                },
+              },
+              {
+                text: promptText,
+              },
+            ],
+          },
+        ],
+      }),
+    });
+
+    if (!res.ok) {
+      const errText = await res.text();
+      throw new Error(`Error de la API de Gemini: ${res.statusText} - ${errText}`);
+    }
+
+    const json = await res.json() as any;
+    const extracted = json.candidates?.[0]?.content?.parts?.[0]?.text || "";
+    return { text: extracted.trim() };
+  });
+

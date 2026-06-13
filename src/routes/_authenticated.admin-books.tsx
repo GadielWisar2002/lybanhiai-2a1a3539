@@ -21,7 +21,8 @@ import {
   createBookChapter, 
   updateBookChapter, 
   deleteBookChapter,
-  getDashboard
+  getDashboard,
+  extractTextFromMedia
 } from "@/lib/quiz.functions";
 import { 
   BookOpen, 
@@ -55,6 +56,7 @@ function AdminBooks() {
   const createChapter = useServerFn(createBookChapter);
   const updateChapter = useServerFn(updateBookChapter);
   const deleteChapter = useServerFn(deleteBookChapter);
+  const getExtractTextFn = useServerFn(extractTextFromMedia);
 
   // Queries
   const { data: dash, isLoading: loadingDash } = useQuery({ 
@@ -68,7 +70,7 @@ function AdminBooks() {
     enabled: !!user
   });
 
-  // Developer check matching debanhivillanueva@colegiomaranatha
+  // Developer check matching debanhivillanuevacolegiomaranatha
   const emailLower = user?.email?.toLowerCase() ?? "";
   const isDeveloper = emailLower === "debanhivillanueva@colegiomaranatha.edu.mx" ||
                       emailLower.includes("debanhivillanueva@colegiomaranatha") ||
@@ -81,6 +83,7 @@ function AdminBooks() {
   const [grade, setGrade] = useState("");
   const [subject, setSubject] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
+  const [isExtracting, setIsExtracting] = useState(false);
 
   // Mutations
   const createMut = useMutation({
@@ -112,21 +115,65 @@ function AdminBooks() {
     onError: (e) => toast.error(e instanceof Error ? e.message : "Error al eliminar"),
   });
 
-  // File Upload OCR handler
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // File Upload OCR handler (TXT, PDF, and Images using Gemini 1.5 Flash)
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (!file.name.endsWith(".txt")) {
-      toast.error("Solo se permiten archivos de texto plano (.txt)");
+
+    const fileName = file.name.toLowerCase();
+    const isTxt = fileName.endsWith(".txt");
+    const isImage = /\.(png|jpe?g|webp)$/i.test(fileName);
+    const isPdf = fileName.endsWith(".pdf");
+
+    if (!isTxt && !isImage && !isPdf) {
+      toast.error("Solo se permiten archivos .txt, .pdf, o imágenes (.png, .jpg, .jpeg, .webp)");
       return;
     }
-    const reader = new FileReader();
-    reader.onload = (evt) => {
-      const text = evt.target?.result as string;
-      setContent(text);
-      toast.success("Texto cargado del archivo con éxito");
-    };
-    reader.readAsText(file);
+
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error("El archivo no debe superar los 10MB");
+      return;
+    }
+
+    if (isTxt) {
+      const reader = new FileReader();
+      reader.onload = (evt) => {
+        const text = evt.target?.result as string;
+        setContent(text);
+        toast.success("Texto cargado del archivo con éxito");
+      };
+      reader.readAsText(file);
+    } else {
+      setIsExtracting(true);
+      const toastId = toast.loading("Extrayendo texto con la IA de Gemini...");
+      try {
+        const reader = new FileReader();
+        reader.onload = async (evt) => {
+          try {
+            const dataUrl = evt.target?.result as string;
+            const base64Parts = dataUrl.split(",");
+            const mimeType = base64Parts[0].match(/:(.*?);/)?.[1] || file.type;
+            const base64Data = base64Parts[1];
+
+            const result = await getExtractTextFn({ data: { base64Data, mimeType } });
+            if (result?.text) {
+              setContent(result.text);
+              toast.success("Texto extraído con éxito", { id: toastId });
+            } else {
+              toast.error("No se pudo extraer texto del archivo.", { id: toastId });
+            }
+          } catch (err) {
+            toast.error(err instanceof Error ? err.message : "Error al procesar el archivo", { id: toastId });
+          } finally {
+            setIsExtracting(false);
+          }
+        };
+        reader.readAsDataURL(file);
+      } catch (err) {
+        toast.error("Error al leer el archivo", { id: toastId });
+        setIsExtracting(false);
+      }
+    }
   };
 
   const resetForm = () => {
@@ -263,7 +310,7 @@ function AdminBooks() {
               <BookMarked className="size-6 text-primary" />
               Administrador de Libros
             </h1>
-            <p className="text-xs text-muted-foreground mt-0.5">Sube los textos de tus libros (OCR) para generar quizzes dinámicos con la API de Gemini.</p>
+            <p className="text-xs text-muted-foreground mt-0.5">Sube los textos de tus libros (TXT, PDF o fotos/imágenes) para generar quizzes dinámicos con la API de Gemini.</p>
           </div>
         </div>
 
@@ -311,13 +358,14 @@ function AdminBooks() {
                 <div className="space-y-1.5">
                   <div className="flex justify-between items-center px-1">
                     <label className="text-xs font-bold text-muted-foreground block">TEXTO COMPLETO (OCR)</label>
-                    <label className="text-xs font-bold text-primary flex items-center gap-1 cursor-pointer hover:underline">
+                    <label className={`text-xs font-bold text-primary flex items-center gap-1 cursor-pointer hover:underline ${isExtracting ? "opacity-50 pointer-events-none" : ""}`}>
                       <Upload className="size-3" />
-                      Cargar .txt
+                      {isExtracting ? "Procesando..." : "Subir Archivo (Foto, PDF, TXT)"}
                       <input
                         type="file"
-                        accept=".txt"
+                        accept=".txt,.pdf,.png,.jpg,.jpeg,.webp"
                         onChange={handleFileUpload}
+                        disabled={isExtracting}
                         className="hidden"
                       />
                     </label>
@@ -326,8 +374,9 @@ function AdminBooks() {
                     required
                     value={content}
                     onChange={e => setContent(e.target.value)}
-                    placeholder="Pega aquí el texto extraído desde Google AI Studio..."
-                    className="h-60 w-full rounded-xl border border-input bg-card p-3.5 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none resize-none font-mono text-xs leading-relaxed"
+                    disabled={isExtracting}
+                    placeholder={isExtracting ? "Extrayendo texto con la IA de Gemini..." : "Pega aquí el texto extraído o sube un archivo (Foto, PDF, TXT)..."}
+                    className="h-60 w-full rounded-xl border border-input bg-card p-3.5 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none resize-none font-mono text-xs leading-relaxed disabled:opacity-75"
                   />
                   <div className="text-right text-[10px] text-muted-foreground px-1">
                     {content.length.toLocaleString()} caracteres
