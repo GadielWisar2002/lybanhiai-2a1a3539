@@ -30,7 +30,6 @@ function Prep() {
   const [count, setCount] = useState<number>(5);
   const [topic, setTopic] = useState<string>("");
   const [selectedSubject, setSelectedSubject] = useState<string>("");
-  const [selectedBookTitle, setSelectedBookTitle] = useState<string>("");
   const [selectedChapterId, setSelectedChapterId] = useState<string>("");
 
   useEffect(() => {
@@ -40,7 +39,6 @@ function Prep() {
         setTopic(TOPICS[openCat][lang][0]);
       } else {
         setSelectedSubject("");
-        setSelectedBookTitle("");
         setSelectedChapterId("");
       }
     }
@@ -61,18 +59,12 @@ function Prep() {
     { value: "career", label: t("prep.career") },
   ];
 
-  // Unique list of books filtered by standard level and subject
-  const filteredBooks = Array.from(
-    new Set(
-      (books ?? [])
-        .filter(b => {
-          const matchesGrade = !level || b.grade === level;
-          const matchesSubject = !selectedSubject || b.subject === selectedSubject;
-          return matchesGrade && matchesSubject;
-        })
-        .map(b => b.title)
-    )
-  );
+  // Filter books directly by level and subject
+  const filteredTexts = (books ?? []).filter(b => {
+    const matchesGrade = !level || b.grade === level;
+    const matchesSubject = !selectedSubject || b.subject === selectedSubject;
+    return matchesGrade && matchesSubject;
+  });
 
   const mut = useMutation({
     mutationFn: (vars: { category: Cat; topic: string; level: string; count: number }) =>
@@ -110,7 +102,6 @@ function Prep() {
       setTopic(TOPICS[cat][lang][0]);
     } else {
       setTopic("");
-      setSelectedBookTitle("");
       setSelectedChapterId("");
     }
   };
@@ -190,7 +181,6 @@ function Prep() {
                         value={level}
                         onChange={(e) => {
                           setLevel(e.target.value);
-                          setSelectedBookTitle("");
                           setSelectedChapterId("");
                         }}
                         className="mt-1 w-full bg-transparent text-sm font-medium outline-none cursor-pointer"
@@ -210,7 +200,6 @@ function Prep() {
                         value={selectedSubject}
                         onChange={(e) => {
                           setSelectedSubject(e.target.value);
-                          setSelectedBookTitle("");
                           setSelectedChapterId("");
                         }}
                         className="mt-1 w-full bg-transparent text-sm font-medium outline-none cursor-pointer"
@@ -222,49 +211,28 @@ function Prep() {
                       </select>
                     </label>
 
-                    {/* Libro */}
+                    {/* Texto de estudio */}
                     {selectedSubject && (
                       <label className="block rounded-2xl border border-border p-3 animate-fade-in">
                         <span className="block text-[10px] font-semibold tracking-wider text-muted-foreground uppercase">
-                          {t("prep.selectBook", { defaultValue: "Seleccionar libro" })}
-                        </span>
-                        <select
-                          value={selectedBookTitle}
-                          onChange={(e) => {
-                            setSelectedBookTitle(e.target.value);
-                            setSelectedChapterId("");
-                          }}
-                          className="mt-1 w-full bg-transparent text-sm font-medium outline-none cursor-pointer"
-                        >
-                          <option value="">-- {t("prep.selectBook", { defaultValue: "Seleccionar libro" })} --</option>
-                          {filteredBooks.map(title => (
-                            <option key={title} value={title}>{title}</option>
-                          ))}
-                        </select>
-                      </label>
-                    )}
-
-                    {/* Capítulo */}
-                    {selectedBookTitle && (
-                      <label className="block rounded-2xl border border-border p-3 animate-fade-in">
-                        <span className="block text-[10px] font-semibold tracking-wider text-muted-foreground uppercase">
-                          {t("prep.selectChapter", { defaultValue: "Seleccionar capítulo" })}
+                          {t("prep.selectText", { defaultValue: "Texto de estudio" })}
                         </span>
                         <select
                           value={selectedChapterId}
                           onChange={(e) => setSelectedChapterId(e.target.value)}
                           className="mt-1 w-full bg-transparent text-sm font-medium outline-none cursor-pointer"
                         >
-                          <option value="">-- {t("prep.selectChapter", { defaultValue: "Seleccionar capítulo" })} --</option>
-                          {(books ?? [])
-                            .filter(b => {
-                              const matchesGrade = !level || b.grade === level;
-                              const matchesSubject = !selectedSubject || b.subject === selectedSubject;
-                              return b.title === selectedBookTitle && matchesGrade && matchesSubject;
-                            })
-                            .map(b => (
-                              <option key={b.id} value={b.id}>{b.chapter_name}</option>
-                            ))}
+                          <option value="">-- {t("prep.selectTextPlaceholder", { defaultValue: "Seleccionar texto de estudio" })} --</option>
+                          {filteredTexts.map((txt, index) => {
+                            const contentSnippet = txt.content.length > 50 
+                              ? txt.content.slice(0, 50) + "..." 
+                              : txt.content;
+                            return (
+                              <option key={txt.id} value={txt.id}>
+                                Texto #{index + 1} ({contentSnippet})
+                              </option>
+                            );
+                          })}
                         </select>
                       </label>
                     )}

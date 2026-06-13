@@ -374,14 +374,12 @@ export const listBooks = createServerFn({ method: "GET" })
     const { supabase } = context;
     const { data, error } = await supabase
       .from("books")
-      .select("id, title, chapter_name, created_at, grade, subject")
-      .order("title", { ascending: true })
+      .select("id, content, created_at, grade, subject")
       .order("created_at", { ascending: true });
     if (error) throw new Error(error.message);
     return (data ?? []).map(b => ({
       id: b.id as string,
-      title: b.title as string,
-      chapter_name: b.chapter_name as string,
+      content: b.content as string,
       created_at: b.created_at as string,
       grade: b.grade as string | null,
       subject: b.subject as string | null,
@@ -417,7 +415,7 @@ export const generateBookQuiz = createServerFn({ method: "POST" })
     const subjectClause = book.subject ? ` Academic subject field: ${book.subject}.` : "";
     
     const systemInstruction = `Eres un creador de exámenes académicos profesional. Genera un examen estructurado de opción múltiple de ${data.count} preguntas en el idioma ${langLabel}.${levelClause}${gradeClause}${subjectClause} Cada pregunta debe tener 4 opciones, y exactamente una de ellas debe ser correcta.`;
-    const userPrompt = `Basándote únicamente en el siguiente texto del capítulo "${book.chapter_name}" del libro "${book.title}", genera el examen:\n\n${book.content}`;
+    const userPrompt = `Basándote únicamente en el siguiente texto académico, genera el examen:\n\n${book.content}`;
 
     const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
     const res = await fetch(url, {
@@ -488,7 +486,9 @@ export const generateBookQuiz = createServerFn({ method: "POST" })
       throw new Error("El examen devuelto por la IA no tiene preguntas válidas.");
     }
 
-    const quizTopic = `${book.title} - ${book.chapter_name}`;
+    const sub = book.subject || "Libro";
+    const grd = book.grade || "General";
+    const quizTopic = `${sub.toUpperCase()} (${grd})`;
     const { data: row, error } = await supabase.from("quizzes").insert({
       user_id: userId,
       category: "language",
@@ -502,8 +502,6 @@ export const generateBookQuiz = createServerFn({ method: "POST" })
   });
 
 const CreateBookSchema = z.object({
-  title: z.string().min(1).max(255),
-  chapterName: z.string().min(1).max(255),
   content: z.string().min(1),
   grade: z.string().optional().nullable(),
   subject: z.string().optional().nullable(),
@@ -524,8 +522,8 @@ export const createBookChapter = createServerFn({ method: "POST" })
     const { data: row, error } = await supabase
       .from("books")
       .insert({
-        title: data.title,
-        chapter_name: data.chapterName,
+        title: "",
+        chapter_name: "",
         content: data.content,
         grade: data.grade,
         subject: data.subject,
@@ -539,8 +537,6 @@ export const createBookChapter = createServerFn({ method: "POST" })
 
 const UpdateBookSchema = z.object({
   id: z.string().uuid(),
-  title: z.string().min(1).max(255),
-  chapterName: z.string().min(1).max(255),
   content: z.string().min(1),
   grade: z.string().optional().nullable(),
   subject: z.string().optional().nullable(),
@@ -561,8 +557,6 @@ export const updateBookChapter = createServerFn({ method: "POST" })
     const { error } = await supabase
       .from("books")
       .update({
-        title: data.title,
-        chapter_name: data.chapterName,
         content: data.content,
         grade: data.grade,
         subject: data.subject,

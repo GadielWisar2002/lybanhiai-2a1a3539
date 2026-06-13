@@ -76,8 +76,6 @@ function AdminBooks() {
 
   // Local Form state
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [title, setTitle] = useState("");
-  const [chapterName, setChapterName] = useState("");
   const [content, setContent] = useState("");
   const [grade, setGrade] = useState("");
   const [subject, setSubject] = useState("");
@@ -85,19 +83,19 @@ function AdminBooks() {
 
   // Mutations
   const createMut = useMutation({
-    mutationFn: (vars: { title: string; chapterName: string; content: string; grade?: string; subject?: string }) => createChapter({ data: vars }),
+    mutationFn: (vars: { content: string; grade?: string; subject?: string }) => createChapter({ data: vars }),
     onSuccess: () => {
-      toast.success("Capítulo creado con éxito");
+      toast.success("Texto guardado con éxito");
       resetForm();
       qc.invalidateQueries({ queryKey: ["admin-books"] });
     },
-    onError: (e) => toast.error(e instanceof Error ? e.message : "Error al crear"),
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Error al guardar"),
   });
 
   const updateMut = useMutation({
-    mutationFn: (vars: { id: string; title: string; chapterName: string; content: string; grade?: string; subject?: string }) => updateChapter({ data: vars }),
+    mutationFn: (vars: { id: string; content: string; grade?: string; subject?: string }) => updateChapter({ data: vars }),
     onSuccess: () => {
-      toast.success("Capítulo actualizado con éxito");
+      toast.success("Texto actualizado con éxito");
       resetForm();
       qc.invalidateQueries({ queryKey: ["admin-books"] });
     },
@@ -132,56 +130,49 @@ function AdminBooks() {
 
   const resetForm = () => {
     setEditingId(null);
-    setTitle("");
-    setChapterName("");
     setContent("");
     setGrade("");
     setSubject("");
   };
 
   const handleEdit = async (bookId: string) => {
-    // We need to fetch the full content of the chapter to edit it.
-    // The listBooks only returns id, title, chapter_name, grade, subject.
-    // Let's fetch it via supabase client directly client-side since read access is public-auth.
     try {
       const { supabase } = await import("@/integrations/supabase/client");
       const { data, error } = await supabase
         .from("books")
-        .select("title, chapter_name, content, grade, subject")
+        .select("content, grade, subject")
         .eq("id", bookId)
         .single();
       if (error) throw error;
       if (data) {
         setEditingId(bookId);
-        setTitle(data.title);
-        setChapterName(data.chapter_name);
         setContent(data.content);
         setGrade(data.grade ?? "");
         setSubject(data.subject ?? "");
         window.scrollTo({ top: 0, behavior: 'smooth' });
       }
     } catch (err) {
-      toast.error("Error al cargar detalles del capítulo");
+      toast.error("Error al cargar detalles del texto");
       console.error(err);
     }
   };
 
-  const handleDelete = (id: string, name: string) => {
-    if (confirm(`¿Estás seguro de que deseas eliminar "${name}"?`)) {
+  const handleDelete = (id: string) => {
+    if (confirm("¿Estás seguro de que deseas eliminar este texto de estudio?")) {
       deleteMut.mutate(id);
     }
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!title.trim() || !chapterName.trim() || !content.trim()) {
-      toast.error("Por favor completa todos los campos.");
+    if (!content.trim()) {
+      toast.error("Por favor completa el contenido de texto (OCR).");
       return;
     }
     if (editingId) {
-      updateMut.mutate({ id: editingId, title, chapterName, content, grade: grade.trim() || null, subject: subject.trim() || null });
+      updateMut.mutate({ id: editingId, content, grade: grade.trim() || null, subject: subject.trim() || null });
     } else {
-      createMut.mutate({ title, chapterName, content, grade: grade.trim() || null, subject: subject.trim() || null });
+      createMut.mutate({ content, grade: grade.trim() || null, subject: subject.trim() || null });
     }
   };
 
@@ -210,28 +201,50 @@ function AdminBooks() {
     );
   }
 
-  // Group books by Title
-  const groupedBooks: Record<string, typeof books> = {};
+  // Group books by Grade and Subject
+  const groupedByGradeAndSubject: Record<string, Record<string, typeof books>> = {};
+  
   (books ?? []).forEach(b => {
-    if (!groupedBooks[b.title]) groupedBooks[b.title] = [];
-    groupedBooks[b.title].push(b);
+    const g = b.grade || "Sin grado";
+    const s = b.subject || "Sin materia";
+    if (!groupedByGradeAndSubject[g]) {
+      groupedByGradeAndSubject[g] = {};
+    }
+    if (!groupedByGradeAndSubject[g][s]) {
+      groupedByGradeAndSubject[g][s] = [];
+    }
+    groupedByGradeAndSubject[g][s].push(b);
   });
 
   // Filter grouped books by search query
-  const filteredGroupedBooks = Object.keys(groupedBooks).reduce((acc, bookTitle) => {
-    const matchesBook = bookTitle.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchedChapters = groupedBooks[bookTitle].filter(ch => 
-      ch.chapter_name.toLowerCase().includes(searchQuery.toLowerCase())
-    );
-
-    if (matchesBook || matchedChapters.length > 0) {
-      acc[bookTitle] = matchesBook ? groupedBooks[bookTitle] : matchedChapters;
+  const filteredGroupedBooks = Object.keys(groupedByGradeAndSubject).reduce((accGrade, gradeKey) => {
+    const subjectsMap = groupedByGradeAndSubject[gradeKey];
+    const filteredSubjectsMap: Record<string, typeof books> = {};
+    
+    Object.keys(subjectsMap).forEach(subjectKey => {
+      const textsList = subjectsMap[subjectKey];
+      const matchedTexts = textsList.filter(txt => {
+        const queryLower = searchQuery.toLowerCase();
+        const matchesGrade = gradeKey.toLowerCase().includes(queryLower);
+        const matchesSubject = subjectKey.toLowerCase().includes(queryLower);
+        const subjectLabel = SUBJECTS.find(s => s.value === subjectKey)?.label || subjectKey;
+        const matchesSubjectLabel = subjectLabel.toLowerCase().includes(queryLower);
+        const gradeLabel = LEVELS["es"].find(l => l.value === gradeKey)?.label || gradeKey;
+        const matchesGradeLabel = gradeLabel.toLowerCase().includes(queryLower);
+        const matchesContent = txt.content.toLowerCase().includes(queryLower);
+        return matchesGrade || matchesSubject || matchesSubjectLabel || matchesGradeLabel || matchesContent;
+      });
+      
+      if (matchedTexts.length > 0) {
+        filteredSubjectsMap[subjectKey] = matchedTexts;
+      }
+    });
+    
+    if (Object.keys(filteredSubjectsMap).length > 0) {
+      accGrade[gradeKey] = filteredSubjectsMap;
     }
-    return acc;
-  }, {} as Record<string, typeof books>);
-
-  // Unique list of book titles for suggestions
-  const bookSuggestions = Array.from(new Set((books ?? []).map(b => b.title)));
+    return accGrade;
+  }, {} as Record<string, Record<string, typeof books>>);
 
   return (
     <>
@@ -256,29 +269,10 @@ function AdminBooks() {
             <div className="rounded-3xl border border-border bg-card p-5 shadow-[var(--shadow-card)] sticky top-6">
               <h2 className="font-display font-bold text-lg mb-4 flex items-center gap-1.5">
                 {editingId ? <Edit2 className="size-4 text-primary" /> : <Plus className="size-4 text-primary" />}
-                {editingId ? "Editar Capítulo" : "Subir Nuevo Capítulo"}
+                {editingId ? "Editar Texto de Estudio" : "Subir Texto de Estudio"}
               </h2>
 
               <form onSubmit={handleSubmit} className="space-y-4">
-                {/* Título de Libro */}
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-muted-foreground block px-1">TÍTULO DEL LIBRO</label>
-                  <input
-                    type="text"
-                    required
-                    value={title}
-                    onChange={e => setTitle(e.target.value)}
-                    placeholder="Ej. Biología General"
-                    list="book-titles"
-                    className="h-11 w-full rounded-xl border border-input bg-card px-3.5 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none"
-                  />
-                  <datalist id="book-titles">
-                    {bookSuggestions.map(s => (
-                      <option key={s} value={s} />
-                    ))}
-                  </datalist>
-                </div>
-
                 {/* Grado y Materia */}
                 <div className="grid grid-cols-2 gap-2">
                   <div className="space-y-1.5">
@@ -307,19 +301,6 @@ function AdminBooks() {
                       ))}
                     </select>
                   </div>
-                </div>
-
-                {/* Nombre de Capítulo */}
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-muted-foreground block px-1">NOMBRE DEL CAPÍTULO</label>
-                  <input
-                    type="text"
-                    required
-                    value={chapterName}
-                    onChange={e => setChapterName(e.target.value)}
-                    placeholder="Ej. Capítulo 2: La Célula"
-                    className="h-11 w-full rounded-xl border border-input bg-card px-3.5 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none"
-                  />
                 </div>
 
                 {/* Contenido (Textarea) */}
@@ -362,7 +343,7 @@ function AdminBooks() {
                   )}
                   <button
                     type="submit"
-                    disabled={createMut.isPending || updateMut.isPending || !title || !chapterName || !content}
+                    disabled={createMut.isPending || updateMut.isPending || !content}
                     className="h-11 flex-1 rounded-xl bg-primary text-sm font-semibold text-primary-foreground transition hover:opacity-90 active:scale-[0.99] disabled:opacity-50 flex items-center justify-center gap-1.5 cursor-pointer"
                   >
                     <Save className="size-4" />
@@ -382,7 +363,7 @@ function AdminBooks() {
                 type="text"
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
-                placeholder="Buscar libro o capítulo..."
+                placeholder="Buscar por grado, materia o contenido..."
                 className="w-full bg-transparent text-sm text-foreground placeholder:text-muted-foreground focus:outline-none"
               />
               {searchQuery && (
@@ -400,67 +381,81 @@ function AdminBooks() {
             ) : Object.keys(filteredGroupedBooks).length === 0 ? (
               <div className="rounded-3xl border border-dashed border-border bg-card p-10 text-center text-sm text-muted-foreground shadow-sm">
                 <BookOpen className="mx-auto size-12 text-muted-foreground/60 mb-2" />
-                No se encontraron libros. ¡Agrega el primero en el formulario!
+                No se encontraron textos. ¡Agrega el primero en el formulario!
               </div>
             ) : (
-              <div className="space-y-4">
-                {Object.keys(filteredGroupedBooks).map(bookTitle => (
-                  <div key={bookTitle} className="rounded-3xl border border-border bg-card overflow-hidden shadow-[var(--shadow-card)]">
-                    <div className="bg-muted/40 px-4 py-3 border-b border-border flex items-center gap-2">
-                      <BookOpen className="size-4.5 text-primary" />
-                      <h3 className="font-display font-bold text-sm text-foreground">{bookTitle}</h3>
-                      <span className="text-[10px] bg-primary/10 text-primary px-2 py-0.5 rounded-full font-bold">
-                        {filteredGroupedBooks[bookTitle].length} {filteredGroupedBooks[bookTitle].length === 1 ? "capítulo" : "capítulos"}
-                      </span>
-                    </div>
-
-                    <ul className="divide-y divide-border">
-                      {filteredGroupedBooks[bookTitle].map(chapter => {
-                        const gradeLabel = LEVELS["es"].find(l => l.value === chapter.grade)?.label || chapter.grade;
-                        const subjectLabel = SUBJECTS.find(s => s.value === chapter.subject)?.label || chapter.subject;
+              <div className="space-y-6">
+                {Object.keys(filteredGroupedBooks).map(gradeKey => {
+                  const gradeLabel = LEVELS["es"].find(l => l.value === gradeKey)?.label || gradeKey;
+                  const subjectsMap = filteredGroupedBooks[gradeKey];
+                  
+                  return (
+                    <div key={gradeKey} className="space-y-4">
+                      <h3 className="font-display font-black text-xs uppercase text-slate-400 tracking-wider px-1">
+                        {gradeLabel}
+                      </h3>
+                      
+                      {Object.keys(subjectsMap).map(subjectKey => {
+                        const subjectLabel = SUBJECTS.find(s => s.value === subjectKey)?.label || subjectKey;
+                        const textsList = subjectsMap[subjectKey];
+                        
                         return (
-                          <li key={chapter.id} className="px-4 py-3 flex items-center justify-between gap-4 transition hover:bg-muted/10">
-                            <div className="min-w-0 flex-1">
-                              <p className="font-display text-sm font-semibold text-foreground truncate">{chapter.chapter_name}</p>
-                              <div className="flex flex-wrap items-center gap-1.5 mt-1">
-                                {chapter.grade && (
-                                  <span className="text-[9px] bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 px-1.5 py-0.5 rounded font-bold">
-                                    {gradeLabel}
-                                  </span>
-                                )}
-                                {chapter.subject && (
-                                  <span className="text-[9px] bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-300 px-1.5 py-0.5 rounded font-bold">
-                                    {subjectLabel}
-                                  </span>
-                                )}
-                                <span className="text-[9px] text-muted-foreground">
-                                  Creado: {new Date(chapter.created_at).toLocaleDateString()}
-                                </span>
+                          <div key={subjectKey} className="rounded-3xl border border-border bg-card overflow-hidden shadow-[var(--shadow-card)]">
+                            <div className="bg-muted/40 px-4 py-2.5 border-b border-border flex items-center justify-between gap-2">
+                              <div className="flex items-center gap-2">
+                                <BookOpen className="size-4 text-primary" />
+                                <h4 className="font-display font-bold text-sm text-foreground">{subjectLabel}</h4>
                               </div>
+                              <span className="text-[10px] bg-primary/10 text-primary px-2 py-0.5 rounded-full font-bold">
+                                {textsList.length} {textsList.length === 1 ? "texto" : "textos"}
+                              </span>
                             </div>
-                          
-                          <div className="flex items-center gap-1.5 shrink-0">
-                            <button
-                              onClick={() => handleEdit(chapter.id)}
-                              title="Editar capítulo"
-                              className="grid size-8 place-items-center rounded-lg border border-border bg-card text-muted-foreground hover:text-primary hover:border-primary/50 transition cursor-pointer"
-                            >
-                              <Edit2 className="size-3.5" />
-                            </button>
-                            <button
-                              onClick={() => handleDelete(chapter.id, chapter.chapter_name)}
-                              title="Eliminar capítulo"
-                              className="grid size-8 place-items-center rounded-lg border border-destructive/20 bg-card text-destructive hover:bg-destructive/5 transition cursor-pointer"
-                            >
-                              <Trash2 className="size-3.5" />
-                            </button>
+                            
+                            <ul className="divide-y divide-border">
+                              {textsList.map((txt, index) => {
+                                const contentSnippet = txt.content.length > 60 
+                                  ? txt.content.slice(0, 60) + "..." 
+                                  : txt.content;
+                                return (
+                                  <li key={txt.id} className="px-4 py-3 flex items-center justify-between gap-4 transition hover:bg-muted/10">
+                                    <div className="min-w-0 flex-1">
+                                      <p className="font-display text-sm font-semibold text-foreground truncate">
+                                        Texto #{index + 1}
+                                      </p>
+                                      <p className="text-xs text-muted-foreground font-mono truncate mt-0.5 max-w-md">
+                                        {contentSnippet}
+                                      </p>
+                                      <p className="text-[9px] text-slate-400 mt-1">
+                                        Creado: {new Date(txt.created_at).toLocaleDateString()}
+                                      </p>
+                                    </div>
+                                    
+                                    <div className="flex items-center gap-1.5 shrink-0">
+                                      <button
+                                        onClick={() => handleEdit(txt.id)}
+                                        title="Editar texto"
+                                        className="grid size-8 place-items-center rounded-lg border border-border bg-card text-muted-foreground hover:text-primary hover:border-primary/50 transition cursor-pointer"
+                                      >
+                                        <Edit2 className="size-3.5" />
+                                      </button>
+                                      <button
+                                        onClick={() => handleDelete(txt.id)}
+                                        title="Eliminar texto"
+                                        className="grid size-8 place-items-center rounded-lg border border-destructive/20 bg-card text-destructive hover:bg-destructive/5 transition cursor-pointer"
+                                      >
+                                        <Trash2 className="size-3.5" />
+                                      </button>
+                                    </div>
+                                  </li>
+                                );
+                              })}
+                            </ul>
                           </div>
-                        </li>
-                      );
-                    })}
-                  </ul>
-                  </div>
-                ))}
+                        );
+                      })}
+                    </div>
+                  );
+                })}
               </div>
             )}
           </section>
