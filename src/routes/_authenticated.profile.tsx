@@ -10,7 +10,7 @@ import { translateRecommendations } from "@/lib/recommendations.functions";
 import { AppHeader } from "@/components/AppHeader";
 import { supabase } from "@/integrations/supabase/client";
 import { StreakBadge } from "@/components/StreakBadge";
-import { LogOut, Globe, Trophy, Lock, User } from "lucide-react";
+import { LogOut, Globe, Trophy, Lock, User, BookOpen } from "lucide-react";
 import { BLOOKS } from "@/lib/games.functions";
 import { RobloxAvatarRenderer } from "@/components/RobloxAvatarRenderer";
 import { LayeredAvatarRenderer } from "@/components/LayeredAvatarRenderer";
@@ -33,6 +33,14 @@ function Profile() {
   const updLang = useServerFn(updateLanguage);
   const trans = useServerFn(translateRecommendations);
   const { data, isLoading } = useQuery({ queryKey: ["dashboard"], queryFn: () => fn() });
+
+  const isDeveloper = user?.email?.toLowerCase() === "debanhivillanueva@colegiomaranatha.edu.mx" || 
+                      user?.email?.toLowerCase()?.includes("debanhivillanueva@colegiomaranatha") ||
+                      user?.email?.toLowerCase()?.includes("debanhivillanuevacolegiomaranatha") ||
+                      data?.email?.toLowerCase() === "debanhivillanueva@colegiomaranatha.edu.mx" ||
+                      data?.email?.toLowerCase()?.includes("debanhivillanueva@colegiomaranatha") ||
+                      data?.email?.toLowerCase()?.includes("debanhivillanuevacolegiomaranatha") ||
+                      data?.isDeveloper === true;
 
   const [loadingLang, setLoadingLang] = useState(false);
   const [newPassword, setNewPassword] = useState("");
@@ -286,6 +294,25 @@ function Profile() {
             </form>
           )}
         </section>
+
+        {/* Panel de Administración (Desarrollador) */}
+        {isDeveloper && (
+          <section className="mt-6 rounded-2xl border border-border bg-card p-4 shadow-sm">
+            <div className="mb-3 flex items-center gap-2">
+              <BookOpen className="size-4 text-primary" />
+              <h2 className="font-semibold">Administración de Libros</h2>
+            </div>
+            <p className="text-xs text-muted-foreground mb-3 leading-relaxed">
+              Como administrador de Lybanhi, puedes subir y gestionar los libros de texto para la generación automática de quizzes.
+            </p>
+            <Link
+              to="/admin-books"
+              className="flex items-center justify-center gap-2 h-11 w-full rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 active:scale-[0.99] transition cursor-pointer shadow-sm text-center"
+            >
+              Ir al Administrador de Libros
+            </Link>
+          </section>
+        )}
 
         <button onClick={signOut} className="mt-6 inline-flex h-12 w-full items-center justify-center gap-2 rounded-2xl border border-destructive/30 bg-card font-semibold text-destructive">
           <LogOut className="size-4" /> {t("common.signOut")}
