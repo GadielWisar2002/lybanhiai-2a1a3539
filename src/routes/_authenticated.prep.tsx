@@ -196,7 +196,11 @@ function Prep() {
                 {/* Tab selector */}
                 <div className="grid grid-cols-2 gap-1 rounded-2xl bg-muted p-1 text-xs font-semibold">
                   <button
-                    onClick={() => setActiveTab("school")}
+                    onClick={() => {
+                      setActiveTab("school");
+                      setSelectedSubject("");
+                      setSelectedChapterId("");
+                    }}
                     className={`rounded-xl py-2 transition active:scale-[0.98] ${
                       activeTab === "school" 
                         ? "bg-card text-foreground shadow-sm" 
@@ -206,7 +210,11 @@ function Prep() {
                     Material escolar
                   </button>
                   <button
-                    onClick={() => setActiveTab("custom")}
+                    onClick={() => {
+                      setActiveTab("custom");
+                      setSelectedSubject("");
+                      setSelectedChapterId("");
+                    }}
                     className={`rounded-xl py-2 transition active:scale-[0.98] flex items-center justify-center gap-1 ${
                       activeTab === "custom" 
                         ? "bg-card text-foreground shadow-sm" 
@@ -421,16 +429,13 @@ function Prep() {
                             <span className="block text-[10px] font-semibold tracking-wider text-muted-foreground uppercase">
                               Asignatura
                             </span>
-                            <select
+                            <input
+                              type="text"
                               value={selectedSubject}
                               onChange={(e) => setSelectedSubject(e.target.value)}
-                              className="mt-1 w-full bg-transparent text-sm font-medium outline-none cursor-pointer"
-                            >
-                              <option value="">-- Seleccionar --</option>
-                              {SUBJECTS.map(s => (
-                                <option key={s.value} value={s.value}>{s.label}</option>
-                              ))}
-                            </select>
+                              placeholder="Ej. Biología, Química..."
+                              className="mt-1 w-full bg-transparent text-sm font-medium outline-none placeholder:text-muted-foreground"
+                            />
                           </label>
                         </div>
 
