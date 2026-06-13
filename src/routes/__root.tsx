@@ -75,7 +75,15 @@ function RootShell({ children }: { children: React.ReactNode }) {
 function LangSync() {
   const { i18n } = useTranslation();
   useEffect(() => {
-    if (typeof document !== "undefined") document.documentElement.lang = i18n.language;
+    const savedLanguage = window.localStorage.getItem("lybanhi_lang");
+    const browserLanguage = window.navigator.language.slice(0, 2);
+    const nextLanguage = savedLanguage ?? (["es", "en", "fr"].includes(browserLanguage) ? browserLanguage : "es");
+    if (nextLanguage !== i18n.language) void i18n.changeLanguage(nextLanguage);
+  }, [i18n]);
+
+  useEffect(() => {
+    document.documentElement.lang = i18n.language;
+    window.localStorage.setItem("lybanhi_lang", i18n.language.slice(0, 2));
   }, [i18n.language]);
   return null;
 }
