@@ -14,6 +14,39 @@ export type Database = {
   }
   public: {
     Tables: {
+      books: {
+        Row: {
+          chapter_name: string
+          content: string
+          created_at: string
+          grade: string | null
+          id: string
+          subject: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          chapter_name?: string
+          content: string
+          created_at?: string
+          grade?: string | null
+          id?: string
+          subject?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Update: {
+          chapter_name?: string
+          content?: string
+          created_at?: string
+          grade?: string | null
+          id?: string
+          subject?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           active_blook_id: string | null
