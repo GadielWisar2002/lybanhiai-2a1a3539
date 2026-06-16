@@ -105,42 +105,42 @@ export class Avatar {
         geometry: new THREE.CylinderGeometry(0.04, 0.035, 0.28, 8),
         boneIndex: 5, // leftArmBone index
         color: 0xeab308, // Yellow
-        offset: new THREE.Vector3(-0.28, 1.62, 0),
+        offset: new THREE.Vector3(-0.28, 1.46, 0),
       },
       {
         name: "rightUpperArm",
         geometry: new THREE.CylinderGeometry(0.04, 0.035, 0.28, 8),
         boneIndex: 6, // rightArmBone index
         color: 0xeab308, // Yellow
-        offset: new THREE.Vector3(0.28, 1.62, 0),
+        offset: new THREE.Vector3(0.28, 1.46, 0),
       },
       {
         name: "leftLowerArm",
         geometry: new THREE.CylinderGeometry(0.035, 0.03, 0.26, 8),
         boneIndex: 5, // leftArmBone index
         color: 0x84cc16, // Lime
-        offset: new THREE.Vector3(-0.32, 1.35, 0),
+        offset: new THREE.Vector3(-0.32, 1.19, 0),
       },
       {
         name: "rightLowerArm",
         geometry: new THREE.CylinderGeometry(0.035, 0.03, 0.26, 8),
         boneIndex: 6, // rightArmBone index
         color: 0x84cc16, // Lime
-        offset: new THREE.Vector3(0.32, 1.35, 0),
+        offset: new THREE.Vector3(0.32, 1.19, 0),
       },
       {
         name: "leftHand",
         geometry: handLeftGeo,
         boneIndex: 5, // leftArmBone index
         color: 0x06b6d4, // Cyan
-        offset: new THREE.Vector3(-0.34, 1.10, 0),
+        offset: new THREE.Vector3(-0.34, 1.024, 0),
       },
       {
         name: "rightHand",
         geometry: handRightGeo,
         boneIndex: 6, // rightArmBone index
         color: 0x06b6d4, // Cyan
-        offset: new THREE.Vector3(0.34, 1.10, 0),
+        offset: new THREE.Vector3(0.34, 1.024, 0),
       },
       {
         name: "leftUpperLeg",
