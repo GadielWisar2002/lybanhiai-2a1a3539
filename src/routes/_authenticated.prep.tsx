@@ -35,8 +35,20 @@ function Prep() {
   const [selectedChapterId, setSelectedChapterId] = useState<string>("");
 
   // Grado and Objetivo states based on flowchart
-  const [selectedGrade, setSelectedGrade] = useState<"secundaria" | "preparatoria">("preparatoria");
-  const [selectedObjective, setSelectedObjective] = useState<"estudiar" | "admision">("estudiar");
+  const [selectedGrade, setSelectedGrade] = useState<"secundaria" | "preparatoria">(() => {
+    if (typeof window !== "undefined") {
+      const g = window.localStorage.getItem("lybanhi_grade");
+      if (g === "secundaria" || g === "preparatoria") return g;
+    }
+    return "preparatoria";
+  });
+  const [selectedObjective, setSelectedObjective] = useState<"estudiar" | "admision">(() => {
+    if (typeof window !== "undefined") {
+      const o = window.localStorage.getItem("lybanhi_objective");
+      if (o === "estudiar" || o === "admision") return o;
+    }
+    return "estudiar";
+  });
 
   // Custom study materials states (PRO Feature)
   const [isPro, setIsPro] = useState(false);
@@ -48,15 +60,32 @@ function Prep() {
   const [materialName, setMaterialName] = useState("");
 
   useEffect(() => {
-    setLevel(LEVELS[lang][1].value);
+    let initialLevel = LEVELS[lang][1].value;
+    if (typeof window !== "undefined") {
+      const savedGrade = window.localStorage.getItem("lybanhi_grade");
+      if (savedGrade === "secundaria") {
+        initialLevel = "3º secundaria";
+      }
+    }
+    setLevel(initialLevel);
+
     if (openCat) {
       if (openCat !== "book") {
         setTopic(TOPICS[openCat][lang][0]);
       } else {
         setSelectedSubject("");
         setSelectedChapterId("");
-        setSelectedGrade("preparatoria");
-        setSelectedObjective("estudiar");
+        
+        let initialGrade: "secundaria" | "preparatoria" = "preparatoria";
+        let initialObjective: "estudiar" | "admision" = "estudiar";
+        if (typeof window !== "undefined") {
+          const savedGrade = window.localStorage.getItem("lybanhi_grade") as "secundaria" | "preparatoria" | null;
+          const savedObj = window.localStorage.getItem("lybanhi_objective") as "estudiar" | "admision" | null;
+          if (savedGrade) initialGrade = savedGrade;
+          if (savedObj) initialObjective = savedObj;
+        }
+        setSelectedGrade(initialGrade);
+        setSelectedObjective(initialObjective);
         
         // Sync PRO plan status and reset values when opening Books drawer
         const proStatus = typeof window !== "undefined" && window.localStorage.getItem("lybanhi_pro_status") === "true";
@@ -209,6 +238,7 @@ function Prep() {
                         setSelectedGrade("secundaria");
                         setLevel("3º secundaria");
                         setSelectedChapterId("");
+                        window.localStorage.setItem("lybanhi_grade", "secundaria");
                       }}
                       className={`flex items-center justify-center gap-1.5 h-10 rounded-xl border text-xs font-semibold transition cursor-pointer active:scale-95 ${
                         selectedGrade === "secundaria"
@@ -224,6 +254,7 @@ function Prep() {
                         setSelectedGrade("preparatoria");
                         setLevel("1º preparatoria");
                         setSelectedChapterId("");
+                        window.localStorage.setItem("lybanhi_grade", "preparatoria");
                       }}
                       className={`flex items-center justify-center gap-1.5 h-10 rounded-xl border text-xs font-semibold transition cursor-pointer active:scale-95 ${
                         selectedGrade === "preparatoria"
@@ -242,7 +273,10 @@ function Prep() {
                   <div className="grid grid-cols-2 gap-2">
                     <button
                       type="button"
-                      onClick={() => setSelectedObjective("estudiar")}
+                      onClick={() => {
+                        setSelectedObjective("estudiar");
+                        window.localStorage.setItem("lybanhi_objective", "estudiar");
+                      }}
                       className={`flex items-center justify-center gap-1.5 h-10 rounded-xl border text-xs font-semibold transition cursor-pointer active:scale-95 ${
                         selectedObjective === "estudiar"
                           ? "border-primary bg-primary/10 text-primary"
@@ -253,7 +287,10 @@ function Prep() {
                     </button>
                     <button
                       type="button"
-                      onClick={() => setSelectedObjective("admision")}
+                      onClick={() => {
+                        setSelectedObjective("admision");
+                        window.localStorage.setItem("lybanhi_objective", "admision");
+                      }}
                       className={`flex items-center justify-center gap-1.5 h-10 rounded-xl border text-xs font-semibold transition cursor-pointer active:scale-95 ${
                         selectedObjective === "admision"
                           ? "border-primary bg-primary/10 text-primary"

@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { useServerFn } from "@tanstack/react-start";
 import { useQueryClient } from "@tanstack/react-query";
@@ -25,6 +25,8 @@ function Onboarding() {
   const gen = useServerFn(generateRecommendations);
 
   const [step, setStep] = useState(0);
+  const [selectedGrade, setSelectedGrade] = useState<"secundaria" | "preparatoria">("preparatoria");
+  const [selectedObjective, setSelectedObjective] = useState<"estudiar" | "admision">("estudiar");
   const [skills, setSkills] = useState<string[]>([]);
   const [interests, setInterests] = useState("");
   const [subjects, setSubjects] = useState<Record<string, number>>({});
@@ -32,6 +34,22 @@ function Onboarding() {
   const [country, setCountry] = useState("");
   const [uniType, setUniType] = useState<"public" | "private" | "online" | "any">("any");
   const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const savedGrade = window.localStorage.getItem("lybanhi_grade") as "secundaria" | "preparatoria" | null;
+      const savedObj = window.localStorage.getItem("lybanhi_objective") as "estudiar" | "admision" | null;
+      if (savedGrade) setSelectedGrade(savedGrade);
+      if (savedObj) setSelectedObjective(savedObj);
+
+      if (!window.localStorage.getItem("lybanhi_grade")) {
+        window.localStorage.setItem("lybanhi_grade", "preparatoria");
+      }
+      if (!window.localStorage.getItem("lybanhi_objective")) {
+        window.localStorage.setItem("lybanhi_objective", "estudiar");
+      }
+    }
+  }, []);
 
   const toggleSkill = (k: string) => setSkills(s => s.includes(k) ? s.filter(x => x !== k) : [...s, k]);
   const rate = (k: string, n: number) => setSubjects(p => ({ ...p, [k]: n }));
@@ -54,7 +72,7 @@ function Onboarding() {
     } finally { setBusy(false); }
   };
 
-  const steps = [Brain, Compass, GraduationCap];
+  const steps = [GraduationCap, Brain, Compass, Star];
   const StepIcon = steps[step];
 
   return (
@@ -64,7 +82,7 @@ function Onboarding() {
         <h1 className="font-display text-3xl font-bold leading-tight">{t("onboarding.title")}</h1>
         <p className="mt-2 text-sm text-muted-foreground">{t("onboarding.subtitle")}</p>
         <div className="mt-4 flex gap-2">
-          {[0,1,2].map(i => (
+          {[0,1,2,3].map(i => (
             <div key={i} className={`h-1.5 flex-1 rounded-full ${i <= step ? "bg-primary" : "bg-muted"}`} />
           ))}
         </div>
@@ -73,11 +91,106 @@ function Onboarding() {
           <div className="mb-3 flex items-center gap-2">
             <div className="grid size-8 place-items-center rounded-lg bg-primary/10"><StepIcon className="size-4 text-primary" /></div>
             <h2 className="font-display text-lg font-semibold">
-              {step === 0 ? t("onboarding.skillsTitle") : step === 1 ? t("onboarding.subjectsTitle") : t("onboarding.budgetTitle")}
+              {step === 0 
+                ? "Grado y Objetivo" 
+                : step === 1 
+                ? t("onboarding.skillsTitle") 
+                : step === 2 
+                ? t("onboarding.subjectsTitle") 
+                : t("onboarding.budgetTitle")}
             </h2>
           </div>
 
           {step === 0 && (
+            <div className="space-y-5">
+              <p className="text-sm text-muted-foreground">Dinos en qué nivel escolar estás y cuál es tu meta principal para personalizar tu experiencia.</p>
+              
+              {/* Grado Selector */}
+              <div>
+                <span className="text-xs font-bold text-muted-foreground block mb-2 uppercase px-0.5">Nivel Escolar (Grado)</span>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSelectedGrade("secundaria");
+                      window.localStorage.setItem("lybanhi_grade", "secundaria");
+                    }}
+                    className={`flex items-center justify-center gap-1.5 h-12 rounded-xl border text-sm font-semibold transition cursor-pointer active:scale-95 ${
+                      selectedGrade === "secundaria"
+                        ? "border-primary bg-primary text-primary-foreground shadow-sm font-bold"
+                        : "border-border bg-muted text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    Secundaria
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSelectedGrade("preparatoria");
+                      window.localStorage.setItem("lybanhi_grade", "preparatoria");
+                    }}
+                    className={`flex items-center justify-center gap-1.5 h-12 rounded-xl border text-sm font-semibold transition cursor-pointer active:scale-95 ${
+                      selectedGrade === "preparatoria"
+                        ? "border-primary bg-primary text-primary-foreground shadow-sm font-bold"
+                        : "border-border bg-muted text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    Preparatoria
+                  </button>
+                </div>
+              </div>
+
+              {/* Objetivo Selector */}
+              <div>
+                <span className="text-xs font-bold text-muted-foreground block mb-2 uppercase px-0.5">Objetivo Académico</span>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSelectedObjective("estudiar");
+                      window.localStorage.setItem("lybanhi_objective", "estudiar");
+                    }}
+                    className={`flex items-center justify-center gap-1.5 h-12 rounded-xl border text-sm font-semibold transition cursor-pointer active:scale-95 ${
+                      selectedObjective === "estudiar"
+                        ? "border-primary bg-primary text-primary-foreground shadow-sm font-bold"
+                        : "border-border bg-muted text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    Estudiar Materias
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSelectedObjective("admision");
+                      window.localStorage.setItem("lybanhi_objective", "admision");
+                    }}
+                    className={`flex items-center justify-center gap-1.5 h-12 rounded-xl border text-sm font-semibold transition cursor-pointer active:scale-95 ${
+                      selectedObjective === "admision"
+                        ? "border-primary bg-primary text-primary-foreground shadow-sm font-bold"
+                        : "border-border bg-muted text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    Examen de Admisión
+                  </button>
+                </div>
+              </div>
+
+              {/* Detalle explicativo de la selección */}
+              <div className="bg-[#17224D]/5 border border-[#3B6DE8]/10 rounded-xl p-3.5 text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                {selectedObjective === "estudiar" ? (
+                  <span>
+                    📚 <strong>Modo Estudio Activo:</strong> Habilitaremos quizzes adaptados a las asignaturas de tu grado escolar actual para entrenar a diario. En la versión Pro también podrás subir tus propios apuntes.
+                  </span>
+                ) : (
+                  <span>
+                    🎯 <strong>Examen de Admisión Activo:</strong> Adaptaremos las guías de estudio y el contenido hacia exámenes de admisión {selectedGrade === "preparatoria" ? "universitaria (EXANI-II / PAA)" : "a preparatoria (tipo COMIPEMS)"}.
+                  </span>
+                )}
+              </div>
+            </div>
+          )}
+
+          {step === 1 && (
             <>
               <p className="mb-3 text-sm text-muted-foreground">{t("onboarding.skillsHelp")}</p>
               <div className="flex flex-wrap gap-2">
@@ -100,7 +213,7 @@ function Onboarding() {
             </>
           )}
 
-          {step === 1 && (
+          {step === 2 && (
             <>
               <p className="mb-3 text-sm text-muted-foreground">{t("onboarding.subjectsHelp")}</p>
               <ul className="space-y-2">
@@ -123,7 +236,7 @@ function Onboarding() {
             </>
           )}
 
-          {step === 2 && (
+          {step === 3 && (
             <div className="space-y-4">
               <div>
                 <label className="text-sm font-medium">{t("onboarding.budgetTitle")}</label>
@@ -156,7 +269,7 @@ function Onboarding() {
               <ArrowLeft className="size-4" /> {t("common.back")}
             </button>
           )}
-          {step < 2 ? (
+          {step < 3 ? (
             <button onClick={() => setStep(s => s + 1)} className="ml-auto inline-flex h-12 items-center justify-center gap-2 rounded-2xl bg-primary px-5 font-semibold text-primary-foreground">
               {t("common.next")} <ArrowRight className="size-4" />
             </button>
