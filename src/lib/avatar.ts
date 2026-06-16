@@ -165,29 +165,36 @@ export class Avatar {
     footRightGeo.scale(1.8, 0.6, 1.1); // Foot shape
 
     // Build realistic deformed head geometry
-    const headGeo = new THREE.SphereGeometry(0.12, 32, 32);
-    const headPos = headGeo.attributes.position;
+    const headGeo = new THREE.SphereGeometry(0.12, 32, 32)
+    const pos = headGeo.attributes.position
 
-    for (let i = 0; i < headPos.count; i++) {
-      const y = headPos.getY(i);
-      const z = headPos.getZ(i);
-      
-      // Achatar arriba del cráneo
-      if (y > 0.08) headPos.setY(i, y * 0.85);
-      
-      // Mandíbula más angosta abajo
+    for (let i = 0; i < pos.count; i++) {
+      const x = pos.getX(i)
+      const y = pos.getY(i)
+      const z = pos.getZ(i)
+
+      // Achatar cráneo arriba
+      if (y > 0.08) pos.setY(i, y * 0.85)
+
+      // Estrechar mandíbula abajo
       if (y < -0.05) {
-        headPos.setX(i, headPos.getX(i) * 0.75);
-        headPos.setZ(i, z * 0.75);
+        pos.setX(i, x * 0.75)
+        pos.setZ(i, z * 0.75)
       }
-      
+
       // Proyectar frente hacia adelante
       if (z > 0.05 && y > -0.03 && y < 0.06) {
-        headPos.setZ(i, z * 1.15);
+        pos.setZ(i, z * 1.15)
+      }
+
+      // Occipital (parte trasera redondeada)
+      if (z < -0.06 && y > 0.0) {
+        pos.setZ(i, z * 1.08)
       }
     }
-    headPos.needsUpdate = true;
-    headGeo.computeVertexNormals();
+
+    pos.needsUpdate = true
+    headGeo.computeVertexNormals()
 
     // Segment specifications with offset coordinates (meters)
     const segments = [
