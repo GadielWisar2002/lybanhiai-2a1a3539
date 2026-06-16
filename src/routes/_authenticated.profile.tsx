@@ -1,5 +1,4 @@
 import { createFileRoute, useNavigate, Link, useRouter } from "@tanstack/react-router";
-import { AvatarCustomizer } from "@/components/AvatarCustomizer";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useTranslation } from "react-i18next";
@@ -11,10 +10,7 @@ import { AppHeader } from "@/components/AppHeader";
 import { supabase } from "@/integrations/supabase/client";
 import { StreakBadge } from "@/components/StreakBadge";
 import { LogOut, Globe, Trophy, Lock, User, BookOpen } from "lucide-react";
-import { BLOOKS } from "@/lib/games.functions";
-import { RobloxAvatarRenderer } from "@/components/RobloxAvatarRenderer";
-import { LayeredAvatarRenderer } from "@/components/LayeredAvatarRenderer";
-import { getPrestigeTitle, getPrestigeBadge } from "@/lib/avatar.functions";
+import { BLOOKS, getPrestigeTitle, getPrestigeBadge } from "@/lib/games.functions";
 import { useAuth } from "@/hooks/use-auth";
 import { toast } from "sonner";
 
@@ -153,23 +149,23 @@ function Profile() {
       <div className="mx-auto max-w-md px-5 pt-4">
         <h1 className="font-display text-2xl font-bold">{t("profile.title")}</h1>
         
-        <Link to="/games" search={{ tab: "avatar" }} className="block mt-4 transition hover:opacity-90 active:scale-[0.99]">
-          <div className="flex items-center gap-3.5 rounded-2xl border border-border bg-card p-4 shadow-[var(--shadow-card)] cursor-pointer">
-            <div className="size-14 shrink-0 rounded-2xl bg-slate-900 border border-slate-800/80 shadow-[var(--shadow-card)] overflow-hidden flex items-center justify-center relative">
-              <LayeredAvatarRenderer config={data?.profile?.avatar_config as any} profileView={true} />
-            </div>
-            <div>
-              <p className="font-display font-bold text-lg leading-tight">{data?.profile?.full_name}</p>
-              <p className="mt-1 text-xs text-muted-foreground flex items-center gap-1.5">
-                <span className="text-sm leading-none">{getPrestigeBadge(getPrestigeTitle(data?.streak.total_xp ?? 0))}</span>
-                <span className="font-bold text-primary">{getPrestigeTitle(data?.streak.total_xp ?? 0)}</span>
-                {activeBlook && (
-                  <span className="text-muted-foreground opacity-80">• {activeBlook.emoji} {t(`games.blookName.${activeBlook.id}`, { defaultValue: activeBlook.name })}</span>
-                )}
-              </p>
-            </div>
+        <div className="flex items-center gap-3.5 rounded-2xl border border-border bg-card p-4 shadow-[var(--shadow-card)] mt-4">
+          <div className="size-14 shrink-0 rounded-2xl bg-primary/10 border border-border overflow-hidden flex items-center justify-center relative">
+            <span className="font-display font-bold text-xl text-primary">
+              {data?.profile?.full_name?.charAt(0).toUpperCase() || "U"}
+            </span>
           </div>
-        </Link>
+          <div>
+            <p className="font-display font-bold text-lg leading-tight">{data?.profile?.full_name}</p>
+            <p className="mt-1 text-xs text-muted-foreground flex items-center gap-1.5">
+              <span className="text-sm leading-none">{getPrestigeBadge(getPrestigeTitle(data?.streak.total_xp ?? 0))}</span>
+              <span className="font-bold text-primary">{getPrestigeTitle(data?.streak.total_xp ?? 0)}</span>
+              {activeBlook && (
+                <span className="text-muted-foreground opacity-80">• {activeBlook.emoji} {t(`games.blookName.${activeBlook.id}`, { defaultValue: activeBlook.name })}</span>
+              )}
+            </p>
+          </div>
+        </div>
 
         <section className="mt-6 grid grid-cols-2 gap-3">
           <div className="rounded-2xl border border-border bg-card p-4">

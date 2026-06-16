@@ -10,11 +10,10 @@ import { AppHeader } from "@/components/AppHeader";
 import { Gamepad2, Lock, Sparkles, Trophy, Settings, RefreshCw, BookOpen } from "lucide-react";
 import { toast } from "sonner";
 import streakCap from "@/assets/streak-cap.png";
-import { AvatarCustomizer } from "@/components/AvatarCustomizer";
 import { useAuth } from "@/hooks/use-auth";
 
 const GamesSearchSchema = z.object({
-  tab: z.enum(["play", "locker", "avatar", "bank"]).optional(),
+  tab: z.enum(["play", "locker", "bank"]).optional(),
 });
 
 export const Route = createFileRoute("/_authenticated/games")({
@@ -62,14 +61,14 @@ function GamesHub() {
   const { data: dash, isLoading: dashLoading } = useQuery({ queryKey: ["dashboard"], queryFn: () => getDash() });
   const { data: locker, isLoading: lockerLoading } = useQuery({ queryKey: ["unlockedBlooks"], queryFn: () => listBlooks() });
 
-  const [activeTab, setActiveTab] = useState<"play" | "locker" | "avatar" | "bank">(tab ?? "play");
+  const [activeTab, setActiveTab] = useState<"play" | "locker" | "bank">(tab === "avatar" ? "play" : (tab ?? "play"));
   const [amountToConvert, setAmountToConvert] = useState(1);
   const [showConfirmBankModal, setShowConfirmBankModal] = useState(false);
   const [selectedBlookToBuy, setSelectedBlookToBuy] = useState<Blook | null>(null);
 
   useEffect(() => {
-    if (tab) {
-      setActiveTab(tab);
+    if (tab && tab !== "avatar") {
+      setActiveTab(tab as any);
     }
   }, [tab]);
 
@@ -247,19 +246,7 @@ function GamesHub() {
     );
   }
 
-  if (activeTab === "avatar") {
-    return (
-      <div className="animate-in fade-in duration-300">
-        <AvatarCustomizer
-          inline={false}
-          onClose={() => {
-            setActiveTab("play");
-            navigate({ to: "/games", search: { tab: "play" } });
-          }}
-        />
-      </div>
-    );
-  }
+
 
   return (
     <>
@@ -270,7 +257,7 @@ function GamesHub() {
           <div>
             <h1 className="font-display text-2xl font-bold">{t("games.title", { defaultValue: "Games" })}</h1>
             <div className="flex flex-col gap-0.5 text-xs text-muted-foreground">
-              <p>{t("games.subtitle", { defaultValue: "Spend coins to play & collect avatars!" })}</p>
+              <p>{t("games.subtitle", { defaultValue: "¡Juega y colecciona Blooks!" })}</p>
               <p className="text-[10px] font-bold text-slate-500">Sesión: {dash?.email} | Rol: {isDeveloper ? "developer" : "student"}</p>
             </div>
           </div>
@@ -311,7 +298,7 @@ function GamesHub() {
 
         {/* Tab Selection */}
         <div className="mt-5 flex gap-2 border-b border-border pb-px overflow-x-auto whitespace-nowrap scrollbar-none">
-          {(["play", "locker", "avatar", "bank"] as const).map((tab) => (
+          {(["play", "locker", "bank"] as const).map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
@@ -322,7 +309,6 @@ function GamesHub() {
               }`}
             >
               {tab === "bank" ? t("games.convertXp", { defaultValue: "Convertir XP" }) :
-               tab === "avatar" ? t("games.avatar", { defaultValue: "Avatar" }) :
                t(`games.${tab}`, { defaultValue: tab })}
             </button>
           ))}
@@ -689,11 +675,11 @@ function GamesHub() {
               <div>
                 <h4 className="font-display font-bold text-sm text-foreground">¿Qué es el Locker?</h4>
                 <p className="mt-1 text-xs text-muted-foreground leading-relaxed">
-                  Aquí se guardan tus <strong>Blooks</strong> (avatares coleccionables). Puedes hacer clic sobre cualquiera que hayas desbloqueado para equiparlo como insignia activa junto a tu nombre de perfil.
+                  Aquí se guardan tus <strong>Blooks</strong> (insignias coleccionables). Puedes hacer clic sobre cualquiera que hayas desbloqueado para equiparlo como insignia activa junto a tu nombre de perfil.
                 </p>
                 <p className="mt-2 text-[11px] text-[#3B6DE8] font-bold flex items-center gap-1">
                   <span>💡</span>
-                  <span>Puedes conseguirlos comprando paquetes en la pestaña de Juegos, o adquirirlos directamente aquí haciendo clic sobre cualquier avatar bloqueado.</span>
+                  <span>Puedes conseguirlos comprando paquetes en la pestaña de Juegos, o adquirirlos directamente aquí haciendo clic sobre cualquier Blook bloqueado.</span>
                 </p>
               </div>
             </div>

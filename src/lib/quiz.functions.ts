@@ -255,7 +255,7 @@ export const getDashboard = createServerFn({ method: "GET" })
   .handler(async ({ context }) => {
     const { supabase, userId } = context;
     const [profileRes, streakRes, recsRes] = await Promise.all([
-      supabase.from("profiles").select("full_name, language, active_blook_id, avatar_config, unlocked_avatar_items").eq("id", userId).maybeSingle(),
+      supabase.from("profiles").select("full_name, language, active_blook_id").eq("id", userId).maybeSingle(),
       supabase.from("streaks").select("*").eq("user_id", userId).maybeSingle(),
       supabase.from("recommendations").select("id, career_name, match_score, tags, language").eq("user_id", userId).order("match_score", { ascending: false }).limit(3),
     ]);

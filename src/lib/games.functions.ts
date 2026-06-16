@@ -358,3 +358,25 @@ export const devSetLevel = createServerFn({ method: "POST" })
     await supabase.from("streaks").update({ total_xp: targetXp, updated_at: new Date().toISOString() }).eq("user_id", userId);
     return { totalXp: targetXp };
   });
+
+export const getPrestigeTitle = (xp: number): string => {
+  if (xp >= 30000) return "Rector Supremo";
+  if (xp >= 15000) return "Leyenda Académica";
+  if (xp >= 7000) return "Erudito";
+  if (xp >= 3500) return "Académico";
+  if (xp >= 1500) return "Alumno Destacado";
+  if (xp >= 500) return "Estudiante";
+  return "Aprendiz";
+};
+
+export const getPrestigeBadge = (title: string): string => {
+  switch (title) {
+    case "Rector Supremo": return "👑";
+    case "Leyenda Académica": return "🦁";
+    case "Erudito": return "📜";
+    case "Académico": return "📚";
+    case "Alumno Destacado": return "⭐";
+    case "Estudiante": return "📝";
+    default: return "🌱";
+  }
+};
