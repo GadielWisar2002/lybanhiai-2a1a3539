@@ -1,10 +1,5 @@
 import * as THREE from "three";
 
-// Establish safe fallback for THREE.SmoothShading to support various Three.js releases
-if (!(THREE as any).SmoothShading) {
-  (THREE as any).SmoothShading = 1;
-}
-
 export class Avatar {
   public mesh: THREE.SkinnedMesh;
   public skeleton: THREE.Skeleton;
@@ -205,7 +200,7 @@ export class Avatar {
     let vertexOffset = 0;
     let indexOffset = 0;
 
-    const SmoothShadingVal = (THREE as any).SmoothShading;
+    const SmoothShadingVal = (THREE as any).SmoothShading ?? 1;
 
     segments.forEach((seg, idx) => {
       const geom = seg.geometry;
