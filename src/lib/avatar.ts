@@ -91,14 +91,14 @@ export class Avatar {
         geometry: new THREE.CylinderGeometry(0.05, 0.06, 0.10, 12),
         boneIndex: 1, // spineBone index (neck attaches to spine)
         color: 0xf97316, // Orange
-        offset: new THREE.Vector3(0, 1.73, 0),
+        offset: new THREE.Vector3(0, 1.65, 0),
       },
       {
         name: "head",
         geometry: new THREE.SphereGeometry(0.12, 16, 16),
         boneIndex: 2, // headBone index
         color: 0x44ff44, // Green
-        offset: new THREE.Vector3(0, 1.86, 0),
+        offset: new THREE.Vector3(0, 1.82, 0),
       },
       {
         name: "leftUpperArm",
