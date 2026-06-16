@@ -4,6 +4,8 @@ export class Avatar {
   public mesh: THREE.SkinnedMesh;
   public skeleton: THREE.Skeleton;
   public bones: THREE.Bone[];
+  public leftEye: THREE.Object3D;
+  public rightEye: THREE.Object3D;
 
   constructor(height: number = 2.0) {
     // Proportions mapping to preserve identical bone attachment points
@@ -53,6 +55,98 @@ export class Avatar {
 
     this.bones = [hipsBone, spineBone, headBone, leftLegBone, rightLegBone, leftArmBone, rightArmBone];
     this.skeleton = new THREE.Skeleton(this.bones);
+
+    // Create eyes
+    const eyeBallGeo = new THREE.SphereGeometry(0.022, 12, 12);
+    const irisGeo = new THREE.SphereGeometry(0.014, 10, 10);
+    const pupilGeo = new THREE.SphereGeometry(0.008, 8, 8);
+
+    const eyeBallMat = new THREE.MeshStandardMaterial({
+      color: 0xffffff,
+      roughness: 0.1,
+      metalness: 0.0,
+    });
+    const leftIrisMat = new THREE.MeshStandardMaterial({
+      color: 0x3a6ea5,
+      roughness: 0.5,
+      metalness: 0.0,
+    });
+    const rightIrisMat = new THREE.MeshStandardMaterial({
+      color: 0x3a6ea5,
+      roughness: 0.5,
+      metalness: 0.0,
+    });
+    const pupilMat = new THREE.MeshStandardMaterial({
+      color: 0x111111,
+      roughness: 0.9,
+      metalness: 0.0,
+    });
+
+    // Left Eye
+    this.leftEye = new THREE.Object3D();
+    this.leftEye.name = "leftEye";
+    // Eyeball world position is (-0.045, 1.838, 0.108).
+    // headBone is at Y=1.75. Relative coordinate is (-0.045, 0.088, 0.108).
+    this.leftEye.position.set(-0.045, 0.088, 0.108);
+
+    const leftEyeballMesh = new THREE.Mesh(eyeBallGeo, eyeBallMat);
+    leftEyeballMesh.name = "eyeball";
+    leftEyeballMesh.castShadow = true;
+    leftEyeballMesh.receiveShadow = true;
+    this.leftEye.add(leftEyeballMesh);
+
+    const leftIrisMesh = new THREE.Mesh(irisGeo, leftIrisMat);
+    leftIrisMesh.name = "iris";
+    // Iris world position is (-0.045, 1.838, 0.118).
+    // Relative to leftEye center: (0, 0, 0.010).
+    leftIrisMesh.position.set(0, 0, 0.010);
+    leftIrisMesh.castShadow = true;
+    leftIrisMesh.receiveShadow = true;
+    this.leftEye.add(leftIrisMesh);
+
+    const leftPupilMesh = new THREE.Mesh(pupilGeo, pupilMat);
+    leftPupilMesh.name = "pupil";
+    // Pupil world position is (-0.045, 1.838, 0.124).
+    // Relative to leftEye center: (0, 0, 0.016).
+    leftPupilMesh.position.set(0, 0, 0.016);
+    leftPupilMesh.castShadow = true;
+    leftPupilMesh.receiveShadow = true;
+    this.leftEye.add(leftPupilMesh);
+
+    // Right Eye
+    this.rightEye = new THREE.Object3D();
+    this.rightEye.name = "rightEye";
+    // Eyeball world position is (0.045, 1.838, 0.108).
+    // headBone is at Y=1.75. Relative coordinate is (0.045, 0.088, 0.108).
+    this.rightEye.position.set(0.045, 0.088, 0.108);
+
+    const rightEyeballMesh = new THREE.Mesh(eyeBallGeo, eyeBallMat);
+    rightEyeballMesh.name = "eyeball";
+    rightEyeballMesh.castShadow = true;
+    rightEyeballMesh.receiveShadow = true;
+    this.rightEye.add(rightEyeballMesh);
+
+    const rightIrisMesh = new THREE.Mesh(irisGeo, rightIrisMat);
+    rightIrisMesh.name = "iris";
+    // Iris world position is (0.045, 1.838, 0.118).
+    // Relative to rightEye center: (0, 0, 0.010).
+    rightIrisMesh.position.set(0, 0, 0.010);
+    rightIrisMesh.castShadow = true;
+    rightIrisMesh.receiveShadow = true;
+    this.rightEye.add(rightIrisMesh);
+
+    const rightPupilMesh = new THREE.Mesh(pupilGeo, pupilMat);
+    rightPupilMesh.name = "pupil";
+    // Pupil world position is (0.045, 1.838, 0.124).
+    // Relative to rightEye center: (0, 0, 0.016).
+    rightPupilMesh.position.set(0, 0, 0.016);
+    rightPupilMesh.castShadow = true;
+    rightPupilMesh.receiveShadow = true;
+    this.rightEye.add(rightPupilMesh);
+
+    // Attach both eyes to headBone
+    headBone.add(this.leftEye);
+    headBone.add(this.rightEye);
 
     // Build organic geometries according to strict guidelines
     const torsoGeo = new THREE.CylinderGeometry(0.18, 0.15, 0.50, 12);
