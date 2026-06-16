@@ -194,15 +194,19 @@ export class Avatar {
     const mergedSkinWeights: number[] = [];
     const mergedIndices: number[] = [];
 
-    const materials: THREE.MeshStandardMaterial[] = [];
-    const groups: { start: number; count: number; materialIndex: number }[] = [];
-
-    let vertexOffset = 0;
-    let indexOffset = 0;
-
     const SmoothShadingVal = (THREE as any).SmoothShading ?? 1;
 
-    segments.forEach((seg, idx) => {
+    const skinMat = new THREE.MeshStandardMaterial({ 
+      color: 0xffd6b0,  // tono piel
+      roughness: 0.8,
+      metalness: 0.0,
+      flatShading: false,
+    });
+    (skinMat as any).smoothShading = SmoothShadingVal;
+
+    let vertexOffset = 0;
+
+    segments.forEach((seg) => {
       const geom = seg.geometry;
       const boneIdx = seg.boneIndex;
 
@@ -226,42 +230,19 @@ export class Avatar {
         mergedSkinWeights.push(1.0, 0.0, 0.0, 0.0);
       }
 
-      let indexCount = 0;
       if (indexAttr) {
-        indexCount = indexAttr.count;
+        const indexCount = indexAttr.count;
         for (let i = 0; i < indexCount; i++) {
           mergedIndices.push(indexAttr.getX(i) + vertexOffset);
         }
       } else {
-        indexCount = vertexCount;
+        const indexCount = vertexCount;
         for (let i = 0; i < indexCount; i++) {
           mergedIndices.push(i + vertexOffset);
         }
       }
 
-      // Group range for multi-material debug colors
-      groups.push({
-        start: indexOffset,
-        count: indexCount,
-        materialIndex: idx
-      });
-
-      // Construct a material with smooth shading and skinning support
-      const material = new THREE.MeshStandardMaterial({
-        color: seg.color,
-        roughness: 0.5,
-        metalness: 0.15,
-        flatShading: false,
-      });
-
-      // Inject the required smoothShading setting
-      (material as any).smoothShading = SmoothShadingVal;
-
-      materials.push(material);
-
       vertexOffset += vertexCount;
-      indexOffset += indexCount;
-
       geom.dispose();
     });
 
@@ -273,13 +254,8 @@ export class Avatar {
     mergedGeometry.setAttribute("skinWeight", new THREE.Float32BufferAttribute(mergedSkinWeights, 4));
     mergedGeometry.setIndex(mergedIndices);
 
-    // Apply groups for material assignment
-    groups.forEach(group => {
-      mergedGeometry.addGroup(group.start, group.count, group.materialIndex);
-    });
-
     // Create the SkinnedMesh and bind skeleton
-    this.mesh = new THREE.SkinnedMesh(mergedGeometry, materials);
+    this.mesh = new THREE.SkinnedMesh(mergedGeometry, skinMat);
     this.mesh.add(hipsBone); 
     this.mesh.bind(this.skeleton);
 

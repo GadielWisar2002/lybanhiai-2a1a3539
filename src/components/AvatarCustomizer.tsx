@@ -347,14 +347,14 @@ export const AvatarCustomizer: React.FC = () => {
           <div className="absolute bottom-3 left-3 bg-slate-900/90 border border-slate-800 px-3 py-2 rounded-lg text-[10px] space-y-1 backdrop-blur shadow-lg">
             <p className="font-bold text-slate-400 mb-1 border-b border-slate-800 pb-0.5">Segmentos Orgánicos</p>
             <div className="grid grid-cols-2 gap-x-3 gap-y-0.5 font-medium text-slate-300">
-              <span className="flex items-center gap-1.5"><span className="size-2 rounded bg-[#44ff44]" /> Cabeza (Esfera)</span>
-              <span className="flex items-center gap-1.5"><span className="size-2 rounded bg-[#f97316]" /> Cuello (Cilindro)</span>
-              <span className="flex items-center gap-1.5"><span className="size-2 rounded bg-[#ff4444]" /> Torso (Cilindro Elíp.)</span>
-              <span className="flex items-center gap-1.5"><span className="size-2 rounded bg-[#4f46e5]" /> Caderas (Cilindro)</span>
-              <span className="flex items-center gap-1.5"><span className="size-2 rounded bg-[#eab308]" /> Brazos (Cilindros)</span>
-              <span className="flex items-center gap-1.5"><span className="size-2 rounded bg-[#06b6d4]" /> Manos (Esferas)</span>
-              <span className="flex items-center gap-1.5"><span className="size-2 rounded bg-[#3b82f6]" /> Piernas (Cilindros)</span>
-              <span className="flex items-center gap-1.5"><span className="size-2 rounded bg-[#8b5cf6]" /> Pies (Esferas)</span>
+              <span className="flex items-center gap-1.5"><span className="size-2 rounded bg-[#ffd6b0]" /> Cabeza (Esfera)</span>
+              <span className="flex items-center gap-1.5"><span className="size-2 rounded bg-[#ffd6b0]" /> Cuello (Cilindro)</span>
+              <span className="flex items-center gap-1.5"><span className="size-2 rounded bg-[#ffd6b0]" /> Torso (Cilindro Elíp.)</span>
+              <span className="flex items-center gap-1.5"><span className="size-2 rounded bg-[#ffd6b0]" /> Caderas (Cilindro)</span>
+              <span className="flex items-center gap-1.5"><span className="size-2 rounded bg-[#ffd6b0]" /> Brazos (Cilindros)</span>
+              <span className="flex items-center gap-1.5"><span className="size-2 rounded bg-[#ffd6b0]" /> Manos (Esferas)</span>
+              <span className="flex items-center gap-1.5"><span className="size-2 rounded bg-[#ffd6b0]" /> Piernas (Cilindros)</span>
+              <span className="flex items-center gap-1.5"><span className="size-2 rounded bg-[#ffd6b0]" /> Pies (Esferas)</span>
             </div>
           </div>
         </div>
