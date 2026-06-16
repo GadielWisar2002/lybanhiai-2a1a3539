@@ -178,6 +178,24 @@ function Profile() {
           </div>
         </section>
 
+        {/* Sección de Creador de Avatar */}
+        <section className="mt-6 rounded-2xl border border-border bg-card p-4 shadow-sm">
+          <div className="mb-3 flex items-center gap-2">
+            <User className="size-4 text-primary" />
+            <h2 className="font-semibold">Creador de Avatares 3D</h2>
+          </div>
+          <p className="text-xs text-muted-foreground mb-3 leading-relaxed">
+            Diseña y personaliza tu propio avatar humanoide articulado en 3D para la plataforma.
+          </p>
+          <Link
+            to="/games"
+            search={{ tab: "avatar" }}
+            className="flex items-center justify-center gap-2 h-11 w-full rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 active:scale-[0.99] transition cursor-pointer shadow-sm text-center font-display"
+          >
+            Personalizar Avatar 3D
+          </Link>
+        </section>
+
         <section className="mt-6 rounded-2xl border border-border bg-card p-4">
           <div className="mb-3 flex items-center gap-2"><Globe className="size-4 text-primary" /><h2 className="font-semibold">{t("profile.language")}</h2></div>
           <div className="grid grid-cols-3 gap-2">

@@ -9,11 +9,12 @@ import { listUnlockedBlooks, equipBlook, BLOOKS, convertXpToCoins, unlockGame, b
 import { AppHeader } from "@/components/AppHeader";
 import { Gamepad2, Lock, Sparkles, Trophy, Settings, RefreshCw, BookOpen } from "lucide-react";
 import { toast } from "sonner";
+import { AvatarCustomizer } from "@/components/AvatarCustomizer";
 import streakCap from "@/assets/streak-cap.png";
 import { useAuth } from "@/hooks/use-auth";
 
 const GamesSearchSchema = z.object({
-  tab: z.enum(["play", "locker", "bank"]).optional(),
+  tab: z.enum(["play", "locker", "avatar", "bank"]).optional(),
 });
 
 export const Route = createFileRoute("/_authenticated/games")({
@@ -61,13 +62,13 @@ function GamesHub() {
   const { data: dash, isLoading: dashLoading } = useQuery({ queryKey: ["dashboard"], queryFn: () => getDash() });
   const { data: locker, isLoading: lockerLoading } = useQuery({ queryKey: ["unlockedBlooks"], queryFn: () => listBlooks() });
 
-  const [activeTab, setActiveTab] = useState<"play" | "locker" | "bank">(tab === "avatar" ? "play" : (tab ?? "play"));
+  const [activeTab, setActiveTab] = useState<"play" | "locker" | "avatar" | "bank">(tab === "avatar" ? "avatar" : (tab ?? "play"));
   const [amountToConvert, setAmountToConvert] = useState(1);
   const [showConfirmBankModal, setShowConfirmBankModal] = useState(false);
   const [selectedBlookToBuy, setSelectedBlookToBuy] = useState<Blook | null>(null);
 
   useEffect(() => {
-    if (tab && tab !== "avatar") {
+    if (tab) {
       setActiveTab(tab as any);
     }
   }, [tab]);
@@ -298,7 +299,7 @@ function GamesHub() {
 
         {/* Tab Selection */}
         <div className="mt-5 flex gap-2 border-b border-border pb-px overflow-x-auto whitespace-nowrap scrollbar-none">
-          {(["play", "locker", "bank"] as const).map((tab) => (
+          {(["play", "locker", "avatar", "bank"] as const).map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
@@ -309,6 +310,7 @@ function GamesHub() {
               }`}
             >
               {tab === "bank" ? t("games.convertXp", { defaultValue: "Convertir XP" }) :
+               tab === "avatar" ? t("avatar", { defaultValue: "Avatar" }) :
                t(`games.${tab}`, { defaultValue: tab })}
             </button>
           ))}
@@ -861,6 +863,12 @@ function GamesHub() {
               </div>
             )}
           </div>
+        </section>
+      )}
+
+      {activeTab === "avatar" && (
+        <section className="mt-5 animate-in fade-in duration-300">
+          <AvatarCustomizer />
         </section>
       )}
 
