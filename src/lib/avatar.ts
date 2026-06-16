@@ -77,112 +77,112 @@ export class Avatar {
         geometry: new THREE.CylinderGeometry(0.14, 0.16, 0.22, 10),
         boneIndex: 0, // hipsBone index
         color: 0x4f46e5, // Indigo/Purple
-        offset: new THREE.Vector3(0, 0.91, 0),
+        offset: new THREE.Vector3(0, 1.10, 0),
       },
       {
         name: "torso",
         geometry: torsoGeo,
         boneIndex: 1, // spineBone index
         color: 0xff4444, // Red
-        offset: new THREE.Vector3(0, 1.21, 0),
+        offset: new THREE.Vector3(0, 1.35, 0),
       },
       {
         name: "neck",
         geometry: new THREE.CylinderGeometry(0.05, 0.06, 0.10, 12),
         boneIndex: 1, // spineBone index (neck attaches to spine)
         color: 0xf97316, // Orange
-        offset: new THREE.Vector3(0, 1.51, 0),
+        offset: new THREE.Vector3(0, 1.73, 0),
       },
       {
         name: "head",
         geometry: new THREE.SphereGeometry(0.12, 16, 16),
         boneIndex: 2, // headBone index
         color: 0x44ff44, // Green
-        offset: new THREE.Vector3(0, 1.68, 0),
+        offset: new THREE.Vector3(0, 1.86, 0),
       },
       {
         name: "leftUpperArm",
         geometry: new THREE.CylinderGeometry(0.04, 0.035, 0.28, 8),
         boneIndex: 5, // leftArmBone index
         color: 0xeab308, // Yellow
-        offset: new THREE.Vector3(-0.264, 1.45, 0),
+        offset: new THREE.Vector3(-0.28, 1.62, 0),
       },
       {
         name: "rightUpperArm",
         geometry: new THREE.CylinderGeometry(0.04, 0.035, 0.28, 8),
         boneIndex: 6, // rightArmBone index
         color: 0xeab308, // Yellow
-        offset: new THREE.Vector3(0.264, 1.45, 0),
+        offset: new THREE.Vector3(0.28, 1.62, 0),
       },
       {
         name: "leftLowerArm",
         geometry: new THREE.CylinderGeometry(0.035, 0.03, 0.26, 8),
         boneIndex: 5, // leftArmBone index
         color: 0x84cc16, // Lime
-        offset: new THREE.Vector3(-0.264, 1.18, 0),
+        offset: new THREE.Vector3(-0.32, 1.35, 0),
       },
       {
         name: "rightLowerArm",
         geometry: new THREE.CylinderGeometry(0.035, 0.03, 0.26, 8),
         boneIndex: 6, // rightArmBone index
         color: 0x84cc16, // Lime
-        offset: new THREE.Vector3(0.264, 1.18, 0),
+        offset: new THREE.Vector3(0.32, 1.35, 0),
       },
       {
         name: "leftHand",
         geometry: handLeftGeo,
         boneIndex: 5, // leftArmBone index
         color: 0x06b6d4, // Cyan
-        offset: new THREE.Vector3(-0.264, 1.014, 0),
+        offset: new THREE.Vector3(-0.34, 1.10, 0),
       },
       {
         name: "rightHand",
         geometry: handRightGeo,
         boneIndex: 6, // rightArmBone index
         color: 0x06b6d4, // Cyan
-        offset: new THREE.Vector3(0.264, 1.014, 0),
+        offset: new THREE.Vector3(0.34, 1.10, 0),
       },
       {
         name: "leftUpperLeg",
         geometry: new THREE.CylinderGeometry(0.07, 0.055, 0.40, 8),
         boneIndex: 3, // leftLegBone index
         color: 0x3b82f6, // Blue
-        offset: new THREE.Vector3(-0.132, 0.76, 0),
+        offset: new THREE.Vector3(-0.08, 0.85, 0),
       },
       {
         name: "rightUpperLeg",
         geometry: new THREE.CylinderGeometry(0.07, 0.055, 0.40, 8),
         boneIndex: 4, // rightLegBone index
         color: 0x3b82f6, // Blue
-        offset: new THREE.Vector3(0.132, 0.76, 0),
+        offset: new THREE.Vector3(0.08, 0.85, 0),
       },
       {
         name: "leftLowerLeg",
         geometry: new THREE.CylinderGeometry(0.055, 0.04, 0.38, 8),
         boneIndex: 3, // leftLegBone index
         color: 0x0ea5e9, // Sky
-        offset: new THREE.Vector3(-0.132, 0.37, 0),
+        offset: new THREE.Vector3(-0.09, 0.45, 0),
       },
       {
         name: "rightLowerLeg",
         geometry: new THREE.CylinderGeometry(0.055, 0.04, 0.38, 8),
         boneIndex: 4, // rightLegBone index
         color: 0x0ea5e9, // Sky
-        offset: new THREE.Vector3(0.132, 0.37, 0),
+        offset: new THREE.Vector3(0.09, 0.45, 0),
       },
       {
         name: "leftFoot",
         geometry: footLeftGeo,
         boneIndex: 3, // leftLegBone index
         color: 0x8b5cf6, // Violet
-        offset: new THREE.Vector3(-0.132, 0.144, 0.06), // forward-facing foot offset
+        offset: new THREE.Vector3(-0.09, 0.06, 0.06), // forward-facing foot offset
       },
       {
         name: "rightFoot",
         geometry: footRightGeo,
         boneIndex: 4, // rightLegBone index
         color: 0x8b5cf6, // Violet
-        offset: new THREE.Vector3(0.132, 0.144, 0.06), // forward-facing foot offset
+        offset: new THREE.Vector3(0.09, 0.06, 0.06), // forward-facing foot offset
       }
     ];
 
