@@ -70,6 +70,31 @@ export class Avatar {
     const footRightGeo = new THREE.SphereGeometry(0.06, 16, 16);
     footRightGeo.scale(1.8, 0.6, 1.1); // Foot shape
 
+    // Build realistic deformed head geometry
+    const headGeo = new THREE.SphereGeometry(0.12, 32, 32);
+    const headPos = headGeo.attributes.position;
+
+    for (let i = 0; i < headPos.count; i++) {
+      const y = headPos.getY(i);
+      const z = headPos.getZ(i);
+      
+      // Achatar arriba del cráneo
+      if (y > 0.08) headPos.setY(i, y * 0.85);
+      
+      // Mandíbula más angosta abajo
+      if (y < -0.05) {
+        headPos.setX(i, headPos.getX(i) * 0.75);
+        headPos.setZ(i, z * 0.75);
+      }
+      
+      // Proyectar frente hacia adelante
+      if (z > 0.05 && y > -0.03 && y < 0.06) {
+        headPos.setZ(i, z * 1.15);
+      }
+    }
+    headPos.needsUpdate = true;
+    headGeo.computeVertexNormals();
+
     // Segment specifications with offset coordinates (meters)
     const segments = [
       {
@@ -95,7 +120,7 @@ export class Avatar {
       },
       {
         name: "head",
-        geometry: new THREE.SphereGeometry(0.12, 16, 16),
+        geometry: headGeo,
         boneIndex: 2, // headBone index
         color: 0x44ff44, // Green
         offset: new THREE.Vector3(0, 1.82, 0),
