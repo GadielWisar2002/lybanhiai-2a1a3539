@@ -26,6 +26,7 @@ export const AvatarCustomizer: React.FC = () => {
   const [height, setHeight] = useState<number>(2.0);
   const [animation, setAnimation] = useState<"none" | "walk" | "wave" | "dance">("none");
   const [speed, setSpeed] = useState<number>(1.0);
+  const [showGuides, setShowGuides] = useState<boolean>(true);
   
   // Joint rotation states (in radians, range -Math.PI/2 to Math.PI/2)
   const [headY, setHeadY] = useState<number>(0);
@@ -137,8 +138,66 @@ export const AvatarCustomizer: React.FC = () => {
 
     // Bone reference guides for visualization
     const skeletonHelper = new THREE.SkeletonHelper(avatar.mesh);
-    skeletonHelper.visible = false;
+    skeletonHelper.visible = showGuides;
     scene.add(skeletonHelper);
+
+    // Axes and Height Reference Guides
+    const guidesGroup = new THREE.Group();
+    scene.add(guidesGroup);
+
+    if (showGuides) {
+      // Axes Helper at origin (size 2.2 meters)
+      const axesHelper = new THREE.AxesHelper(2.2);
+      guidesGroup.add(axesHelper);
+
+      // Height Reference Guide Coordinates (corresponds to specified coordinate system)
+      const heightGuides = [
+        { y: 0.06, color: 0x8b5cf6 }, // Pies
+        { y: 0.45, color: 0x0ea5e9 }, // Rodillas
+        { y: 0.85, color: 0x3b82f6 }, // Muslos
+        { y: 1.10, color: 0x4f46e5 }, // Caderas
+        { y: 1.35, color: 0xff4444 }, // Torso / Ombligo
+        { y: 1.62, color: 0xeab308 }, // Hombros
+        { y: 1.73, color: 0xf97316 }, // Cuello
+        { y: 1.86, color: 0x44ff44 }  // Cabeza
+      ];
+
+      // Draw horizontal circles/rings at each height guide
+      heightGuides.forEach(guide => {
+        const points: THREE.Vector3[] = [];
+        for (let i = 0; i <= 64; i++) {
+          const theta = (i / 64) * Math.PI * 2;
+          points.push(new THREE.Vector3(Math.cos(theta) * 0.45, 0, Math.sin(theta) * 0.45));
+        }
+        const circleGeo = new THREE.BufferGeometry().setFromPoints(points);
+        const circleMat = new THREE.LineBasicMaterial({ color: guide.color, transparent: true, opacity: 0.45 });
+        const circle = new THREE.LineLoop(circleGeo, circleMat);
+        circle.position.y = guide.y;
+        guidesGroup.add(circle);
+      });
+
+      // Draw a vertical ruler line at X = -0.5, Z = 0
+      const rulerPoints = [
+        new THREE.Vector3(-0.5, 0, 0),
+        new THREE.Vector3(-0.5, 2.1, 0)
+      ];
+      const rulerGeo = new THREE.BufferGeometry().setFromPoints(rulerPoints);
+      const rulerMat = new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.4 });
+      const rulerLine = new THREE.Line(rulerGeo, rulerMat);
+      guidesGroup.add(rulerLine);
+
+      // Draw tick marks at X = -0.5 to X = -0.4 at each height guide
+      heightGuides.forEach(guide => {
+        const tickPoints = [
+          new THREE.Vector3(-0.5, guide.y, 0),
+          new THREE.Vector3(-0.4, guide.y, 0)
+        ];
+        const tickGeo = new THREE.BufferGeometry().setFromPoints(tickPoints);
+        const tickMat = new THREE.LineBasicMaterial({ color: guide.color });
+        const tickLine = new THREE.Line(tickGeo, tickMat);
+        guidesGroup.add(tickLine);
+      });
+    }
 
     // 7. Animation Loop
     let lastTime = Date.now();
@@ -228,7 +287,7 @@ export const AvatarCustomizer: React.FC = () => {
       renderer.dispose();
       scene.clear();
     };
-  }, [height]);
+  }, [height, showGuides]);
 
   const handleReset = () => {
     setHeadY(0);
@@ -348,6 +407,24 @@ export const AvatarCustomizer: React.FC = () => {
             <Info className="size-3 shrink-0 mt-0.5 text-slate-400" />
             <span>Escala automáticamente los huesos y volúmenes de malla respetando el canon de 8 cabezas.</span>
           </p>
+        </div>
+
+        {/* Guías 3D Toggle */}
+        <div className="flex justify-between items-center bg-slate-800/20 border border-slate-800/60 p-3.5 rounded-xl">
+          <div>
+            <span className="text-xs font-bold text-slate-300 block">Mostrar Reglas y Guías 3D</span>
+            <span className="text-[10px] text-slate-500 block mt-0.5">Visualiza el esqueleto y anillos de altura Y de referencia.</span>
+          </div>
+          <button
+            onClick={() => setShowGuides(!showGuides)}
+            className={`px-3.5 py-1.5 rounded-lg text-[10px] font-bold uppercase transition cursor-pointer ${
+              showGuides
+                ? "bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/30"
+                : "bg-slate-800 text-slate-400 border border-slate-700 hover:bg-slate-700"
+            }`}
+          >
+            {showGuides ? "Activo" : "Inactivo"}
+          </button>
         </div>
 
         {/* Joints adjustment - only visible in pose mode */}
