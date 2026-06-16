@@ -34,6 +34,10 @@ function Prep() {
   const [selectedSubject, setSelectedSubject] = useState<string>("");
   const [selectedChapterId, setSelectedChapterId] = useState<string>("");
 
+  // Grado and Objetivo states based on flowchart
+  const [selectedGrade, setSelectedGrade] = useState<"secundaria" | "preparatoria">("preparatoria");
+  const [selectedObjective, setSelectedObjective] = useState<"estudiar" | "admision">("estudiar");
+
   // Custom study materials states (PRO Feature)
   const [isPro, setIsPro] = useState(false);
   const [activeTab, setActiveTab] = useState<"school" | "custom">("school");
@@ -51,6 +55,8 @@ function Prep() {
       } else {
         setSelectedSubject("");
         setSelectedChapterId("");
+        setSelectedGrade("preparatoria");
+        setSelectedObjective("estudiar");
         
         // Sync PRO plan status and reset values when opening Books drawer
         const proStatus = typeof window !== "undefined" && window.localStorage.getItem("lybanhi_pro_status") === "true";
@@ -193,6 +199,87 @@ function Prep() {
 
             {openCat === "book" ? (
               <div className="space-y-4 mt-4 animate-fade-in">
+                {/* Grado Selector */}
+                <div>
+                  <span className="text-[10px] font-bold text-muted-foreground block mb-2 uppercase px-0.5">Grado</span>
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSelectedGrade("secundaria");
+                        setLevel("3º secundaria");
+                        setSelectedChapterId("");
+                      }}
+                      className={`flex items-center justify-center gap-1.5 h-10 rounded-xl border text-xs font-semibold transition cursor-pointer active:scale-95 ${
+                        selectedGrade === "secundaria"
+                          ? "border-primary bg-primary/10 text-primary"
+                          : "border-border bg-card text-muted-foreground hover:text-foreground"
+                      }`}
+                    >
+                      Secundaria
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSelectedGrade("preparatoria");
+                        setLevel("1º preparatoria");
+                        setSelectedChapterId("");
+                      }}
+                      className={`flex items-center justify-center gap-1.5 h-10 rounded-xl border text-xs font-semibold transition cursor-pointer active:scale-95 ${
+                        selectedGrade === "preparatoria"
+                          ? "border-primary bg-primary/10 text-primary"
+                          : "border-border bg-card text-muted-foreground hover:text-foreground"
+                      }`}
+                    >
+                      Preparatoria
+                    </button>
+                  </div>
+                </div>
+
+                {/* Objetivo Selector */}
+                <div>
+                  <span className="text-[10px] font-bold text-muted-foreground block mb-2 uppercase px-0.5">Objetivo</span>
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setSelectedObjective("estudiar")}
+                      className={`flex items-center justify-center gap-1.5 h-10 rounded-xl border text-xs font-semibold transition cursor-pointer active:scale-95 ${
+                        selectedObjective === "estudiar"
+                          ? "border-primary bg-primary/10 text-primary"
+                          : "border-border bg-card text-muted-foreground hover:text-foreground"
+                      }`}
+                    >
+                      Estudiar
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setSelectedObjective("admision")}
+                      className={`flex items-center justify-center gap-1.5 h-10 rounded-xl border text-xs font-semibold transition cursor-pointer active:scale-95 ${
+                        selectedObjective === "admision"
+                          ? "border-primary bg-primary/10 text-primary"
+                          : "border-border bg-card text-muted-foreground hover:text-foreground"
+                      }`}
+                    >
+                      Examen de Admisión
+                    </button>
+                  </div>
+                </div>
+
+                {/* Explicación de la selección del objetivo */}
+                <div className="bg-[#17224D]/5 border border-[#3B6DE8]/10 rounded-xl p-3 text-[11px] text-slate-600 dark:text-slate-300 leading-relaxed">
+                  {selectedObjective === "estudiar" ? (
+                    <span>
+                      📚 <strong>Modo Estudio:</strong> Practica quizzes por temas y capítulos. En la versión Pro podrás subir tu propio material para estudiar libremente.
+                    </span>
+                  ) : (
+                    <span>
+                      🎯 <strong>Preparación de Admisión:</strong> Enfocado en exámenes de admisión {selectedGrade === "preparatoria" ? "universitaria (PAA / EXANI-II)" : "a preparatoria (tipo COMIPEMS)"}. Estudia con material de la app y agrega material propio en Pro.
+                    </span>
+                  )}
+                </div>
+
+                <div className="border-t border-border/60 my-1" />
+
                 {/* Tab selector */}
                 <div className="grid grid-cols-2 gap-1 rounded-2xl bg-muted p-1 text-xs font-semibold">
                   <button
@@ -251,9 +338,17 @@ function Prep() {
                             }}
                             className="mt-1 w-full bg-transparent text-sm font-medium outline-none cursor-pointer"
                           >
-                            {LEVELS[lang].map((l) => (
-                              <option key={l.value} value={l.value}>{l.label}</option>
-                            ))}
+                            {LEVELS[lang]
+                              .filter((l) => {
+                                if (selectedGrade === "secundaria") {
+                                  return l.value.toLowerCase().includes("secundaria");
+                                } else {
+                                  return l.value.toLowerCase().includes("prepara");
+                                }
+                              })
+                              .map((l) => (
+                                <option key={l.value} value={l.value}>{l.label}</option>
+                              ))}
                           </select>
                         </label>
 
@@ -324,7 +419,12 @@ function Prep() {
 
                         <button
                           disabled={mutBook.isPending || !selectedChapterId}
-                          onClick={() => mutBook.mutate({ bookId: selectedChapterId, count, level })}
+                          onClick={() => {
+                            const finalLevel = selectedObjective === "admision"
+                              ? `${level} (Preparación para Examen de Admisión ${selectedGrade === "preparatoria" ? "Universitaria PAA/EXANI-II" : "a Preparatoria"})`
+                              : level;
+                            mutBook.mutate({ bookId: selectedChapterId, count, level: finalLevel });
+                          }}
                           className="mt-4 inline-flex h-12 w-full items-center justify-center gap-2 rounded-2xl border border-border bg-card font-semibold transition active:scale-[0.99] disabled:opacity-60 cursor-pointer animate-fade-in"
                         >
                           <Sparkles className="size-4" />
@@ -420,9 +520,17 @@ function Prep() {
                               onChange={(e) => setLevel(e.target.value)}
                               className="mt-1 w-full bg-transparent text-sm font-medium outline-none cursor-pointer"
                             >
-                              {LEVELS[lang].map((l) => (
-                                <option key={l.value} value={l.value}>{l.label}</option>
-                              ))}
+                              {LEVELS[lang]
+                                .filter((l) => {
+                                  if (selectedGrade === "secundaria") {
+                                    return l.value.toLowerCase().includes("secundaria");
+                                  } else {
+                                    return l.value.toLowerCase().includes("prepara");
+                                  }
+                                })
+                                .map((l) => (
+                                  <option key={l.value} value={l.value}>{l.label}</option>
+                                ))}
                             </select>
                           </label>
                           <label className="block rounded-2xl border border-border p-3">
@@ -581,10 +689,13 @@ function Prep() {
                           }
                           onClick={() => {
                             const contentStr = customType === "link" ? customUrl : customText;
+                            const finalLevel = selectedObjective === "admision"
+                              ? `${level} (Preparación para Examen de Admisión ${selectedGrade === "preparatoria" ? "Universitaria PAA/EXANI-II" : "a Preparatoria"})`
+                              : level;
                             mutCustom.mutate({
                               content: contentStr,
                               count,
-                              level,
+                              level: finalLevel,
                               subject: selectedSubject || "General",
                               sourceType: customType,
                               sourceName: materialName.trim() || undefined
