@@ -147,42 +147,42 @@ export class Avatar {
         geometry: new THREE.CylinderGeometry(0.07, 0.055, 0.40, 8),
         boneIndex: 3, // leftLegBone index
         color: 0x3b82f6, // Blue
-        offset: new THREE.Vector3(-0.08, 0.85, 0),
+        offset: new THREE.Vector3(-0.08, 0.79, 0),
       },
       {
         name: "rightUpperLeg",
         geometry: new THREE.CylinderGeometry(0.07, 0.055, 0.40, 8),
         boneIndex: 4, // rightLegBone index
         color: 0x3b82f6, // Blue
-        offset: new THREE.Vector3(0.08, 0.85, 0),
+        offset: new THREE.Vector3(0.08, 0.79, 0),
       },
       {
         name: "leftLowerLeg",
         geometry: new THREE.CylinderGeometry(0.055, 0.04, 0.38, 8),
         boneIndex: 3, // leftLegBone index
         color: 0x0ea5e9, // Sky
-        offset: new THREE.Vector3(-0.09, 0.45, 0),
+        offset: new THREE.Vector3(-0.09, 0.40, 0),
       },
       {
         name: "rightLowerLeg",
         geometry: new THREE.CylinderGeometry(0.055, 0.04, 0.38, 8),
         boneIndex: 4, // rightLegBone index
         color: 0x0ea5e9, // Sky
-        offset: new THREE.Vector3(0.09, 0.45, 0),
+        offset: new THREE.Vector3(0.09, 0.40, 0),
       },
       {
         name: "leftFoot",
         geometry: footLeftGeo,
         boneIndex: 3, // leftLegBone index
         color: 0x8b5cf6, // Violet
-        offset: new THREE.Vector3(-0.09, 0.06, 0.06), // forward-facing foot offset
+        offset: new THREE.Vector3(-0.09, 0.174, 0.06), // forward-facing foot offset
       },
       {
         name: "rightFoot",
         geometry: footRightGeo,
         boneIndex: 4, // rightLegBone index
         color: 0x8b5cf6, // Violet
-        offset: new THREE.Vector3(0.09, 0.06, 0.06), // forward-facing foot offset
+        offset: new THREE.Vector3(0.09, 0.174, 0.06), // forward-facing foot offset
       }
     ];
 
