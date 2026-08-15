@@ -90,8 +90,8 @@ function generateLocalFallbackQuestions(text: string, count: number): StudyQuest
         correctIndex: options.indexOf(targetWord),
         explanation: `¿Por qué? Como se explica directamente en el apunte: "${sentence}".`,
       });
-    } else {
-      // True/False question directly from sentence
+    } else if (idx % 3 === 1) {
+      // True/False question (Verdadero)
       questions.push({
         id: `local_q_${idx + 1}`,
         type: "true_false",
@@ -100,24 +100,51 @@ function generateLocalFallbackQuestions(text: string, count: number): StudyQuest
         options: ["Verdadero", "Falso"],
         correctAnswer: "Verdadero",
         correctIndex: 0,
-        explanation: `¿Por qué? Esta afirmación aparece textualmente en la explicación de tu material de estudio.`,
+        explanation: `¿Por qué? Esta afirmación es Verdadera porque aparece textualmente en tu material de estudio.`,
+      });
+    } else {
+      // True/False question (Falso - afirmación contraria o negada)
+      const modifiedSentence = sentence.replace(/\b(siempre|todos|es|son|contiene|posee)\b/i, (match) => {
+        const lower = match.toLowerCase();
+        if (lower === "siempre") return "nunca";
+        if (lower === "todos") return "ninguno de";
+        if (lower === "es") return "no es";
+        if (lower === "son") return "no son";
+        if (lower === "contiene") return "carece de";
+        return "no posee";
+      });
+
+      questions.push({
+        id: `local_q_${idx + 1}`,
+        type: "true_false",
+        concept: `Afirmación contraria del texto`,
+        question: `Según la explicación: "${modifiedSentence}"`,
+        options: ["Verdadero", "Falso"],
+        correctAnswer: "Falso",
+        correctIndex: 1,
+        explanation: `¿Por qué? Es Falso. El apunte original explica: "${sentence}".`,
       });
     }
   });
 
   if (questions.length === 0) {
+    const defaultOptions = [
+      "Memorizar información no explicada",
+      "Comprender y practicar los conceptos explicados en el texto",
+      "Aprender datos externos no mencionados",
+      "Ninguna de las anteriores",
+    ];
     questions.push({
       id: "fallback_1",
       type: "multiple_choice",
       concept: "Comprensión del Texto",
       question: "¿Cuál es el propósito del material de estudio leído?",
-      options: [
-        "Comprender y practicar los conceptos explicados en el texto",
-        "Aprender datos externos no mencionados",
-        "Memorizar información no explicada",
-        "Ninguna de las anteriores",
-      ],
+      options: defaultOptions,
       correctAnswer: "Comprender y practicar los conceptos explicados en el texto",
+      correctIndex: 1,
+      explanation: "¿Por qué? El material está diseñado para fijar los conceptos explicados.",
+    });
+  }
       correctIndex: 0,
       explanation: "¿Por qué? El material está diseñado para fijar los conceptos explicados.",
     });
@@ -265,10 +292,13 @@ export const generateStudyGameQuestions = createServerFn({ method: "POST" })
 2. Todas las respuestas correctas DEBEN poder encontrarse directamente leyendo la explicación del apunte.
 3. ESTÁ PROHIBIDO usar conocimientos generales de Internet, datos externos o cultura general que no esté escrita en el texto.
 4. Si la explicación no menciona un dato específico, NO lo preguntes bajo ninguna circunstancia.
-5. Cada pregunta debe incluir una explicación didáctica que inicie con "¿Por qué? " citando la parte exacta del apunte donde se explica la respuesta.
-6. Tipos de preguntas:
+5. DISTRIBUCIÓN EQUITATIVA Y ALEATORIA DE RESPUESTAS (IMPORTANTE):
+   - NUNCA pongas la respuesta correcta siempre en la opción A, siempre en la B o siempre en la C. Distribúyelas de forma variada y aleatoria entre las opciones A, B, C y D.
+   - En las preguntas de Verdadero o Falso, genera una combinación equilibrada y variada de preguntas con respuesta 'Verdadero' y preguntas con respuesta 'Falso'.
+6. Cada pregunta debe incluir una explicación didáctica que inicie con "¿Por qué? " citando la parte exacta del apunte donde se explica la respuesta.
+7. Tipos de preguntas:
    - "multiple_choice" (4 opciones claras, exactamente una correcta según el texto)
-   - "true_false" (evaluando directamente una frase o hecho del texto)
+   - "true_false" (evaluando directamente una afirmación verdadera o falsa sobre el texto)
    - "fill_blank" (completar una frase textual del apunte con ________)`;
 
       const userPrompt = `Material de estudio del estudiante (SOLO puedes preguntar cosas que aparezcan aquí):\n\n${data.materialText}`;

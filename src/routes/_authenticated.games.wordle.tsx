@@ -127,6 +127,25 @@ class SoundFX {
 
 const sfx = new SoundFX();
 
+// Randomize option order (A, B, C, D) dynamically so correct answers are never always A or always B
+function shuffleQuestionOptions(questionList: StudyQuestion[]): StudyQuestion[] {
+  return questionList.map((q) => {
+    if (q.type === "true_false" || !q.options || q.options.length <= 1) {
+      return { ...q };
+    }
+    const shuffled = [...q.options];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    return {
+      ...q,
+      options: shuffled,
+      correctIndex: shuffled.indexOf(String(q.correctAnswer)),
+    };
+  });
+}
+
 export function EducationalGamesPlatform() {
   const navigate = useNavigate();
   const qc = useQueryClient();
@@ -203,9 +222,9 @@ export function EducationalGamesPlatform() {
     setSelectedTopic(topic);
     setQuestionCount(count);
 
-    // Shuffle and slice preset questions
-    const pool = [...topic.presetQuestions].sort(() => 0.5 - Math.random());
-    setQuestions(pool.slice(0, count));
+    // Shuffle questions and randomize their option order (A, B, C, D)
+    const randomizedQuestions = shuffleQuestionOptions(topic.presetQuestions).sort(() => 0.5 - Math.random());
+    setQuestions(randomizedQuestions.slice(0, count));
     setCurrentIndex(0);
     setLives(3);
     setScore(0);
@@ -305,7 +324,8 @@ export function EducationalGamesPlatform() {
         },
       });
 
-      setQuestions(res.questions);
+      const randomizedQuestions = shuffleQuestionOptions(res.questions);
+      setQuestions(randomizedQuestions);
       setCurrentIndex(0);
       setLives(3);
       setScore(0);
@@ -429,7 +449,8 @@ export function EducationalGamesPlatform() {
         },
       });
 
-      setQuestions(res.questions);
+      const randomizedQuestions = shuffleQuestionOptions(res.questions);
+      setQuestions(randomizedQuestions);
       setCurrentIndex(0);
       setLives(3);
       setScore(0);
