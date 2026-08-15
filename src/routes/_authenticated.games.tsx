@@ -355,12 +355,12 @@ function GamesHub() {
             <section className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
               {[
                 {
-                  id: "reto-relampago",
+                  id: "wordle",
                   title: "Juegos Educativos con IA",
                   style: "Estudio + Juego Adaptativo",
                   desc: "Estudia por materias (Matemáticas, Química, Biología, Historia...) o sube tus propios apuntes: lee 'Lo que debes saber', juega y practica tus errores.",
                   cost: 100,
-                  path: "/games/reto-relampago",
+                  path: "/games/wordle",
                   styleColor: "bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20",
                 }
               ].map((game) => {
