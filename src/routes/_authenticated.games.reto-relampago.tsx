@@ -210,22 +210,16 @@ export function RetoRelampagoGame() {
   // -------------------------------------------------------------
   // 1. MATERIAL SELECTION / UPLOAD LOGIC
   // -------------------------------------------------------------
-  const handleSelectPreset = async (preset: PresetTopic) => {
-    setPhase("analyzing");
-    try {
-      const res = await analyzeMaterialFn({
-        data: {
-          content: preset.content,
-          sourceName: preset.title,
-        },
-      });
-      setAnalysis(res);
-      setSelectedSubtopic(res.detectedTopics[0] || "Todos los temas");
-      setPhase("study_overview");
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Error al analizar el material");
-      setPhase("select_source");
-    }
+  const handleSelectPreset = (preset: PresetTopic) => {
+    const res: StudyAnalysisResult = {
+      ...preset.preAnalyzed,
+      sourceText: preset.content,
+      isPreset: true,
+      presetId: preset.id,
+    };
+    setAnalysis(res);
+    setSelectedSubtopic(res.detectedTopics[0] || "Todos los temas");
+    setPhase("study_overview");
   };
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
