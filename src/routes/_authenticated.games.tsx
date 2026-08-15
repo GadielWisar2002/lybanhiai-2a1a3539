@@ -325,34 +325,21 @@ function GamesHub() {
               <div className="absolute -right-20 -top-20 h-48 w-48 rounded-full bg-purple-500/10 blur-[80px] group-hover:bg-purple-500/20 transition-all duration-700 pointer-events-none" />
               <div className="absolute -left-20 -bottom-20 h-48 w-48 rounded-full bg-indigo-500/10 blur-[80px] group-hover:bg-indigo-500/20 transition-all duration-700 pointer-events-none" />
               
-              <div className="relative flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <div className="space-y-1.5">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <span className="inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-purple-500 to-indigo-500 px-3 py-1 text-[9px] font-bold uppercase tracking-wider text-white shadow-md shadow-purple-500/25">
-                      ✨ Premium & Competitivo
-                    </span>
-                    <span className="inline-flex items-center gap-1 rounded-full bg-rose-500/15 border border-rose-500/25 px-2.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-rose-400">
-                      Próximamente
-                    </span>
-                  </div>
-                  <h2 className="font-display text-2xl font-black bg-gradient-to-r from-purple-400 via-pink-400 to-indigo-400 bg-clip-text text-transparent">
-                    Juegos Premium Educativos
-                  </h2>
-                  <p className="text-xs text-muted-foreground max-w-2xl leading-relaxed">
-                    Nuevos desafíos diseñados para el desarrollo académico avanzado y la competencia intercolegial de alto rendimiento.
-                  </p>
+              <div className="relative space-y-1.5">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-purple-500 to-indigo-500 px-3 py-1 text-[9px] font-bold uppercase tracking-wider text-white shadow-md shadow-purple-500/25">
+                    ✨ Premium & Competitivo
+                  </span>
+                  <span className="inline-flex items-center gap-1 rounded-full bg-rose-500/15 border border-rose-500/25 px-2.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-rose-400">
+                    Próximamente
+                  </span>
                 </div>
-                
-                <div className="flex flex-wrap gap-2 items-center">
-                  <div className="flex items-center gap-1.5 text-[10px] font-bold text-purple-400 bg-purple-500/10 border border-purple-500/20 px-3 py-1.5 rounded-full">
-                    <Sparkles className="size-3.5 text-purple-400 animate-pulse" />
-                    <span>Ligas Ranked</span>
-                  </div>
-                  <div className="flex items-center gap-1.5 text-[10px] font-bold text-indigo-400 bg-indigo-500/10 border border-indigo-500/20 px-3 py-1.5 rounded-full">
-                    <Trophy className="size-3.5 text-indigo-400" />
-                    <span>Olimpiadas</span>
-                  </div>
-                </div>
+                <h2 className="font-display text-2xl font-black bg-gradient-to-r from-purple-400 via-pink-400 to-indigo-400 bg-clip-text text-transparent">
+                  Juegos Premium Educativos
+                </h2>
+                <p className="text-xs text-muted-foreground max-w-2xl leading-relaxed">
+                  Nuevos desafíos diseñados para el desarrollo académico avanzado y la competencia intercolegial de alto rendimiento.
+                </p>
               </div>
             </div>
 
