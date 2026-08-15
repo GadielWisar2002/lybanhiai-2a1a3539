@@ -1462,4 +1462,4 @@ export function EducationalGamesPlatform() {
   );
 }
 export default EducationalGamesPlatform;
->>>>>>> 639e4ae (fix: alinear rutas con routeTree.gen.ts para publicacion exitosa en Lovable)
+
