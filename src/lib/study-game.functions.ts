@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { PRESET_STUDY_TOPICS } from "./preset-study-materials";
+import { SCHOOL_SUBJECTS } from "./school-subjects-data";
 
 export type QuestionType = "multiple_choice" | "true_false" | "fill_blank" | "match_concepts" | "order_steps";
 
@@ -32,7 +32,6 @@ function smartLocalAnalysis(text: string, titleHint?: string): StudyAnalysisResu
   const paragraphs = clean.split(/\n\s*\n/).filter((p) => p.trim().length > 15);
   const firstPara = paragraphs[0] || clean.slice(0, 300);
 
-  // Extract lines starting with "-" or "•" as keypoints
   const lines = clean.split("\n");
   const extractedBullets = lines
     .filter((l) => l.trim().startsWith("-") || l.trim().startsWith("•") || l.trim().startsWith("*"))
@@ -43,27 +42,25 @@ function smartLocalAnalysis(text: string, titleHint?: string): StudyAnalysisResu
     extractedBullets.length >= 3
       ? extractedBullets.slice(0, 5)
       : [
-          firstPara.slice(0, 120) + "...",
-          "Repasa las definiciones principales y conceptos clave de tu apunte.",
-          "Identifica las características fundamentales mencionadas en el texto.",
-          "Asegúrate de recordar los términos y sus funciones.",
+          firstPara.slice(0, 140) + "...",
+          "Lee atentamente los conceptos principales del apunte para responder las preguntas.",
+          "Cada pregunta está basada al 100% en las frases y definiciones de este texto.",
         ];
 
-  // Extract potential topics from headings or first sentences
   const topics = lines
     .filter((l) => l.length > 5 && l.length < 60 && !l.includes("."))
     .slice(0, 4);
 
   return {
     title: titleHint || "Mis Apuntes de Estudio",
-    detectedTopics: topics.length > 0 ? topics : ["Conceptos Clave", "Definiciones Generales", "Funciones Principales"],
+    detectedTopics: topics.length > 0 ? topics : ["Conceptos principales", "Definiciones del texto"],
     summaryExplanation: firstPara.length > 400 ? firstPara.slice(0, 400) + "..." : firstPara,
     keyPoints,
     sourceText: text,
   };
 }
 
-// Smart local question generator from raw notes
+// Smart local question generator from raw notes (strictly from sentences of the text)
 function generateLocalFallbackQuestions(text: string, count: number): StudyQuestion[] {
   const sentences = text
     .split(/[.!?]+/)
@@ -75,7 +72,7 @@ function generateLocalFallbackQuestions(text: string, count: number): StudyQuest
   sentences.slice(0, count).forEach((sentence, idx) => {
     const words = sentence.split(/\s+/).filter((w) => w.length > 4 && !w.includes(","));
     if (words.length > 0 && idx % 2 === 0) {
-      // Fill-in-the-blank question
+      // Fill-in-the-blank question strictly from sentence
       const targetWord = words[Math.min(2, words.length - 1)];
       const questionText = sentence.replace(new RegExp(`\\b${targetWord}\\b`, "i"), "________");
       const distractors = ["invariable", "secundario", "artificial", "opcional"].filter(
@@ -86,24 +83,24 @@ function generateLocalFallbackQuestions(text: string, count: number): StudyQuest
       questions.push({
         id: `local_q_${idx + 1}`,
         type: "fill_blank",
-        concept: `Concepto ${idx + 1}`,
-        question: `Completa la afirmación del apunte: "${questionText}"`,
+        concept: `Concepto del apunte (${targetWord})`,
+        question: `De acuerdo a tu apunte: "${questionText}"`,
         options,
         correctAnswer: targetWord,
         correctIndex: options.indexOf(targetWord),
-        explanation: `¿Por qué? Como se explica en el apunte: "${sentence}".`,
+        explanation: `¿Por qué? Como se explica directamente en el apunte: "${sentence}".`,
       });
     } else {
-      // True/False question
+      // True/False question directly from sentence
       questions.push({
         id: `local_q_${idx + 1}`,
         type: "true_false",
-        concept: `Afirmación ${idx + 1}`,
-        question: `De acuerdo a tu apunte: "${sentence}"`,
+        concept: `Afirmación del texto`,
+        question: `Según la explicación: "${sentence}"`,
         options: ["Verdadero", "Falso"],
         correctAnswer: "Verdadero",
         correctIndex: 0,
-        explanation: `¿Por qué? Esta afirmación coincide exactamente con el texto de tus notas.`,
+        explanation: `¿Por qué? Esta afirmación aparece textualmente en la explicación de tu material de estudio.`,
       });
     }
   });
@@ -112,17 +109,17 @@ function generateLocalFallbackQuestions(text: string, count: number): StudyQuest
     questions.push({
       id: "fallback_1",
       type: "multiple_choice",
-      concept: "Comprensión General",
-      question: "¿Cuál es el objetivo principal del material de estudio cargado?",
+      concept: "Comprensión del Texto",
+      question: "¿Cuál es el propósito del material de estudio leído?",
       options: [
-        "Comprender y repasar los conceptos fundamentales del tema",
-        "Aprender un tema no relacionado",
-        "Memorizar fechas sin contexto",
+        "Comprender y practicar los conceptos explicados en el texto",
+        "Aprender datos externos no mencionados",
+        "Memorizar información no explicada",
         "Ninguna de las anteriores",
       ],
-      correctAnswer: "Comprender y repasar los conceptos fundamentales del tema",
+      correctAnswer: "Comprender y practicar los conceptos explicados en el texto",
       correctIndex: 0,
-      explanation: "¿Por qué? El objetivo del material es fijar los conceptos clave.",
+      explanation: "¿Por qué? El material está diseñado para fijar los conceptos explicados.",
     });
   }
 
@@ -141,41 +138,42 @@ export const analyzeStudyMaterial = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) => AnalyzeMaterialSchema.parse(input))
   .handler(async ({ data }) => {
-    // 1. Check if it matches any Preset Topic for instant zero-latency loading
-    const matchedPreset = PRESET_STUDY_TOPICS.find(
-      (p) =>
-        p.title.toLowerCase() === data.sourceName?.toLowerCase() ||
-        p.content.trim() === data.content.trim() ||
-        p.id === data.sourceName
-    );
-
-    if (matchedPreset) {
-      return {
-        ...matchedPreset.preAnalyzed,
-        sourceText: matchedPreset.content,
-        isPreset: true,
-        presetId: matchedPreset.id,
-      } as StudyAnalysisResult;
+    // 1. Check if it matches any School Subject topic
+    for (const sub of SCHOOL_SUBJECTS) {
+      for (const top of sub.topics) {
+        if (
+          top.explanation.trim() === data.content.trim() ||
+          top.name.toLowerCase() === data.sourceName?.toLowerCase()
+        ) {
+          return {
+            title: `${sub.name}: ${top.name}`,
+            detectedTopics: [top.name, "Conceptos clave", "Fórmulas y Ejemplos"],
+            summaryExplanation: top.explanation,
+            keyPoints: top.keyPoints,
+            sourceText: top.explanation,
+            isPreset: true,
+            presetId: top.id,
+          } as StudyAnalysisResult;
+        }
+      }
     }
 
     const apiKey = process.env.GEMINI_API_KEY;
     const isApiKeyInvalid = !apiKey || apiKey.includes("YourKeyHere") || apiKey.length < 15;
 
-    // If API key is missing or dummy placeholder, use smart local analyzer
     if (isApiKeyInvalid) {
       return smartLocalAnalysis(data.content, data.sourceName);
     }
 
-    // Call Gemini 1.5 Flash API
     try {
       const systemInstruction = `Eres un tutor pedagógico experto para estudiantes. 
-Analiza el material provisto y genera:
+Analiza el material de estudio provisto y genera:
 1. Un título claro del tema.
-2. 3 a 5 subtemas clave.
+2. 3 a 5 subtemas clave detectados en el texto.
 3. Una explicación clara, corta y sencilla (máximo 2 párrafos).
 4. 4 a 6 viñetas con "Lo más importante".
 
-Reglas: Basa todo estrictamente en el texto del apunte.`;
+🚨 REGLA ESTRICTA: Basa todo única y estrictamente en la información que aparece en el texto provisto. No agregues datos ajenos.`;
 
       const userPrompt = `Material de estudio:\n\n${data.content}`;
 
@@ -202,10 +200,7 @@ Reglas: Basa todo estrictamente en el texto del apunte.`;
         }),
       });
 
-      if (!res.ok) {
-        // Graceful fallback to smart local analysis without crashing the UI
-        return smartLocalAnalysis(data.content, data.sourceName);
-      }
+      if (!res.ok) return smartLocalAnalysis(data.content, data.sourceName);
 
       const json = (await res.json()) as any;
       const rawText = json.candidates?.[0]?.content?.parts?.[0]?.text;
@@ -215,8 +210,8 @@ Reglas: Basa todo estrictamente en el texto del apunte.`;
       return {
         title: parsed.title || data.sourceName || "Tema de Estudio",
         detectedTopics: parsed.detectedTopics?.length ? parsed.detectedTopics : ["Conceptos Clave"],
-        summaryExplanation: parsed.summaryExplanation || "Resumen del material de estudio.",
-        keyPoints: parsed.keyPoints?.length ? parsed.keyPoints : ["Repasa los conceptos clave."],
+        summaryExplanation: parsed.summaryExplanation || "Resumen del material.",
+        keyPoints: parsed.keyPoints?.length ? parsed.keyPoints : ["Repasa los conceptos del texto."],
         sourceText: data.content,
       } as StudyAnalysisResult;
     } catch {
@@ -225,31 +220,32 @@ Reglas: Basa todo estrictamente en el texto del apunte.`;
   });
 
 // -------------------------------------------------------------
-// 2. GENERATE STUDY GAME QUESTIONS
+// 2. GENERATE STUDY GAME QUESTIONS (REGLA: NO PREGUNTES LO QUE NO EXPLICASTE)
 // -------------------------------------------------------------
 const GenerateQuestionsSchema = z.object({
   materialText: z.string().min(1),
   topicName: z.string().optional(),
   difficulty: z.enum(["easy", "medium", "hard"]).default("easy"),
-  count: z.number().int().min(3).max(15).default(10),
+  count: z.number().int().min(3).max(20).default(5),
 });
 
 export const generateStudyGameQuestions = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) => GenerateQuestionsSchema.parse(input))
   .handler(async ({ data }) => {
-    // Check preset question banks
-    const matchedPreset = PRESET_STUDY_TOPICS.find(
-      (p) =>
-        p.content.trim() === data.materialText.trim() ||
-        (data.topicName && data.topicName.toLowerCase().includes(p.title.toLowerCase()))
-    );
-
-    if (matchedPreset && matchedPreset.presetQuestions.length > 0) {
-      const qPool = [...matchedPreset.presetQuestions].sort(() => 0.5 - Math.random());
-      return {
-        questions: qPool.slice(0, data.count),
-      };
+    // 1. Check in SCHOOL_SUBJECTS database for instant zero-latency match
+    for (const sub of SCHOOL_SUBJECTS) {
+      for (const top of sub.topics) {
+        if (
+          top.explanation.trim() === data.materialText.trim() ||
+          (data.topicName && (data.topicName.toLowerCase().includes(top.name.toLowerCase()) || top.name.toLowerCase().includes(data.topicName.toLowerCase())))
+        ) {
+          const qPool = [...top.presetQuestions].sort(() => 0.5 - Math.random());
+          return {
+            questions: qPool.slice(0, data.count),
+          };
+        }
+      }
     }
 
     const apiKey = process.env.GEMINI_API_KEY;
@@ -262,22 +258,20 @@ export const generateStudyGameQuestions = createServerFn({ method: "POST" })
     }
 
     try {
-      const difficultyPrompt =
-        data.difficulty === "easy"
-          ? "Nivel FÁCIL: Preguntas directas sobre definiciones y hechos del apunte."
-          : data.difficulty === "medium"
-          ? "Nivel MEDIO: Preguntas que requieran comprender relaciones y diferencias."
-          : "Nivel DIFÍCIL: Preguntas que requieran aplicar o analizar la información del apunte.";
+      const systemInstruction = `Eres un creador pedagógico de preguntas de estudio para estudiantes.
 
-      const systemInstruction = `Crea exactamente ${data.count} preguntas educativas y dinámicas basadas 100% en el material provisto.
-Dificultad: ${difficultyPrompt}
-Tipos de preguntas:
-- "multiple_choice" (4 opciones)
-- "true_false" (exactamente ["Verdadero", "Falso"])
-- "fill_blank" (frase con espacio en blanco)
-Cada pregunta debe incluir: concept, question, options, correctIndex, explanation (iniciando con "¿Por qué? ").`;
+🚨 REGLA PRINCIPAL DE ORO: "NO PREGUNTES LO QUE NO EXPLICASTE"
+1. NUNCA hagas una pregunta sobre información, personajes, fechas, fórmulas o hechos que NO aparezcan explícitamente en el texto del material provisto.
+2. Todas las respuestas correctas DEBEN poder encontrarse directamente leyendo la explicación del apunte.
+3. ESTÁ PROHIBIDO usar conocimientos generales de Internet, datos externos o cultura general que no esté escrita en el texto.
+4. Si la explicación no menciona un dato específico, NO lo preguntes bajo ninguna circunstancia.
+5. Cada pregunta debe incluir una explicación didáctica que inicie con "¿Por qué? " citando la parte exacta del apunte donde se explica la respuesta.
+6. Tipos de preguntas:
+   - "multiple_choice" (4 opciones claras, exactamente una correcta según el texto)
+   - "true_false" (evaluando directamente una frase o hecho del texto)
+   - "fill_blank" (completar una frase textual del apunte con ________)`;
 
-      const userPrompt = `Material:\n${data.materialText}`;
+      const userPrompt = `Material de estudio del estudiante (SOLO puedes preguntar cosas que aparezcan aquí):\n\n${data.materialText}`;
 
       const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
       const res = await fetch(url, {
@@ -341,7 +335,7 @@ Cada pregunta debe incluir: concept, question, options, correctIndex, explanatio
   });
 
 // -------------------------------------------------------------
-// 3. GENERATE REVIEW QUESTIONS (PRACTICAR LO QUE FALLÉ)
+// 3. GENERATE REVIEW QUESTIONS (PRACTICAR MIS ERRORES)
 // -------------------------------------------------------------
 const GenerateReviewSchema = z.object({
   materialText: z.string().min(1),
@@ -374,15 +368,18 @@ export const generateReviewQuestions = createServerFn({ method: "POST" })
       const failedContext = data.failedQuestionsSummary
         .map(
           (f, i) =>
-            `${i + 1}. Concepto: ${f.concept} | Pregunta: "${f.question}" | Respuesta correcta: "${f.correctAnswer}"`
+            `${i + 1}. Concepto: ${f.concept} | Pregunta: "${f.question}" | Respuesta correcta en el texto: "${f.correctAnswer}"`
         )
         .join("\n");
 
-      const systemInstruction = `Crea exactamente ${data.count} preguntas de repaso didácticas enfocadas exclusivamente en estos conceptos que el estudiante falló:
+      const systemInstruction = `Eres un tutor de repaso para estudiantes.
+El estudiante falló en estos conceptos:
 ${failedContext}
-Basa todo en el material provisto.`;
 
-      const userPrompt = `Material:\n${data.materialText}`;
+🚨 REGLA ESTRICTA: Genera exactamente ${data.count} preguntas de refuerzo basadas ÚNICA Y EXCLUSIVAMENTE en el texto del material provisto.
+No inventes datos externos. Todas las respuestas deben estar explicadas en el texto.`;
+
+      const userPrompt = `Material de estudio original:\n${data.materialText}`;
 
       const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
       const res = await fetch(url, {
