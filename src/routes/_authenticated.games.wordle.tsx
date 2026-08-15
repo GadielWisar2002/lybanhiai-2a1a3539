@@ -1,9 +1,7 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { RetoRelampagoGame } from "./_authenticated.games.reto-relampago";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/_authenticated/games/wordle")({
-  head: () => ({ meta: [{ title: "Reto Relámpago — Trivia Educativa — Lybanhi" }] }),
-  component: RetoRelampagoGame,
+  beforeLoad: () => {
+    throw redirect({ to: "/games/reto-relampago" });
+  },
 });
-
-export default RetoRelampagoGame;
