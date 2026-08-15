@@ -145,10 +145,6 @@ function generateLocalFallbackQuestions(text: string, count: number): StudyQuest
       explanation: "¿Por qué? El material está diseñado para fijar los conceptos explicados.",
     });
   }
-      correctIndex: 0,
-      explanation: "¿Por qué? El material está diseñado para fijar los conceptos explicados.",
-    });
-  }
 
   return questions;
 }
