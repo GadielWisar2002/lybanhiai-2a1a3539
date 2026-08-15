@@ -355,12 +355,12 @@ function GamesHub() {
             <section className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
               {[
                 {
-                  id: "wordle",
-                  title: "Wordle de carreras",
-                  style: "Léxico / Vocabulario",
-                  desc: "Adivina palabras relacionadas con carreras universitarias y áreas de estudio en 6 intentos. Incluye retroalimentación por color y tarjeta de carrera.",
+                  id: "reto-relampago",
+                  title: "Reto Relámpago",
+                  style: "Trivia Educativa Rápida",
+                  desc: "Desafío de 10 preguntas con retroalimentación inmediata, explicaciones educativas, temporizador y rachas en 7 materias distintas.",
                   cost: 100,
-                  path: "/games/wordle",
+                  path: "/games/reto-relampago",
                   styleColor: "bg-blue-500/10 text-blue-500 border-blue-500/20",
                 }
               ].map((game) => {
@@ -841,7 +841,7 @@ function GamesHub() {
                 <h4 className="text-xs uppercase font-bold text-slate-400 tracking-wider">Desbloqueo de Juegos en BD</h4>
                 <div className="max-h-[160px] overflow-y-auto border border-border rounded-xl p-3 space-y-2 text-xs scrollbar-thin">
                   {[
-                    { id: "wordle", name: "Wordle de carreras" },
+                    { id: "reto-relampago", name: "Reto Relámpago (Trivia Educativa)" },
                     { id: "complete-concept", name: "Completa el concepto" },
                     { id: "hangman", name: "Ahorcado universitario" },
                     { id: "order-idea", name: "Ordena la idea" },
