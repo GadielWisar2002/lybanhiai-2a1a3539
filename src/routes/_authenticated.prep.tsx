@@ -735,7 +735,7 @@ function Prep() {
                               level: finalLevel,
                               subject: selectedSubject || "General",
                               sourceType: customType,
-                              sourceName: materialName.trim() || undefined
+                              sourceName: materialName.trim() || ""
                             });
                           }}
                           className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-2xl border border-border bg-card font-semibold transition active:scale-[0.99] disabled:opacity-60 cursor-pointer shadow-sm animate-fade-in"
