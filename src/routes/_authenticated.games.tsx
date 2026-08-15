@@ -357,11 +357,11 @@ function GamesHub() {
                 {
                   id: "reto-relampago",
                   title: "Reto Relámpago",
-                  style: "Trivia Educativa Rápida",
-                  desc: "Desafío de 10 preguntas con retroalimentación inmediata, explicaciones educativas, temporizador y rachas en 7 materias distintas.",
+                  style: "Estudio + Juego con IA",
+                  desc: "Sube tus apuntes (PDF/fotos/texto) o elige un tema: la IA te explica lo más importante, genera preguntas de tu material y te ayuda a repasar tus errores.",
                   cost: 100,
                   path: "/games/reto-relampago",
-                  styleColor: "bg-blue-500/10 text-blue-500 border-blue-500/20",
+                  styleColor: "bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20",
                 }
               ].map((game) => {
                 const isUnlocked = (isDeveloper && devMode) || unlockedGames.includes(game.id);

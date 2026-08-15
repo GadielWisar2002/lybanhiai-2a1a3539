@@ -1,45 +1,58 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useState, useEffect, useRef } from "react";
-import { useTranslation } from "react-i18next";
 import { 
   ArrowLeft, Trophy, Zap, Heart, Timer, Sparkles, 
   RotateCcw, CheckCircle2, XCircle, AlertCircle, 
   BookOpen, Volume2, VolumeX, Flame, ChevronRight,
-  Brain, ShieldAlert, Award, Star, Compass, Play
+  Brain, FileText, Camera, Upload, Link as LinkIcon, 
+  Star, Compass, Play, Loader2, Check, RefreshCw,
+  HelpCircle, Lightbulb, GraduationCap, ArrowRight,
+  Sliders, ShieldCheck, Layers
 } from "lucide-react";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { rewardGameCoins, rewardGameXp } from "@/lib/games.functions";
-import streakCap from "@/assets/streak-cap.png";
+import { extractTextFromMedia } from "@/lib/quiz.functions";
 import { 
-  RETO_CATEGORIES, 
-  RETO_QUESTIONS_DB, 
-  getRetoQuestions, 
-  type RetoCategory, 
-  type RetoQuestion, 
-  type CategoryInfo 
-} from "@/lib/reto-relampago-data";
+  analyzeStudyMaterial, 
+  generateStudyGameQuestions, 
+  generateReviewQuestions,
+  type StudyQuestion,
+  type StudyAnalysisResult 
+} from "@/lib/study-game.functions";
+import { PRESET_STUDY_TOPICS, type PresetTopic } from "@/lib/preset-study-materials";
+import streakCap from "@/assets/streak-cap.png";
 
 export const Route = createFileRoute("/_authenticated/games/reto-relampago")({
-  head: () => ({ meta: [{ title: "Reto Relámpago — Trivia Educativa — Lybanhi" }] }),
+  head: () => ({ meta: [{ title: "Reto Relámpago — Estudio y Juego — Lybanhi" }] }),
   component: RetoRelampagoGame,
 });
 
-type GameMode = "standard" | "unlimited" | "survival";
+type AppPhase = 
+  | "select_source"       // 1. Elegir o subir material
+  | "analyzing"           // 2. IA analizando apuntes...
+  | "study_overview"      // 3. Explicación previa + Lo más importante
+  | "generating_game"     // 4. IA creando preguntas
+  | "playing"             // 5. En partida
+  | "question_feedback"   // 6. Retroalimentación inmediata
+  | "results"             // 7. Resultados y diagnóstico (Lo que dominas vs Lo que debes repasar)
+  | "generating_review";  // 8. IA generando práctica de errores
 
-interface QuestionAnswerRecord {
-  question: RetoQuestion;
-  selectedOptionIndex: number | null; // null if timed out
+type GameMode = "fast" | "practice" | "challenge" | "review";
+type Difficulty = "easy" | "medium" | "hard";
+
+interface AnswerRecord {
+  question: StudyQuestion;
+  userChoice: string;
   isCorrect: boolean;
-  timeSpent: number; // in seconds
+  timeSpent: number;
   scoreEarned: number;
 }
 
-// Synthesizer for lightweight Web Audio Sound FX without external assets
-class WebAudioSFX {
+// Web Audio API Synthesizer for instant native sound effects
+class SoundFX {
   private ctx: AudioContext | null = null;
-
   private getCtx() {
     if (!this.ctx && typeof window !== "undefined") {
       const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
@@ -56,26 +69,19 @@ class WebAudioSFX {
       const ctx = this.getCtx();
       if (!ctx) return;
       const now = ctx.currentTime;
-      
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
-      
       osc.type = "sine";
-      osc.frequency.setValueAtTime(523.25, now); // C5
-      osc.frequency.exponentialRampToValueAtTime(783.99, now + 0.12); // G5
-      osc.frequency.exponentialRampToValueAtTime(1046.50, now + 0.25); // C6
-
+      osc.frequency.setValueAtTime(523.25, now);
+      osc.frequency.exponentialRampToValueAtTime(783.99, now + 0.12);
+      osc.frequency.exponentialRampToValueAtTime(1046.50, now + 0.25);
       gain.gain.setValueAtTime(0.2, now);
       gain.gain.exponentialRampToValueAtTime(0.01, now + 0.35);
-
       osc.connect(gain);
       gain.connect(ctx.destination);
-
       osc.start(now);
       osc.stop(now + 0.35);
-    } catch {
-      // Audio not supported or blocked
-    }
+    } catch {}
   }
 
   playIncorrect() {
@@ -83,44 +89,17 @@ class WebAudioSFX {
       const ctx = this.getCtx();
       if (!ctx) return;
       const now = ctx.currentTime;
-      
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
-      
       osc.type = "sawtooth";
-      osc.frequency.setValueAtTime(220, now); // A3
-      osc.frequency.exponentialRampToValueAtTime(146.83, now + 0.25); // D3
-
+      osc.frequency.setValueAtTime(220, now);
+      osc.frequency.exponentialRampToValueAtTime(146.83, now + 0.25);
       gain.gain.setValueAtTime(0.15, now);
       gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
-
       osc.connect(gain);
       gain.connect(ctx.destination);
-
       osc.start(now);
       osc.stop(now + 0.3);
-    } catch {}
-  }
-
-  playStreak() {
-    try {
-      const ctx = this.getCtx();
-      if (!ctx) return;
-      const now = ctx.currentTime;
-      
-      const notes = [659.25, 783.99, 987.77, 1318.51]; // E5, G5, B5, E6
-      notes.forEach((freq, i) => {
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.type = "triangle";
-        osc.frequency.setValueAtTime(freq, now + i * 0.06);
-        gain.gain.setValueAtTime(0.18, now + i * 0.06);
-        gain.gain.exponentialRampToValueAtTime(0.01, now + i * 0.06 + 0.15);
-        osc.connect(gain);
-        gain.connect(ctx.destination);
-        osc.start(now + i * 0.06);
-        osc.stop(now + i * 0.06 + 0.15);
-      });
     } catch {}
   }
 
@@ -132,8 +111,8 @@ class WebAudioSFX {
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
       osc.type = "square";
-      osc.frequency.setValueAtTime(800, now);
-      gain.gain.setValueAtTime(0.05, now);
+      osc.frequency.setValueAtTime(750, now);
+      gain.gain.setValueAtTime(0.04, now);
       gain.gain.exponentialRampToValueAtTime(0.001, now + 0.04);
       osc.connect(gain);
       gain.connect(ctx.destination);
@@ -147,8 +126,7 @@ class WebAudioSFX {
       const ctx = this.getCtx();
       if (!ctx) return;
       const now = ctx.currentTime;
-      const chords = [523.25, 659.25, 783.99, 1046.50];
-      chords.forEach((freq) => {
+      [523.25, 659.25, 783.99, 1046.50].forEach((freq) => {
         const osc = ctx.createOscillator();
         const gain = ctx.createGain();
         osc.type = "sine";
@@ -164,13 +142,17 @@ class WebAudioSFX {
   }
 }
 
-const sfx = new WebAudioSFX();
+const sfx = new SoundFX();
 
 export function RetoRelampagoGame() {
   const navigate = useNavigate();
   const qc = useQueryClient();
   const rewardCoins = useServerFn(rewardGameCoins);
   const rewardXp = useServerFn(rewardGameXp);
+  const analyzeMaterialFn = useServerFn(analyzeStudyMaterial);
+  const generateQuestionsFn = useServerFn(generateStudyGameQuestions);
+  const generateReviewFn = useServerFn(generateReviewQuestions);
+  const extractMediaFn = useServerFn(extractTextFromMedia);
 
   // Sound preference
   const [soundEnabled, setSoundEnabled] = useState<boolean>(() => {
@@ -186,59 +168,179 @@ export function RetoRelampagoGame() {
     localStorage.setItem("reto_sound_enabled", next ? "true" : "false");
   };
 
-  // Game setup states
-  const [gameState, setGameState] = useState<"lobby" | "playing" | "answered" | "gameover">("lobby");
-  const [selectedCategory, setSelectedCategory] = useState<RetoCategory | "random">("random");
-  const [gameMode, setGameMode] = useState<GameMode>("standard");
+  // Main Flow Phase
+  const [phase, setPhase] = useState<AppPhase>("select_source");
+  const [sourceTab, setSourceTab] = useState<"preset" | "upload">("preset");
 
-  // In-game states
-  const [questions, setQuestions] = useState<RetoQuestion[]>([]);
+  // Material Upload Form State
+  const [uploadType, setUploadType] = useState<"text" | "file" | "camera" | "link">("text");
+  const [customText, setCustomText] = useState("");
+  const [customLink, setCustomLink] = useState("");
+  const [isProcessingMedia, setIsProcessingMedia] = useState(false);
+  const [uploadedFileName, setUploadedFileName] = useState("");
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const cameraInputRef = useRef<HTMLInputElement | null>(null);
+
+  // Active Material & Analysis
+  const [analysis, setAnalysis] = useState<StudyAnalysisResult | null>(null);
+  const [selectedSubtopic, setSelectedSubtopic] = useState<string>("Todos los temas");
+  const [difficulty, setDifficulty] = useState<Difficulty>("easy");
+  const [gameMode, setGameMode] = useState<GameMode>("fast");
+
+  // In-Game States
+  const [questions, setQuestions] = useState<StudyQuestion[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [lives, setLives] = useState(3);
   const [score, setScore] = useState(0);
   const [streak, setStreak] = useState(0);
   const [maxStreak, setMaxStreak] = useState(0);
-  const [selectedOption, setSelectedOption] = useState<number | null>(null);
+  const [selectedChoice, setSelectedChoice] = useState<string | null>(null);
   const [isTimeOut, setIsTimeOut] = useState(false);
-  const [answerHistory, setAnswerHistory] = useState<QuestionAnswerRecord[]>([]);
+  const [answersHistory, setAnswersHistory] = useState<AnswerRecord[]>([]);
   const [earnedReward, setEarnedReward] = useState<{ xp: number; coins: number } | null>(null);
 
-  // Timer states (20 seconds per question)
+  // Timer: 20 seconds
   const QUESTION_TIME_LIMIT = 20;
   const [timeLeft, setTimeLeft] = useState<number>(QUESTION_TIME_LIMIT);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const questionStartTimeRef = useRef<number>(Date.now());
 
-  // Current Question
   const currentQ = questions[currentIndex];
 
-  // Start new game match
-  const handleStartGame = (category: RetoCategory | "random", mode: GameMode = "standard") => {
-    setSelectedCategory(category);
-    setGameMode(mode);
-
-    // Get 10 questions for standard/unlimited, or a large pool for survival
-    const totalCount = mode === "survival" ? 50 : 10;
-    const initialQuestions = getRetoQuestions(category, totalCount, mode !== "unlimited");
-
-    setQuestions(initialQuestions);
-    setCurrentIndex(0);
-    setLives(3);
-    setScore(0);
-    setStreak(0);
-    setMaxStreak(0);
-    setSelectedOption(null);
-    setIsTimeOut(false);
-    setAnswerHistory([]);
-    setEarnedReward(null);
-    setTimeLeft(QUESTION_TIME_LIMIT);
-    questionStartTimeRef.current = Date.now();
-    setGameState("playing");
+  // -------------------------------------------------------------
+  // 1. MATERIAL SELECTION / UPLOAD LOGIC
+  // -------------------------------------------------------------
+  const handleSelectPreset = async (preset: PresetTopic) => {
+    setPhase("analyzing");
+    try {
+      const res = await analyzeMaterialFn({
+        data: {
+          content: preset.content,
+          sourceName: preset.title,
+        },
+      });
+      setAnalysis(res);
+      setSelectedSubtopic(res.detectedTopics[0] || "Todos los temas");
+      setPhase("study_overview");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Error al analizar el material");
+      setPhase("select_source");
+    }
   };
 
-  // Timer Tick Hook
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsProcessingMedia(true);
+    setUploadedFileName(file.name);
+
+    try {
+      const reader = new FileReader();
+      reader.onload = async (event) => {
+        const result = event.target?.result as string;
+        const base64Data = result.split(",")[1];
+        const mimeType = file.type || "application/pdf";
+
+        try {
+          const ocrRes = await extractMediaFn({
+            data: { base64Data, mimeType },
+          });
+
+          if (!ocrRes.text || ocrRes.text.trim().length === 0) {
+            throw new Error("No se detectó texto legible en el archivo. Por favor sube un documento con texto claro o copia tus apuntes.");
+          }
+
+          setCustomText(ocrRes.text);
+          toast.success("¡Texto extraído de tus apuntes con éxito! 📄✨");
+        } catch (err) {
+          toast.error(err instanceof Error ? err.message : "Error al leer el archivo");
+        } finally {
+          setIsProcessingMedia(false);
+        }
+      };
+      reader.readAsDataURL(file);
+    } catch (err) {
+      setIsProcessingMedia(false);
+      toast.error("Error al cargar el archivo");
+    }
+  };
+
+  const handleAnalyzeCustomMaterial = async () => {
+    let contentToAnalyze = customText.trim();
+    if (uploadType === "link") {
+      if (!customLink.trim()) {
+        toast.error("Por favor ingresa un enlace válido");
+        return;
+      }
+      contentToAnalyze = customLink.trim();
+    }
+
+    if (!contentToAnalyze) {
+      toast.error("Por favor ingresa o sube el texto de tus apuntes");
+      return;
+    }
+
+    setPhase("analyzing");
+    try {
+      const res = await analyzeMaterialFn({
+        data: {
+          content: contentToAnalyze,
+          sourceName: uploadedFileName || "Mis Apuntes",
+        },
+      });
+      setAnalysis(res);
+      setSelectedSubtopic(res.detectedTopics[0] || "Todos los temas");
+      setPhase("study_overview");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Error al analizar el material");
+      setPhase("select_source");
+    }
+  };
+
+  // -------------------------------------------------------------
+  // 2. START GAME FROM STUDY OVERVIEW
+  // -------------------------------------------------------------
+  const handleStartGame = async () => {
+    if (!analysis) return;
+
+    setPhase("generating_game");
+    const questionCount = gameMode === "fast" ? 5 : 10;
+
+    try {
+      const res = await generateQuestionsFn({
+        data: {
+          materialText: analysis.sourceText,
+          topicName: `${analysis.title} (${selectedSubtopic})`,
+          difficulty,
+          count: questionCount,
+        },
+      });
+
+      setQuestions(res.questions);
+      setCurrentIndex(0);
+      setLives(3);
+      setScore(0);
+      setStreak(0);
+      setMaxStreak(0);
+      setSelectedChoice(null);
+      setIsTimeOut(false);
+      setAnswersHistory([]);
+      setEarnedReward(null);
+      setTimeLeft(QUESTION_TIME_LIMIT);
+      questionStartTimeRef.current = Date.now();
+      setPhase("playing");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Error al generar preguntas del material");
+      setPhase("study_overview");
+    }
+  };
+
+  // -------------------------------------------------------------
+  // 3. IN-GAME TIMER HOOK
+  // -------------------------------------------------------------
   useEffect(() => {
-    if (gameState !== "playing" || gameMode === "unlimited") {
+    if (phase !== "playing" || gameMode === "practice") {
       if (timerRef.current) clearInterval(timerRef.current);
       return;
     }
@@ -263,14 +365,14 @@ export function RetoRelampagoGame() {
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
     };
-  }, [currentIndex, gameState, gameMode]);
+  }, [currentIndex, phase, gameMode]);
 
   // Handle Timeout
   const handleTimeOut = () => {
-    if (gameState !== "playing") return;
+    if (phase !== "playing") return;
     setIsTimeOut(true);
-    setSelectedOption(null);
-    setGameState("answered");
+    setSelectedChoice("Sin respuesta (Tiempo agotado)");
+    setPhase("question_feedback");
 
     if (soundEnabled) sfx.playIncorrect();
 
@@ -278,39 +380,32 @@ export function RetoRelampagoGame() {
     setLives(newLives);
     setStreak(0);
 
-    const record: QuestionAnswerRecord = {
+    const record: AnswerRecord = {
       question: currentQ,
-      selectedOptionIndex: null,
+      userChoice: "Tiempo agotado",
       isCorrect: false,
       timeSpent: QUESTION_TIME_LIMIT,
       scoreEarned: 0,
     };
-    setAnswerHistory((prev) => [...prev, record]);
-
-    if (gameMode === "survival" && newLives === 0) {
-      setTimeout(() => {
-        handleEndGame([...answerHistory, record], score, maxStreak);
-      }, 2000);
-    }
+    setAnswersHistory((prev) => [...prev, record]);
   };
 
-  // Handle Option Select
-  const handleSelectOption = (index: number) => {
-    if (gameState !== "playing") return;
+  // Handle User Choice Selection
+  const handleSelectChoice = (choice: string) => {
+    if (phase !== "playing") return;
 
     if (timerRef.current) clearInterval(timerRef.current);
 
-    setSelectedOption(index);
-    setGameState("answered");
+    setSelectedChoice(choice);
+    setPhase("question_feedback");
     setIsTimeOut(false);
 
     const timeSpent = Math.max(0.5, (Date.now() - questionStartTimeRef.current) / 1000);
-    const isCorrect = index === currentQ.correctIndex;
+    const isCorrect = choice.trim().toLowerCase() === String(currentQ.correctAnswer).trim().toLowerCase();
 
     let pointsThisTurn = 0;
     let newStreak = streak;
     let newMaxStreak = maxStreak;
-    let newLives = lives;
 
     if (isCorrect) {
       if (soundEnabled) sfx.playCorrect();
@@ -320,75 +415,59 @@ export function RetoRelampagoGame() {
       setStreak(newStreak);
       setMaxStreak(newMaxStreak);
 
-      // Multiplier based on streak
-      let streakMultiplier = 1.0;
-      if (newStreak >= 10) streakMultiplier = 3.0;
-      else if (newStreak >= 5) streakMultiplier = 2.0;
-      else if (newStreak >= 3) streakMultiplier = 1.5;
+      let multiplier = 1.0;
+      if (newStreak >= 10) multiplier = 3.0;
+      else if (newStreak >= 5) multiplier = 2.0;
+      else if (newStreak >= 3) multiplier = 1.5;
 
-      // Speed bonus (more points if answered quickly)
-      const remainingSeconds = Math.max(0, QUESTION_TIME_LIMIT - timeSpent);
-      const speedBonus = gameMode === "unlimited" ? 0 : Math.round(remainingSeconds * 2.5); // Up to 50 pts
-      
-      const basePoints = 100;
-      pointsThisTurn = Math.round((basePoints + speedBonus) * streakMultiplier);
+      const remainingSec = Math.max(0, QUESTION_TIME_LIMIT - timeSpent);
+      const speedBonus = gameMode === "practice" ? 0 : Math.round(remainingSec * 2.5);
+      pointsThisTurn = Math.round((100 + speedBonus) * multiplier);
 
-      const nextScore = score + pointsThisTurn;
-      setScore(nextScore);
-
-      if ((newStreak === 3 || newStreak === 5 || newStreak === 10) && soundEnabled) {
-        sfx.playStreak();
-        toast.success(`🔥 ¡Racha x${newStreak}! Multiplicador ${streakMultiplier}x activado`, {
-          duration: 2000,
-        });
-      }
+      setScore((s) => s + pointsThisTurn);
     } else {
       if (soundEnabled) sfx.playIncorrect();
-      newLives = Math.max(0, lives - 1);
-      setLives(newLives);
+      setLives((l) => Math.max(0, l - 1));
       setStreak(0);
     }
 
-    const record: QuestionAnswerRecord = {
+    const record: AnswerRecord = {
       question: currentQ,
-      selectedOptionIndex: index,
+      userChoice: choice,
       isCorrect,
       timeSpent,
       scoreEarned: pointsThisTurn,
     };
-    const updatedHistory = [...answerHistory, record];
-    setAnswerHistory(updatedHistory);
-
-    // If survival and out of lives, trigger game over after a short view
-    if (gameMode === "survival" && newLives === 0) {
-      setTimeout(() => {
-        handleEndGame(updatedHistory, score + pointsThisTurn, newMaxStreak);
-      }, 2000);
-    }
+    setAnswersHistory((prev) => [...prev, record]);
   };
 
-  // Move to Next Question or Final Screen
+  // Next Question or Results
   const handleNextQuestion = () => {
     const isLast = currentIndex >= questions.length - 1;
     if (isLast) {
-      handleEndGame(answerHistory, score, maxStreak);
+      handleFinishGame(answersHistory, score);
     } else {
       setCurrentIndex((prev) => prev + 1);
-      setSelectedOption(null);
+      setSelectedChoice(null);
       setIsTimeOut(false);
-      setGameState("playing");
+      setPhase("playing");
     }
   };
 
-  // Keyboard controls for options A/B/C/D or 1/2/3/4 & Enter to next
+  // Keyboard shortcut support
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (gameState === "playing") {
-        if (e.key === "1" || e.key.toLowerCase() === "a") handleSelectOption(0);
-        else if (e.key === "2" || e.key.toLowerCase() === "b") handleSelectOption(1);
-        else if (e.key === "3" || e.key.toLowerCase() === "c") handleSelectOption(2);
-        else if (e.key === "4" || e.key.toLowerCase() === "d") handleSelectOption(3);
-      } else if (gameState === "answered") {
+      if (phase === "playing" && currentQ) {
+        if (currentQ.type === "true_false") {
+          if (e.key.toLowerCase() === "v" || e.key === "1") handleSelectChoice("Verdadero");
+          if (e.key.toLowerCase() === "f" || e.key === "2") handleSelectChoice("Falso");
+        } else if (currentQ.options && currentQ.options.length > 0) {
+          if (e.key === "1" || e.key.toLowerCase() === "a") handleSelectChoice(currentQ.options[0]);
+          else if (e.key === "2" || e.key.toLowerCase() === "b") handleSelectChoice(currentQ.options[1]);
+          else if (e.key === "3" || e.key.toLowerCase() === "c") handleSelectChoice(currentQ.options[2]);
+          else if (e.key === "4" || e.key.toLowerCase() === "d") handleSelectChoice(currentQ.options[3]);
+        }
+      } else if (phase === "question_feedback") {
         if (e.key === "Enter" || e.key === " ") {
           e.preventDefault();
           handleNextQuestion();
@@ -398,24 +477,18 @@ export function RetoRelampagoGame() {
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [gameState, currentIndex, questions, score, streak, lives]);
+  }, [phase, currentQ, currentIndex, questions, answersHistory, score]);
 
-  // End Game and Grant Rewards
-  const handleEndGame = async (
-    finalHistory: QuestionAnswerRecord[],
-    finalScore: number,
-    finalMaxStreak: number
-  ) => {
-    setGameState("gameover");
+  // Finish Game
+  const handleFinishGame = async (history: AnswerRecord[], finalScore: number) => {
+    setPhase("results");
     if (soundEnabled) sfx.playVictory();
 
-    const correctCount = finalHistory.filter((h) => h.isCorrect).length;
-    const totalCount = finalHistory.length;
-    const accuracy = totalCount > 0 ? Math.round((correctCount / totalCount) * 100) : 0;
+    const correctCount = history.filter((h) => h.isCorrect).length;
+    const total = history.length;
+    const accuracy = total > 0 ? Math.round((correctCount / total) * 100) : 0;
 
-    // Calculate XP and Sombreritos
-    // Base XP: proportional to score (e.g. 50-250 XP)
-    const xpAwarded = Math.min(350, Math.max(30, Math.round(finalScore / 4)));
+    const xpAwarded = Math.min(300, Math.max(30, Math.round(finalScore / 3)));
     const coinsAwarded = accuracy >= 80 ? 3 : accuracy >= 50 ? 2 : 1;
 
     try {
@@ -426,53 +499,72 @@ export function RetoRelampagoGame() {
       setEarnedReward({ xp: xpAwarded, coins: coinsAwarded });
       qc.invalidateQueries({ queryKey: ["dashboard"] });
     } catch {
-      // Continue gracefully even if network reward fails
       setEarnedReward({ xp: xpAwarded, coins: coinsAwarded });
     }
   };
 
-  // Breakdown statistics per category
-  const getCategoryBreakdown = () => {
-    const stats: Record<string, { total: number; correct: number; info: CategoryInfo }> = {};
-    answerHistory.forEach((item) => {
-      const catId = item.question.category;
-      if (!stats[catId]) {
-        const catInfo = RETO_CATEGORIES.find((c) => c.id === catId) || {
-          id: catId as any,
-          name: catId,
-          icon: "📚",
-          description: "",
-          color: "text-primary",
-          bgColor: "bg-primary/10",
-          borderColor: "border-primary/20",
-        };
-        stats[catId] = { total: 0, correct: 0, info: catInfo };
-      }
-      stats[catId].total += 1;
-      if (item.isCorrect) stats[catId].correct += 1;
-    });
-    return Object.values(stats);
-  };
+  // -------------------------------------------------------------
+  // 4. "PRACTICAR LO QUE FALLÉ" (DYNAMIC ERROR REVIEW ROUND)
+  // -------------------------------------------------------------
+  const handlePracticeFailed = async () => {
+    if (!analysis) return;
 
-  // Average time calculation
-  const getAverageTime = () => {
-    if (answerHistory.length === 0) return 0;
-    const totalSec = answerHistory.reduce((acc, curr) => acc + curr.timeSpent, 0);
-    return (totalSec / answerHistory.length).toFixed(1);
+    const failed = answersHistory.filter((a) => !a.isCorrect);
+    if (failed.length === 0) return;
+
+    setPhase("generating_review");
+
+    try {
+      const failedConcepts = Array.from(new Set(failed.map((f) => f.question.concept)));
+      const failedSummary = failed.map((f) => ({
+        question: f.question.question,
+        concept: f.question.concept,
+        userAnswer: f.userChoice,
+        correctAnswer: String(f.question.correctAnswer),
+      }));
+
+      const res = await generateReviewFn({
+        data: {
+          materialText: analysis.sourceText,
+          failedConcepts,
+          failedQuestionsSummary: failedSummary,
+          count: Math.min(6, Math.max(3, failed.length)),
+        },
+      });
+
+      setGameMode("review");
+      setQuestions(res.questions);
+      setCurrentIndex(0);
+      setLives(3);
+      setScore(0);
+      setStreak(0);
+      setMaxStreak(0);
+      setSelectedChoice(null);
+      setIsTimeOut(false);
+      setAnswersHistory([]);
+      setEarnedReward(null);
+      setTimeLeft(QUESTION_TIME_LIMIT);
+      questionStartTimeRef.current = Date.now();
+      setPhase("playing");
+      toast.success("¡Ronda de repaso generada para afianzar tus dudas! 🎯✨");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Error al generar preguntas de repaso");
+      setPhase("results");
+    }
   };
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col font-sans transition-colors duration-200">
       {/* Top Navbar */}
-      <header className="border-b border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md sticky top-0 z-30 px-4 py-3">
+      <header className="border-b border-slate-200 dark:border-slate-800 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md sticky top-0 z-30 px-4 py-3">
         <div className="max-w-4xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
             <button
               onClick={() => {
-                if (gameState === "playing" || gameState === "answered") {
-                  if (confirm("¿Deseas salir de la partida actual?")) {
-                    setGameState("lobby");
-                  }
+                if (phase === "playing" || phase === "question_feedback") {
+                  if (confirm("¿Deseas volver al menú de temas?")) setPhase("select_source");
+                } else if (phase === "study_overview" || phase === "results") {
+                  setPhase("select_source");
                 } else {
                   navigate({ to: "/games" });
                 }
@@ -484,11 +576,14 @@ export function RetoRelampagoGame() {
             </button>
             <div>
               <h1 className="font-display text-lg font-black tracking-tight text-blue-600 dark:text-blue-400 flex items-center gap-1.5">
-                <Zap className="size-5 text-amber-500 fill-amber-500 animate-pulse" />
-                Reto Relámpago
+                <Brain className="size-5 text-purple-600 dark:text-purple-400 fill-purple-600/20" />
+                <span>Estudia y Juega</span>
+                <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-purple-500/10 text-purple-600 dark:text-purple-300 border border-purple-500/20 hidden sm:inline-block">
+                  IA Adaptativa
+                </span>
               </h1>
               <p className="text-[11px] text-slate-500 dark:text-slate-400 hidden sm:block">
-                Trivia educativa rápida y ágil
+                Aprende el tema → Juega con tus apuntes → Repasa lo que falles
               </p>
             </div>
           </div>
@@ -497,7 +592,7 @@ export function RetoRelampagoGame() {
             <button
               onClick={toggleSound}
               className="flex size-9 items-center justify-center rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 transition active:scale-95 cursor-pointer border-none"
-              title={soundEnabled ? "Silenciar efectos de sonido" : "Activar sonido"}
+              title={soundEnabled ? "Silenciar efectos" : "Activar sonido"}
             >
               {soundEnabled ? <Volume2 className="size-4 text-blue-500" /> : <VolumeX className="size-4 text-slate-400" />}
             </button>
@@ -511,142 +606,453 @@ export function RetoRelampagoGame() {
         </div>
       </header>
 
-      {/* Main Game Container */}
+      {/* Main Container */}
       <main className="flex-1 max-w-3xl w-full mx-auto p-4 sm:p-6 flex flex-col justify-center">
-        
+
         {/* ========================================================================= */}
-        {/* 1. LOBBY / SELECCIÓN DE CATEGORÍA Y MODO */}
+        {/* FASE 1: ¿QUÉ QUIERES ESTUDIAR HOY? (SELECCIÓN / SUBIDA) */}
         {/* ========================================================================= */}
-        {gameState === "lobby" && (
+        {phase === "select_source" && (
           <div className="space-y-6 animate-in fade-in zoom-in-95 duration-300">
-            {/* Hero Card */}
+            {/* Header Card */}
             <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-8 border border-slate-200/80 dark:border-slate-800 shadow-sm text-center relative overflow-hidden">
-              <div className="absolute -right-12 -top-12 size-40 bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
-              <div className="absolute -left-12 -bottom-12 size-40 bg-purple-500/10 rounded-full blur-3xl pointer-events-none" />
-
-              <div className="inline-flex size-16 items-center justify-center rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-500/25 mb-4 animate-bounce">
-                <Brain className="size-9" />
+              <div className="inline-flex size-14 items-center justify-center rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-500/20 mb-3">
+                <GraduationCap className="size-8" />
               </div>
-
-              <h2 className="font-display text-3xl sm:text-4xl font-black text-slate-900 dark:text-white tracking-tight">
-                Reto Relámpago
+              <h2 className="font-display text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
+                ¿Qué quieres estudiar hoy?
               </h2>
-              <p className="mt-2 text-sm sm:text-base text-slate-600 dark:text-slate-300 max-w-lg mx-auto leading-relaxed">
-                Pon a prueba tus conocimientos en 10 preguntas rápidas con retroalimentación y explicaciones educativas instantáneas.
+              <p className="mt-2 text-xs sm:text-sm text-slate-600 dark:text-slate-300 max-w-md mx-auto leading-relaxed">
+                Selecciona un tema listo o sube tus propios apuntes. La IA te explicará lo más importante y creará un juego para practicar.
               </p>
 
-              {/* Game Mode Selector */}
-              <div className="mt-6 inline-flex p-1 bg-slate-100 dark:bg-slate-800/80 rounded-2xl border border-slate-200 dark:border-slate-700/60 flex-wrap justify-center gap-1">
-                {[
-                  { id: "standard", label: "⚡ Reto Relámpago", desc: "10 preguntas · 20s" },
-                  { id: "unlimited", label: "🧠 Sin límite", desc: "Modo estudio libre" },
-                  { id: "survival", label: "🔥 Supervivencia", desc: "Hasta 3 vidas" },
-                ].map((mode) => (
-                  <button
-                    key={mode.id}
-                    onClick={() => setGameMode(mode.id as GameMode)}
-                    className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                      gameMode === mode.id
-                        ? "bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 shadow-sm"
-                        : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
-                    }`}
-                  >
-                    {mode.label}
-                  </button>
-                ))}
+              {/* Source Tabs */}
+              <div className="mt-6 inline-flex p-1 bg-slate-100 dark:bg-slate-800/80 rounded-2xl border border-slate-200 dark:border-slate-700 flex-wrap justify-center gap-1">
+                <button
+                  onClick={() => setSourceTab("preset")}
+                  className={`px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                    sourceTab === "preset"
+                      ? "bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 shadow-sm"
+                      : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
+                  }`}
+                >
+                  <BookOpen className="size-4" />
+                  <span>📖 Usar un tema</span>
+                </button>
+                <button
+                  onClick={() => setSourceTab("upload")}
+                  className={`px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                    sourceTab === "upload"
+                      ? "bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 shadow-sm"
+                      : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
+                  }`}
+                >
+                  <Upload className="size-4" />
+                  <span>📎 Subir mi material</span>
+                </button>
               </div>
             </div>
 
-            {/* Category Grid */}
-            <div className="space-y-3">
-              <div className="flex items-center justify-between px-1">
-                <h3 className="text-sm font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
-                  <Compass className="size-4 text-blue-500" />
-                  Selecciona una materia
+            {/* TAB A: PRESET TOPICS */}
+            {sourceTab === "preset" && (
+              <div className="space-y-3">
+                <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 px-1 flex items-center gap-1.5">
+                  <Sparkles className="size-3.5 text-blue-500" /> Temas preparados para estudiar
                 </h3>
-                <span className="text-xs text-slate-400 font-medium">
-                  {RETO_QUESTIONS_DB.length}+ preguntas disponibles
-                </span>
-              </div>
-
-              {/* Random / All mixed button */}
-              <button
-                onClick={() => handleStartGame("random", gameMode)}
-                className="w-full group p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white font-bold text-left shadow-md shadow-blue-600/20 hover:shadow-xl hover:shadow-blue-600/30 transition-all duration-300 flex items-center justify-between cursor-pointer border-none active:scale-[0.99]"
-              >
-                <div className="flex items-center gap-3.5">
-                  <span className="text-3xl sm:text-4xl bg-white/20 p-2.5 rounded-xl backdrop-blur-sm group-hover:rotate-12 transition-transform">
-                    🎲
-                  </span>
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-base sm:text-lg font-black">Modo Aleatorio</span>
-                      <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 bg-white/25 rounded-full tracking-wider">
-                        Recomendado
-                      </span>
-                    </div>
-                    <p className="text-xs text-blue-100 font-normal mt-0.5">
-                      Mezcla preguntas de todas las ciencias, matemáticas, español, historia e inglés.
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-1 text-sm font-black bg-white/20 hover:bg-white/30 px-3.5 py-2 rounded-xl transition">
-                  <span>Jugar</span>
-                  <ChevronRight className="size-4 group-hover:translate-x-1 transition-transform" />
-                </div>
-              </button>
-
-              {/* Specific Categories */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
-                {RETO_CATEGORIES.map((cat) => (
-                  <button
-                    key={cat.id}
-                    onClick={() => handleStartGame(cat.id, gameMode)}
-                    className={`group p-4 rounded-2xl bg-white dark:bg-slate-900 border ${cat.borderColor} hover:border-blue-400 dark:hover:border-blue-500 shadow-sm hover:shadow-md transition-all text-left flex items-center justify-between cursor-pointer active:scale-[0.98]`}
-                  >
-                    <div className="flex items-center gap-3">
-                      <span className="text-2xl p-2 rounded-xl bg-slate-100 dark:bg-slate-800 group-hover:scale-110 transition-transform">
-                        {cat.icon}
-                      </span>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {PRESET_STUDY_TOPICS.map((preset) => (
+                    <button
+                      key={preset.id}
+                      onClick={() => handleSelectPreset(preset)}
+                      className="group p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 hover:border-blue-500 dark:hover:border-blue-500 shadow-sm hover:shadow-md transition-all text-left flex flex-col justify-between gap-3 cursor-pointer active:scale-[0.99]"
+                    >
                       <div>
-                        <h4 className={`text-sm font-bold ${cat.color}`}>
-                          {cat.name}
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-2xl p-2 rounded-xl bg-slate-100 dark:bg-slate-800 group-hover:scale-110 transition-transform">
+                            {preset.icon}
+                          </span>
+                          <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded-full bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-900/60">
+                            {preset.badge}
+                          </span>
+                        </div>
+                        <h4 className="text-base font-bold text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                          {preset.title}
                         </h4>
-                        <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-tight mt-0.5">
-                          {cat.description}
+                        <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-relaxed line-clamp-2">
+                          {preset.summary}
                         </p>
                       </div>
+
+                      <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs font-bold text-blue-600 dark:text-blue-400">
+                        <span>Estudiar tema</span>
+                        <ChevronRight className="size-4 group-hover:translate-x-1 transition-transform" />
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* TAB B: UPLOAD CUSTOM MATERIAL */}
+            {sourceTab === "upload" && (
+              <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-7 border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-5">
+                <div>
+                  <h3 className="font-display text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                    <span>📎</span> Crea un juego con tus apuntes
+                  </h3>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 leading-relaxed">
+                    Sube tus apuntes, guía de estudio o material de clase y la IA creará una explicación y un juego para practicar.
+                  </p>
+                </div>
+
+                {/* Upload Form Type Selector */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                  {[
+                    { id: "text", label: "✍️ Texto libre", desc: "Copiar / Escribir" },
+                    { id: "file", label: "📄 PDF / Doc", desc: "Documentos" },
+                    { id: "camera", label: "📸 Foto / Cámara", desc: "Foto a libreta" },
+                    { id: "link", label: "🔗 Enlace Web", desc: "Página o artículo" },
+                  ].map((tab) => (
+                    <button
+                      key={tab.id}
+                      onClick={() => setUploadType(tab.id as any)}
+                      className={`p-3 rounded-2xl border text-left transition cursor-pointer ${
+                        uploadType === tab.id
+                          ? "bg-blue-50 dark:bg-blue-950/40 border-blue-500 text-blue-900 dark:text-blue-200 shadow-sm"
+                          : "bg-slate-50 dark:bg-slate-800/60 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:bg-slate-100"
+                      }`}
+                    >
+                      <span className="font-bold text-xs block">{tab.label}</span>
+                      <span className="text-[10px] text-slate-400 block mt-0.5">{tab.desc}</span>
+                    </button>
+                  ))}
+                </div>
+
+                {/* Input forms based on uploadType */}
+                {uploadType === "text" && (
+                  <div className="space-y-2">
+                    <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                      Pega aquí tus apuntes, resumen o texto de estudio:
+                    </label>
+                    <textarea
+                      rows={6}
+                      value={customText}
+                      onChange={(e) => setCustomText(e.target.value)}
+                      placeholder="Ejemplo: La célula es la unidad básica de los seres vivos. Existen células animales y vegetales. La mitocondria genera energía (ATP)..."
+                      className="w-full p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 leading-relaxed"
+                    />
+                  </div>
+                )}
+
+                {uploadType === "file" && (
+                  <div className="space-y-3">
+                    <input
+                      type="file"
+                      ref={fileInputRef}
+                      onChange={handleFileUpload}
+                      accept=".pdf,.png,.jpg,.jpeg,.txt"
+                      className="hidden"
+                    />
+                    <div
+                      onClick={() => fileInputRef.current?.click()}
+                      className="border-2 border-dashed border-slate-300 dark:border-slate-700 hover:border-blue-500 p-6 rounded-2xl text-center cursor-pointer bg-slate-50/50 dark:bg-slate-800/40 transition group"
+                    >
+                      <Upload className="size-8 mx-auto text-blue-500 mb-2 group-hover:scale-110 transition-transform" />
+                      <p className="text-sm font-bold text-slate-800 dark:text-slate-200">
+                        {uploadedFileName ? `Archivo: ${uploadedFileName}` : "Haz clic para subir un PDF o archivo"}
+                      </p>
+                      <p className="text-xs text-slate-400 mt-1">Soporta PDF, imágenes de apuntes o documentos de texto</p>
                     </div>
-                    <ChevronRight className="size-4 text-slate-300 dark:text-slate-600 group-hover:text-blue-500 group-hover:translate-x-0.5 transition-all" />
-                  </button>
-                ))}
+
+                    {customText && (
+                      <div className="p-3 bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-900 rounded-xl text-xs text-emerald-700 dark:text-emerald-300">
+                        ✅ Texto extraído listo ({customText.length} caracteres).
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {uploadType === "camera" && (
+                  <div className="space-y-3">
+                    <input
+                      type="file"
+                      ref={cameraInputRef}
+                      onChange={handleFileUpload}
+                      accept="image/*"
+                      capture="environment"
+                      className="hidden"
+                    />
+                    <div
+                      onClick={() => cameraInputRef.current?.click()}
+                      className="border-2 border-dashed border-slate-300 dark:border-slate-700 hover:border-purple-500 p-6 rounded-2xl text-center cursor-pointer bg-slate-50/50 dark:bg-slate-800/40 transition group"
+                    >
+                      <Camera className="size-8 mx-auto text-purple-500 mb-2 group-hover:scale-110 transition-transform" />
+                      <p className="text-sm font-bold text-slate-800 dark:text-slate-200">
+                        Tomar foto a mi libreta o subir imagen
+                      </p>
+                      <p className="text-xs text-slate-400 mt-1">La IA transcribirá automáticamente tus notas escritas a mano</p>
+                    </div>
+
+                    {customText && (
+                      <div className="p-3 bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-900 rounded-xl text-xs text-emerald-700 dark:text-emerald-300">
+                        ✅ Apuntes escaneados correctamente con OCR.
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {uploadType === "link" && (
+                  <div className="space-y-2">
+                    <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                      Enlace de la página o artículo educativo:
+                    </label>
+                    <div className="flex gap-2">
+                      <input
+                        type="url"
+                        value={customLink}
+                        onChange={(e) => setCustomLink(e.target.value)}
+                        placeholder="https://es.wikipedia.org/wiki/Célula"
+                        className="flex-1 p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {/* Analyze and start button */}
+                <button
+                  disabled={isProcessingMedia || (uploadType === "link" ? !customLink.trim() : !customText.trim())}
+                  onClick={handleAnalyzeCustomMaterial}
+                  className="w-full py-4 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-display font-bold text-sm sm:text-base tracking-wide transition shadow-lg shadow-blue-500/25 active:scale-[0.99] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 border-none"
+                >
+                  {isProcessingMedia ? (
+                    <>
+                      <Loader2 className="size-5 animate-spin" />
+                      <span>Extrayendo texto de tus apuntes...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="size-5" />
+                      <span>Analizar apuntes y crear mi juego ✨</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ========================================================================= */}
+        {/* FASE 2: ANALIZANDO MATERIAL POR IA */}
+        {/* ========================================================================= */}
+        {phase === "analyzing" && (
+          <div className="bg-white dark:bg-slate-900 rounded-3xl p-10 border border-slate-200/80 dark:border-slate-800 shadow-sm text-center space-y-4 max-w-lg mx-auto animate-in fade-in duration-300">
+            <div className="inline-flex size-20 items-center justify-center rounded-3xl bg-blue-500/10 text-blue-600 dark:text-blue-400 animate-pulse">
+              <Brain className="size-10 animate-bounce" />
+            </div>
+            <h3 className="font-display text-2xl font-black text-slate-900 dark:text-white">
+              🧠 Analizando tu material...
+            </h3>
+            <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 leading-relaxed">
+              La IA está identificando los conceptos clave, resumiendo los puntos más importantes y preparando tu explicación didáctica.
+            </p>
+            <div className="flex justify-center pt-2">
+              <Loader2 className="size-6 text-blue-500 animate-spin" />
+            </div>
+          </div>
+        )}
+
+        {/* ========================================================================= */}
+        {/* FASE 3: EXPLICACIÓN DIDÁCTICA + LO MÁS IMPORTANTE (ESTUDIO PREVIO) */}
+        {/* ========================================================================= */}
+        {phase === "study_overview" && analysis && (
+          <div className="space-y-5 animate-in fade-in zoom-in-95 duration-300">
+            {/* Main Explanation Card */}
+            <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-8 border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-5">
+              <div>
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-500/10 text-blue-600 dark:text-blue-400 text-xs font-bold mb-2">
+                  <BookOpen className="size-3.5" />
+                  <span>Paso 1: Estudia el tema</span>
+                </div>
+                <h2 className="font-display text-2xl sm:text-3xl font-black text-slate-900 dark:text-white">
+                  {analysis.title}
+                </h2>
+              </div>
+
+              {/* Simple Short Explanation */}
+              <div className="p-5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/80">
+                <h4 className="text-xs font-extrabold uppercase tracking-wider text-slate-400 mb-2">
+                  📖 Explicación clara y sencilla
+                </h4>
+                <p className="text-sm sm:text-base text-slate-700 dark:text-slate-200 leading-relaxed whitespace-pre-line">
+                  {analysis.summaryExplanation}
+                </p>
+              </div>
+
+              {/* ⭐ Lo más importante */}
+              <div className="p-5 rounded-2xl bg-amber-500/10 border border-amber-500/25 space-y-2.5">
+                <h4 className="text-xs font-extrabold uppercase tracking-wider text-amber-600 dark:text-amber-400 flex items-center gap-1.5">
+                  <Star className="size-4 fill-amber-500 text-amber-500" />
+                  <span>⭐ Lo más importante</span>
+                </h4>
+                <ul className="space-y-2 text-xs sm:text-sm text-slate-800 dark:text-slate-200 font-medium">
+                  {analysis.keyPoints.map((point, idx) => (
+                    <li key={idx} className="flex items-start gap-2">
+                      <span className="text-amber-500 font-bold shrink-0 mt-0.5">•</span>
+                      <span>{point}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              {/* Detected Subtopics */}
+              {analysis.detectedTopics.length > 1 && (
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-slate-500 dark:text-slate-400 block">
+                    Temas detectados en tus apuntes:
+                  </label>
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      onClick={() => setSelectedSubtopic("Todos los temas")}
+                      className={`px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer ${
+                        selectedSubtopic === "Todos los temas"
+                          ? "bg-blue-600 text-white shadow-sm"
+                          : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200"
+                      }`}
+                    >
+                      Todos los temas
+                    </button>
+                    {analysis.detectedTopics.map((topic, i) => (
+                      <button
+                        key={i}
+                        onClick={() => setSelectedSubtopic(topic)}
+                        className={`px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer ${
+                          selectedSubtopic === topic
+                            ? "bg-blue-600 text-white shadow-sm"
+                            : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200"
+                        }`}
+                      >
+                        {topic}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Game Mode & Difficulty Settings */}
+              <div className="pt-3 border-t border-slate-100 dark:border-slate-800 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {/* Difficulty */}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-slate-500 dark:text-slate-400">
+                    Nivel de dificultad:
+                  </label>
+                  <div className="grid grid-cols-3 gap-1.5">
+                    {[
+                      { id: "easy", label: "🟢 Fácil", desc: "Directo" },
+                      { id: "medium", label: "🟡 Medio", desc: "Comprensión" },
+                      { id: "hard", label: "🔴 Difícil", desc: "Aplicación" },
+                    ].map((d) => (
+                      <button
+                        key={d.id}
+                        onClick={() => setDifficulty(d.id as Difficulty)}
+                        className={`p-2 rounded-xl text-xs font-bold transition text-center cursor-pointer ${
+                          difficulty === d.id
+                            ? "bg-slate-900 text-white dark:bg-white dark:text-slate-900 shadow-sm"
+                            : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200"
+                        }`}
+                      >
+                        {d.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Game Mode */}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-slate-500 dark:text-slate-400">
+                    Modo de juego:
+                  </label>
+                  <div className="grid grid-cols-3 gap-1.5">
+                    {[
+                      { id: "fast", label: "⚡ Reto rápido", desc: "5 preguntas" },
+                      { id: "practice", label: "🧠 Practicar", desc: "Sin tiempo" },
+                      { id: "challenge", label: "🔥 Desafío", desc: "10 preguntas" },
+                    ].map((m) => (
+                      <button
+                        key={m.id}
+                        onClick={() => setGameMode(m.id as GameMode)}
+                        className={`p-2 rounded-xl text-xs font-bold transition text-center cursor-pointer ${
+                          gameMode === m.id
+                            ? "bg-blue-600 text-white shadow-sm"
+                            : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200"
+                        }`}
+                      >
+                        {m.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="pt-2 flex flex-col sm:flex-row gap-3">
+                <button
+                  onClick={handleStartGame}
+                  className="flex-1 py-4 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-display font-bold text-base tracking-wide transition shadow-lg shadow-blue-500/25 active:scale-[0.99] cursor-pointer flex items-center justify-center gap-2 border-none"
+                >
+                  <Play className="size-5 fill-white" />
+                  <span>🎮 Ya entendí, comenzar juego</span>
+                </button>
+                <button
+                  onClick={() => setPhase("select_source")}
+                  className="py-4 px-6 rounded-2xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold text-sm transition active:scale-[0.99] cursor-pointer"
+                >
+                  Cambiar tema
+                </button>
               </div>
             </div>
           </div>
         )}
 
         {/* ========================================================================= */}
-        {/* 2. EN JUEGO: PREGUNTA & OPCIONES */}
+        {/* FASE 4: GENERANDO PREGUNTAS CON IA */}
         {/* ========================================================================= */}
-        {(gameState === "playing" || gameState === "answered") && currentQ && (
+        {(phase === "generating_game" || phase === "generating_review") && (
+          <div className="bg-white dark:bg-slate-900 rounded-3xl p-10 border border-slate-200/80 dark:border-slate-800 shadow-sm text-center space-y-4 max-w-lg mx-auto animate-in fade-in duration-300">
+            <div className="inline-flex size-16 items-center justify-center rounded-2xl bg-purple-500/10 text-purple-600 dark:text-purple-400 animate-pulse">
+              <Sparkles className="size-8 animate-spin-slow" />
+            </div>
+            <h3 className="font-display text-2xl font-black text-slate-900 dark:text-white">
+              {phase === "generating_review" ? "🎯 Creando ejercicios de refuerzo..." : "🎮 Generando preguntas de tu material..."}
+            </h3>
+            <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 leading-relaxed">
+              {phase === "generating_review"
+                ? "La IA está diseñando preguntas específicas sobre los conceptos que necesitas repasar."
+                : "Creando preguntas pedagógicas y didácticas ancladas 100% en tu apunte."}
+            </p>
+            <div className="flex justify-center pt-2">
+              <Loader2 className="size-6 text-purple-600 animate-spin" />
+            </div>
+          </div>
+        )}
+
+        {/* ========================================================================= */}
+        {/* FASE 5 & 6: PREGUNTA EN JUEGO & RETROALIMENTACIÓN */}
+        {/* ========================================================================= */}
+        {(phase === "playing" || phase === "question_feedback") && currentQ && (
           <div className="space-y-4 animate-in fade-in duration-200">
-            {/* Top Status Bar: Question Progress, Hearts, Streak, Score & Timer */}
+            {/* Top Game Bar */}
             <div className="bg-white dark:bg-slate-900 rounded-2xl p-4 border border-slate-200/80 dark:border-slate-800 shadow-sm flex flex-col gap-3">
               <div className="flex items-center justify-between gap-2">
-                {/* Question counter & Category */}
                 <div className="flex items-center gap-2">
                   <span className="text-xs font-black px-2.5 py-1 rounded-lg bg-blue-500/10 text-blue-600 dark:text-blue-400">
-                    Pregunta {currentIndex + 1} de {gameMode === "survival" ? "∞" : questions.length}
+                    Pregunta {currentIndex + 1} de {questions.length}
                   </span>
-                  <span className="text-xs text-slate-500 dark:text-slate-400 font-semibold flex items-center gap-1">
-                    {RETO_CATEGORIES.find((c) => c.id === currentQ.category)?.icon}{" "}
-                    {RETO_CATEGORIES.find((c) => c.id === currentQ.category)?.name}
+                  <span className="text-xs text-slate-500 dark:text-slate-400 font-semibold truncate max-w-[150px] sm:max-w-[250px]">
+                    {currentQ.concept || analysis?.title}
                   </span>
                 </div>
 
-                {/* Right side stats: Lives, Streak & Score */}
                 <div className="flex items-center gap-3">
-                  {/* Streak pill */}
                   {streak >= 2 && (
                     <div className="flex items-center gap-1 text-xs font-black text-amber-500 bg-amber-500/10 px-2 py-0.5 rounded-full animate-bounce">
                       <Flame className="size-3.5 fill-amber-500" />
@@ -656,11 +1062,11 @@ export function RetoRelampagoGame() {
 
                   {/* Hearts */}
                   <div className="flex items-center gap-0.5">
-                    {[1, 2, 3].map((heartIndex) => (
+                    {[1, 2, 3].map((h) => (
                       <Heart
-                        key={heartIndex}
+                        key={h}
                         className={`size-4 transition-all duration-300 ${
-                          heartIndex <= lives
+                          h <= lives
                             ? "text-rose-500 fill-rose-500 scale-100"
                             : "text-slate-300 dark:text-slate-700 scale-90"
                         }`}
@@ -676,8 +1082,8 @@ export function RetoRelampagoGame() {
                 </div>
               </div>
 
-              {/* 20-second Timer Bar */}
-              {gameMode !== "unlimited" && (
+              {/* Timer Bar */}
+              {gameMode !== "practice" && (
                 <div className="space-y-1">
                   <div className="flex justify-between items-center text-[10px] font-bold text-slate-400">
                     <span className="flex items-center gap-1">
@@ -704,13 +1110,13 @@ export function RetoRelampagoGame() {
             </div>
 
             {/* Question Card */}
-            <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-8 border border-slate-200/80 dark:border-slate-800 shadow-sm relative">
-              <div className="flex items-center justify-between gap-2 mb-3">
+            <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-8 border border-slate-200/80 dark:border-slate-800 shadow-sm relative space-y-6">
+              <div className="flex items-center justify-between gap-2">
                 <span className="text-[10px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
-                  Dificultad: {currentQ.difficulty === "easy" ? "Fácil" : currentQ.difficulty === "medium" ? "Media" : "Avanzada"}
+                  {currentQ.type === "true_false" ? "⚖️ Verdadero o Falso" : currentQ.type === "fill_blank" ? "✏️ Completa la frase" : "🅰️ Opción Múltiple"}
                 </span>
                 <span className="text-xs text-slate-400 font-mono">
-                  100 pts {gameMode !== "unlimited" && "+ bonus de velocidad"}
+                  100 pts {gameMode !== "practice" && "+ bonus"}
                 </span>
               </div>
 
@@ -718,70 +1124,99 @@ export function RetoRelampagoGame() {
                 {currentQ.question}
               </h2>
 
-              {/* 4 Interactive Answer Options */}
-              <div className="mt-6 grid grid-cols-1 gap-3">
-                {currentQ.options.map((option, optIdx) => {
-                  const letter = ["A", "B", "C", "D"][optIdx];
-                  const isChosen = selectedOption === optIdx;
-                  const isCorrect = optIdx === currentQ.correctIndex;
-                  const isAnswered = gameState === "answered";
+              {/* RENDER OPTIONS BASED ON QUESTION TYPE */}
+              {/* Type 1: Verdadero o Falso */}
+              {currentQ.type === "true_false" ? (
+                <div className="grid grid-cols-2 gap-3 pt-2">
+                  {["Verdadero", "Falso"].map((choice) => {
+                    const isChosen = selectedChoice === choice;
+                    const isCorrect = choice.toLowerCase() === String(currentQ.correctAnswer).toLowerCase();
+                    const isAnswered = phase === "question_feedback";
 
-                  let buttonStyles = "bg-slate-50 dark:bg-slate-800/60 border-slate-200 dark:border-slate-700/80 hover:bg-blue-50 hover:border-blue-300 dark:hover:bg-blue-950/30 text-slate-800 dark:text-slate-200";
-                  let letterStyles = "bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300";
-
-                  if (isAnswered) {
-                    if (isCorrect) {
-                      buttonStyles = "bg-emerald-50 dark:bg-emerald-950/40 border-emerald-500 text-emerald-900 dark:text-emerald-200 font-bold shadow-md shadow-emerald-500/10 scale-[1.01]";
-                      letterStyles = "bg-emerald-500 text-white font-bold";
-                    } else if (isChosen && !isCorrect) {
-                      buttonStyles = "bg-rose-50 dark:bg-rose-950/40 border-rose-500 text-rose-900 dark:text-rose-200 font-bold shake-animation";
-                      letterStyles = "bg-rose-500 text-white font-bold";
-                    } else {
-                      buttonStyles = "bg-slate-50/50 dark:bg-slate-900/50 border-slate-200/50 dark:border-slate-800/50 text-slate-400 opacity-60";
+                    let btnCls = "bg-slate-50 dark:bg-slate-800/70 border-slate-200 dark:border-slate-700 hover:bg-blue-50 text-slate-800 dark:text-slate-200";
+                    if (isAnswered) {
+                      if (isCorrect) btnCls = "bg-emerald-50 dark:bg-emerald-950/40 border-emerald-500 text-emerald-900 dark:text-emerald-200 font-bold shadow-md shadow-emerald-500/10";
+                      else if (isChosen && !isCorrect) btnCls = "bg-rose-50 dark:bg-rose-950/40 border-rose-500 text-rose-900 dark:text-rose-200 font-bold";
+                      else btnCls = "opacity-50";
                     }
-                  }
 
-                  return (
-                    <button
-                      key={optIdx}
-                      disabled={isAnswered}
-                      onClick={() => handleSelectOption(optIdx)}
-                      className={`w-full p-4 rounded-2xl border-2 transition-all flex items-center justify-between text-left cursor-pointer active:scale-[0.99] ${buttonStyles}`}
-                    >
-                      <div className="flex items-center gap-3.5">
-                        <span className={`flex size-8 shrink-0 items-center justify-center rounded-xl text-xs font-black ${letterStyles}`}>
-                          {letter}
-                        </span>
-                        <span className="text-sm sm:text-base font-semibold leading-snug">
-                          {option}
-                        </span>
-                      </div>
+                    return (
+                      <button
+                        key={choice}
+                        disabled={isAnswered}
+                        onClick={() => handleSelectChoice(choice)}
+                        className={`p-5 rounded-2xl border-2 font-display text-lg font-bold text-center transition-all cursor-pointer active:scale-95 ${btnCls}`}
+                      >
+                        {choice === "Verdadero" ? "✅ Verdadero" : "❌ Falso"}
+                      </button>
+                    );
+                  })}
+                </div>
+              ) : (
+                /* Type 2: Multiple Choice / Fill Blank Options */
+                <div className="grid grid-cols-1 gap-3 pt-1">
+                  {currentQ.options?.map((option, idx) => {
+                    const letter = ["A", "B", "C", "D"][idx] || String(idx + 1);
+                    const isChosen = selectedChoice === option;
+                    const isCorrect = option.trim().toLowerCase() === String(currentQ.correctAnswer).trim().toLowerCase();
+                    const isAnswered = phase === "question_feedback";
 
-                      {isAnswered && (
-                        <div className="shrink-0 ml-2">
-                          {isCorrect && <CheckCircle2 className="size-5 text-emerald-500" />}
-                          {isChosen && !isCorrect && <XCircle className="size-5 text-rose-500" />}
+                    let btnCls = "bg-slate-50 dark:bg-slate-800/60 border-slate-200 dark:border-slate-700/80 hover:bg-blue-50 hover:border-blue-300 dark:hover:bg-blue-950/30 text-slate-800 dark:text-slate-200";
+                    let letterCls = "bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300";
+
+                    if (isAnswered) {
+                      if (isCorrect) {
+                        btnCls = "bg-emerald-50 dark:bg-emerald-950/40 border-emerald-500 text-emerald-900 dark:text-emerald-200 font-bold shadow-md shadow-emerald-500/10 scale-[1.01]";
+                        letterCls = "bg-emerald-500 text-white font-bold";
+                      } else if (isChosen && !isCorrect) {
+                        btnCls = "bg-rose-50 dark:bg-rose-950/40 border-rose-500 text-rose-900 dark:text-rose-200 font-bold";
+                        letterCls = "bg-rose-500 text-white font-bold";
+                      } else {
+                        btnCls = "opacity-50 border-slate-200 dark:border-slate-800";
+                      }
+                    }
+
+                    return (
+                      <button
+                        key={idx}
+                        disabled={isAnswered}
+                        onClick={() => handleSelectChoice(option)}
+                        className={`w-full p-4 rounded-2xl border-2 transition-all flex items-center justify-between text-left cursor-pointer active:scale-[0.99] ${btnCls}`}
+                      >
+                        <div className="flex items-center gap-3.5">
+                          <span className={`flex size-8 shrink-0 items-center justify-center rounded-xl text-xs font-black ${letterCls}`}>
+                            {letter}
+                          </span>
+                          <span className="text-sm sm:text-base font-semibold leading-snug">
+                            {option}
+                          </span>
                         </div>
-                      )}
-                    </button>
-                  );
-                })}
-              </div>
 
-              {/* Feedback and Educational Explanation Box */}
-              {gameState === "answered" && (
-                <div className="mt-6 space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-200">
-                  {/* Status Banner */}
+                        {isAnswered && (
+                          <div className="shrink-0 ml-2">
+                            {isCorrect && <CheckCircle2 className="size-5 text-emerald-500" />}
+                            {isChosen && !isCorrect && <XCircle className="size-5 text-rose-500" />}
+                          </div>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+
+              {/* Feedback and Educational Explanation ("💡 ¿Por qué?") */}
+              {phase === "question_feedback" && (
+                <div className="mt-6 space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-200 pt-2 border-t border-slate-100 dark:border-slate-800">
                   <div
                     className={`p-3.5 rounded-2xl flex items-center gap-2.5 font-bold text-sm ${
-                      selectedOption === currentQ.correctIndex
+                      selectedChoice?.toLowerCase() === String(currentQ.correctAnswer).toLowerCase()
                         ? "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30"
                         : isTimeOut
                         ? "bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-500/30"
                         : "bg-rose-500/15 text-rose-700 dark:text-rose-300 border border-rose-500/30"
                     }`}
                   >
-                    {selectedOption === currentQ.correctIndex ? (
+                    {selectedChoice?.toLowerCase() === String(currentQ.correctAnswer).toLowerCase() ? (
                       <>
                         <CheckCircle2 className="size-5 text-emerald-500" />
                         <span>¡Correcto! {streak > 1 && `(🔥 Racha x${streak})`}</span>
@@ -799,28 +1234,24 @@ export function RetoRelampagoGame() {
                     )}
                   </div>
 
-                  {/* Educational explanation pill */}
+                  {/* 💡 ¿Por qué? Card */}
                   <div className="p-4 rounded-2xl bg-blue-50/70 dark:bg-blue-950/30 border border-blue-200/80 dark:border-blue-900/60 text-slate-700 dark:text-slate-300 text-xs sm:text-sm leading-relaxed">
                     <p className="font-bold text-blue-700 dark:text-blue-400 flex items-center gap-1.5 mb-1">
-                      <BookOpen className="size-4" />
-                      Dato educativo:
+                      <Lightbulb className="size-4" />
+                      💡 ¿Por qué?
                     </p>
                     <p>{currentQ.explanation}</p>
                   </div>
 
-                  {/* Next Question Button */}
+                  {/* Next Button */}
                   <button
                     onClick={handleNextQuestion}
                     className="w-full py-4 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-display font-bold text-sm sm:text-base tracking-wide transition shadow-lg shadow-blue-500/25 active:scale-[0.99] cursor-pointer flex items-center justify-center gap-2 border-none"
                   >
                     <span>
-                      {currentIndex >= questions.length - 1 ? "Ver resultados finales 🎉" : "Siguiente pregunta"}
+                      {currentIndex >= questions.length - 1 ? "Ver resultados finales 🎉" : "Siguiente pregunta →"}
                     </span>
-                    <ChevronRight className="size-5" />
                   </button>
-                  <p className="text-[11px] text-center text-slate-400 font-medium">
-                    (o presiona <kbd className="px-1.5 py-0.5 bg-slate-200 dark:bg-slate-800 rounded font-mono">Enter</kbd> para continuar)
-                  </p>
                 </div>
               )}
             </div>
@@ -828,45 +1259,49 @@ export function RetoRelampagoGame() {
         )}
 
         {/* ========================================================================= */}
-        {/* 3. PANTALLA FINAL: RESULTADOS & REPASO EDUCATIVO */}
+        {/* FASE 7: PANTALLA FINAL DE RESULTADOS & DIAGNÓSTICO */}
         {/* ========================================================================= */}
-        {gameState === "gameover" && (
-          <div className="space-y-6 animate-in fade-in zoom-in-95 duration-300 py-4">
-            {/* Header Result Card */}
+        {phase === "results" && (
+          <div className="space-y-6 animate-in fade-in zoom-in-95 duration-300 py-2">
+            {/* Main Result Card */}
             <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-8 border border-slate-200/80 dark:border-slate-800 shadow-sm text-center relative overflow-hidden">
-              <div className="inline-flex size-20 items-center justify-center rounded-3xl bg-gradient-to-tr from-amber-400 to-yellow-500 text-white shadow-xl shadow-yellow-500/20 mb-4 animate-bounce">
-                <Trophy className="size-10" />
+              <div className="inline-flex size-16 items-center justify-center rounded-2xl bg-gradient-to-tr from-amber-400 to-yellow-500 text-white shadow-xl shadow-yellow-500/20 mb-3">
+                <Trophy className="size-8" />
               </div>
 
-              <h2 className="font-display text-3xl font-black text-slate-900 dark:text-white">
-                🎉 ¡Partida terminada!
+              <h2 className="font-display text-2xl sm:text-3xl font-black text-slate-900 dark:text-white">
+                🎉 ¡Terminaste!
               </h2>
 
-              {/* Big Score Display */}
-              <div className="my-4">
-                <span className="font-display text-5xl sm:text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600">
-                  {score}
-                </span>
-                <span className="block text-xs uppercase tracking-widest font-bold text-slate-400 mt-1">
-                  Puntos obtenidos
-                </span>
+              {/* Ratio & Accuracy */}
+              <div className="my-4 flex items-center justify-center gap-6">
+                <div>
+                  <span className="font-display text-4xl sm:text-5xl font-black text-blue-600 dark:text-blue-400">
+                    {answersHistory.filter((a) => a.isCorrect).length}/{answersHistory.length}
+                  </span>
+                  <span className="block text-xs uppercase tracking-widest font-bold text-slate-400 mt-0.5">
+                    Correctas
+                  </span>
+                </div>
+
+                <div className="h-10 w-px bg-slate-200 dark:bg-slate-700" />
+
+                <div>
+                  <span className="font-display text-4xl sm:text-5xl font-black text-amber-500">
+                    {answersHistory.length > 0
+                      ? Math.round((answersHistory.filter((a) => a.isCorrect).length / answersHistory.length) * 100)
+                      : 0}
+                    %
+                  </span>
+                  <span className="block text-xs uppercase tracking-widest font-bold text-slate-400 mt-0.5">
+                    Precisión
+                  </span>
+                </div>
               </div>
 
-              {/* Motivational message */}
-              <p className="text-sm sm:text-base font-semibold text-slate-700 dark:text-slate-300 max-w-md mx-auto">
-                {(() => {
-                  const correct = answerHistory.filter((a) => a.isCorrect).length;
-                  const ratio = answerHistory.length > 0 ? correct / answerHistory.length : 0;
-                  if (ratio >= 0.9) return "🌟 ¡Excelente trabajo! Tienes muy buen dominio de estos temas.";
-                  if (ratio >= 0.7) return "🚀 ¡Gran desempeño! Estás avanzando con pasos firmes.";
-                  if (ratio >= 0.5) return "💪 ¡Buen intento! Practica un poco más y podrás mejorar tu puntuación.";
-                  return "📚 ¡Sigue practicando! La constancia es la clave del aprendizaje.";
-                })()}
-              </p>
-
-              {/* Earned Rewards Pill */}
+              {/* Rewards */}
               {earnedReward && (
-                <div className="mt-5 inline-flex items-center gap-4 px-4 py-2 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-xs font-bold text-amber-700 dark:text-amber-300">
+                <div className="inline-flex items-center gap-4 px-4 py-2 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-xs font-bold text-amber-700 dark:text-amber-300 mt-1">
                   <span className="flex items-center gap-1">
                     <Sparkles className="size-3.5 text-amber-500" />
                     +{earnedReward.xp} XP
@@ -879,148 +1314,131 @@ export function RetoRelampagoGame() {
               )}
             </div>
 
-            {/* Quick Stats Grid */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-              <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm text-center">
-                <Flame className="size-5 text-amber-500 mx-auto mb-1" />
-                <span className="text-xs text-slate-400 font-bold uppercase">Racha Máx.</span>
-                <p className="font-display text-xl font-black text-slate-800 dark:text-slate-100 mt-0.5">
-                  {maxStreak}
-                </p>
+            {/* DIAGNOSTIC: LO QUE DOMINAS VS LO QUE DEBES REPASAR */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {/* ✅ Lo que dominas */}
+              <div className="p-5 rounded-3xl bg-white dark:bg-slate-900 border border-emerald-500/25 shadow-sm space-y-3">
+                <h4 className="font-display text-sm font-bold text-emerald-700 dark:text-emerald-400 flex items-center gap-1.5">
+                  <CheckCircle2 className="size-4 text-emerald-500" />
+                  <span>Lo que dominas</span>
+                </h4>
+                <ul className="space-y-1.5 text-xs text-slate-700 dark:text-slate-300">
+                  {Array.from(new Set(answersHistory.filter((a) => a.isCorrect).map((a) => a.question.concept))).length > 0 ? (
+                    Array.from(new Set(answersHistory.filter((a) => a.isCorrect).map((a) => a.question.concept))).map((c, i) => (
+                      <li key={i} className="flex items-center gap-2">
+                        <span className="text-emerald-500 font-bold">✅</span>
+                        <span>{c}</span>
+                      </li>
+                    ))
+                  ) : (
+                    <li className="text-slate-400 italic">Sigue practicando para afianzar conceptos.</li>
+                  )}
+                </ul>
               </div>
 
-              <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm text-center">
-                <CheckCircle2 className="size-5 text-emerald-500 mx-auto mb-1" />
-                <span className="text-xs text-slate-400 font-bold uppercase">Correctas</span>
-                <p className="font-display text-xl font-black text-emerald-600 dark:text-emerald-400 mt-0.5">
-                  {answerHistory.filter((a) => a.isCorrect).length}
-                </p>
-              </div>
-
-              <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm text-center">
-                <XCircle className="size-5 text-rose-500 mx-auto mb-1" />
-                <span className="text-xs text-slate-400 font-bold uppercase">Incorrectas</span>
-                <p className="font-display text-xl font-black text-rose-600 dark:text-rose-400 mt-0.5">
-                  {answerHistory.filter((a) => !a.isCorrect).length}
-                </p>
-              </div>
-
-              <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm text-center">
-                <Timer className="size-5 text-blue-500 mx-auto mb-1" />
-                <span className="text-xs text-slate-400 font-bold uppercase">Tiempo Prom.</span>
-                <p className="font-display text-xl font-black text-slate-800 dark:text-slate-100 mt-0.5">
-                  {getAverageTime()}s
-                </p>
+              {/* 📚 Lo que debes repasar */}
+              <div className="p-5 rounded-3xl bg-white dark:bg-slate-900 border border-rose-500/25 shadow-sm space-y-3">
+                <h4 className="font-display text-sm font-bold text-rose-700 dark:text-rose-400 flex items-center gap-1.5">
+                  <BookOpen className="size-4 text-rose-500" />
+                  <span>Lo que debes repasar</span>
+                </h4>
+                <ul className="space-y-1.5 text-xs text-slate-700 dark:text-slate-300">
+                  {Array.from(new Set(answersHistory.filter((a) => !a.isCorrect).map((a) => a.question.concept))).length > 0 ? (
+                    Array.from(new Set(answersHistory.filter((a) => !a.isCorrect).map((a) => a.question.concept))).map((c, i) => (
+                      <li key={i} className="flex items-center gap-2">
+                        <span className="text-rose-500 font-bold">📚</span>
+                        <span>{c}</span>
+                      </li>
+                    ))
+                  ) : (
+                    <li className="text-emerald-600 dark:text-emerald-400 font-medium">
+                      🌟 ¡Excelente! Dominas todos los conceptos de esta sesión.
+                    </li>
+                  )}
+                </ul>
               </div>
             </div>
 
-            {/* 📊 Desempeño por Materia */}
+            {/* ACTION: "PRACTICAR LO QUE FALLÉ" (AI ADAPTIVE REVIEW BUTTON) */}
+            {answersHistory.filter((a) => !a.isCorrect).length > 0 && (
+              <div className="p-6 rounded-3xl bg-gradient-to-r from-purple-600 via-indigo-600 to-blue-600 text-white shadow-lg shadow-purple-600/20 space-y-3">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <h3 className="font-display text-lg font-bold flex items-center gap-2">
+                      <Sparkles className="size-5" />
+                      <span>¿Quieres dominar este tema al 100%?</span>
+                    </h3>
+                    <p className="text-xs text-purple-100 mt-1 leading-relaxed">
+                      La IA generará una ronda de ejercicios enfocada únicamente en los {answersHistory.filter((a) => !a.isCorrect).length} conceptos que fallaste.
+                    </p>
+                  </div>
+                </div>
+
+                <button
+                  onClick={handlePracticeFailed}
+                  className="w-full py-3.5 px-4 rounded-2xl bg-white text-purple-900 font-display font-black text-sm tracking-wide transition hover:bg-purple-50 shadow-md active:scale-[0.99] cursor-pointer flex items-center justify-center gap-2 border-none"
+                >
+                  <span>🎯 Practicar lo que fallé</span>
+                  <ArrowRight className="size-4" />
+                </button>
+              </div>
+            )}
+
+            {/* DETAILED QUESTION REVIEW */}
             <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-3">
-              <h3 className="font-display text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                <span>📊</span> Tu desempeño por materia
-              </h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
-                {getCategoryBreakdown().map(({ info, total, correct }) => {
-                  const pct = total > 0 ? Math.round((correct / total) * 100) : 0;
-                  return (
-                    <div key={info.id} className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/70 dark:border-slate-700/60 space-y-2">
-                      <div className="flex justify-between items-center text-xs font-bold">
-                        <span className="flex items-center gap-1.5 text-slate-800 dark:text-slate-200">
-                          <span>{info.icon}</span> {info.name}
-                        </span>
-                        <span className={`${pct >= 70 ? "text-emerald-500" : "text-amber-500"}`}>
-                          {correct}/{total} ({pct}%)
-                        </span>
-                      </div>
-                      <div className="h-1.5 w-full bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
-                        <div
-                          className={`h-full rounded-full ${pct >= 70 ? "bg-emerald-500" : pct >= 40 ? "bg-amber-500" : "bg-rose-500"}`}
-                          style={{ width: `${pct}%` }}
-                        />
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
+              <h4 className="font-display text-sm font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+                <span>📖</span> Detalle de tus respuestas y aprendizaje
+              </h4>
 
-            {/* 📖 Sección de Aprendizaje (Preguntas para repasar) */}
-            <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-4">
-              <div className="flex items-center justify-between">
-                <h3 className="font-display text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                  <span>💡</span> Repaso y Aprendizaje
-                </h3>
-                <span className="text-xs text-slate-400 font-medium">
-                  {answerHistory.filter((a) => !a.isCorrect).length} temas para repasar
-                </span>
-              </div>
+              <div className="space-y-3">
+                {answersHistory.map((item, idx) => (
+                  <div
+                    key={idx}
+                    className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/70 dark:border-slate-700/60 space-y-2"
+                  >
+                    <p className="text-xs font-bold text-slate-800 dark:text-slate-100 flex items-start gap-2">
+                      <span>{item.isCorrect ? "✅" : "❌"}</span>
+                      <span>{item.question.question}</span>
+                    </p>
 
-              {answerHistory.filter((a) => !a.isCorrect).length === 0 ? (
-                <div className="p-6 rounded-2xl bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-900 text-center">
-                  <span className="text-3xl mb-2 block">🌟</span>
-                  <h4 className="font-bold text-emerald-800 dark:text-emerald-200 text-sm">
-                    ¡Impecable! No tuviste ningún error
-                  </h4>
-                  <p className="text-xs text-emerald-600 dark:text-emerald-400 mt-1">
-                    Respondiste todas las preguntas de manera acertada. ¡Sigue así!
-                  </p>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {answerHistory
-                    .filter((a) => !a.isCorrect)
-                    .map((item, idx) => {
-                      const userChoice = item.selectedOptionIndex !== null ? item.question.options[item.selectedOptionIndex] : "Se acabó el tiempo (sin respuesta)";
-                      const correctChoice = item.question.options[item.question.correctIndex];
-
-                      return (
-                        <div
-                          key={idx}
-                          className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/70 dark:border-slate-700/60 space-y-2"
-                        >
-                          <p className="text-xs font-bold text-slate-800 dark:text-slate-100 flex items-start gap-1.5">
-                            <span className="text-rose-500 font-bold shrink-0">❌</span>
-                            <span>{item.question.question}</span>
-                          </p>
-
-                          <div className="text-xs grid grid-cols-1 sm:grid-cols-2 gap-1.5 pt-1">
-                            <div className="p-2 rounded-xl bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300">
-                              <span className="font-bold block text-[10px] uppercase text-rose-500">Tu respuesta:</span>
-                              {userChoice}
-                            </div>
-                            <div className="p-2 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300">
-                              <span className="font-bold block text-[10px] uppercase text-emerald-500">Respuesta correcta:</span>
-                              {correctChoice}
-                            </div>
-                          </div>
-
-                          <div className="pt-2 text-xs text-slate-600 dark:text-slate-300 bg-blue-50/50 dark:bg-blue-950/20 p-2.5 rounded-xl border border-blue-100 dark:border-blue-900/40 leading-relaxed">
-                            <span className="font-bold text-blue-600 dark:text-blue-400">💡 Aprende: </span>
-                            {item.question.explanation}
-                          </div>
+                    {!item.isCorrect && (
+                      <div className="text-xs grid grid-cols-1 sm:grid-cols-2 gap-1.5 pt-1">
+                        <div className="p-2 rounded-xl bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300">
+                          <span className="font-bold block text-[10px] uppercase text-rose-500">Tu respuesta:</span>
+                          {item.userChoice}
                         </div>
-                      );
-                    })}
-                </div>
-              )}
+                        <div className="p-2 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300">
+                          <span className="font-bold block text-[10px] uppercase text-emerald-500">Respuesta correcta:</span>
+                          {String(item.question.correctAnswer)}
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="text-xs text-slate-600 dark:text-slate-300 bg-blue-50/50 dark:bg-blue-950/20 p-2.5 rounded-xl border border-blue-100 dark:border-blue-900/40 leading-relaxed">
+                      <span className="font-bold text-blue-600 dark:text-blue-400">💡 Aprende: </span>
+                      {item.question.explanation}
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
 
-            {/* Action Buttons */}
+            {/* Bottom Actions */}
             <div className="flex flex-col sm:flex-row gap-3 pt-2">
               <button
-                onClick={() => handleStartGame(selectedCategory, gameMode)}
+                onClick={handleStartGame}
                 className="flex-1 py-3.5 px-4 rounded-2xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-sm transition shadow-md shadow-blue-500/20 active:scale-95 cursor-pointer flex items-center justify-center gap-2 border-none"
               >
                 <RotateCcw className="size-4" />
-                <span>Jugar de nuevo</span>
+                <span>Jugar este tema de nuevo</span>
               </button>
 
               <button
-                onClick={() => setGameState("lobby")}
+                onClick={() => setPhase("select_source")}
                 className="flex-1 py-3.5 px-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 font-bold text-sm transition active:scale-95 cursor-pointer flex items-center justify-center gap-2"
               >
-                <Compass className="size-4 text-blue-500" />
-                <span>Cambiar categoría / modo</span>
+                <BookOpen className="size-4 text-blue-500" />
+                <span>Elegir otro tema</span>
               </button>
 
               <Link
