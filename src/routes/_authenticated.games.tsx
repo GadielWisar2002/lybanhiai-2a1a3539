@@ -356,9 +356,9 @@ function GamesHub() {
               {[
                 {
                   id: "reto-relampago",
-                  title: "Reto Relámpago",
-                  style: "Estudio + Juego con IA",
-                  desc: "Sube tus apuntes (PDF/fotos/texto) o elige un tema: la IA te explica lo más importante, genera preguntas de tu material y te ayuda a repasar tus errores.",
+                  title: "Juegos Educativos con IA",
+                  style: "Estudio + Juego Adaptativo",
+                  desc: "Estudia por materias (Matemáticas, Química, Biología, Historia...) o sube tus propios apuntes: lee 'Lo que debes saber', juega y practica tus errores.",
                   cost: 100,
                   path: "/games/reto-relampago",
                   styleColor: "bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20",

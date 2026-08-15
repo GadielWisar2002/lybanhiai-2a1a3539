@@ -7,7 +7,8 @@ import {
   Brain, FileText, Camera, Upload, Link as LinkIcon, 
   Star, Compass, Play, Loader2, Check, RefreshCw,
   HelpCircle, Lightbulb, GraduationCap, ArrowRight,
-  Sliders, ShieldCheck, Layers
+  Sliders, ShieldCheck, Layers, PlusCircle, CheckSquare,
+  Square
 } from "lucide-react";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
@@ -21,26 +22,26 @@ import {
   type StudyQuestion,
   type StudyAnalysisResult 
 } from "@/lib/study-game.functions";
-import { PRESET_STUDY_TOPICS, type PresetTopic } from "@/lib/preset-study-materials";
+import { SCHOOL_SUBJECTS, type SchoolSubject, type SubjectTopic } from "@/lib/school-subjects-data";
 import streakCap from "@/assets/streak-cap.png";
 
 export const Route = createFileRoute("/_authenticated/games/reto-relampago")({
-  head: () => ({ meta: [{ title: "Reto Relámpago — Estudio y Juego — Lybanhi" }] }),
-  component: RetoRelampagoGame,
+  head: () => ({ meta: [{ title: "Juegos Educativos con IA — Lybanhi" }] }),
+  component: EducationalGamesPlatform,
 });
 
-type AppPhase = 
-  | "select_source"       // 1. Elegir o subir material
-  | "analyzing"           // 2. IA analizando apuntes...
-  | "study_overview"      // 3. Explicación previa + Lo más importante
-  | "generating_game"     // 4. IA creando preguntas
-  | "playing"             // 5. En partida
-  | "question_feedback"   // 6. Retroalimentación inmediata
-  | "results"             // 7. Resultados y diagnóstico (Lo que dominas vs Lo que debes repasar)
-  | "generating_review";  // 8. IA generando práctica de errores
-
-type GameMode = "fast" | "practice" | "challenge" | "review";
-type Difficulty = "easy" | "medium" | "hard";
+type AppView = 
+  | "hub"                  // 1. Pantalla Principal: 9 Materias + Sube tus propios apuntes
+  | "subject_topics"      // 2. Selección de tema dentro de una materia
+  | "study_sheet"          // 3. Ficha de estudio: Lo que debes saber
+  | "upload_material"      // 4. Subida de apuntes propios
+  | "analyzing_material"   // 5. IA analizando apuntes...
+  | "custom_topics_select" // 6. Encontramos estos temas (checkboxes)
+  | "generating_game"      // 7. IA creando preguntas
+  | "playing"              // 8. En partida
+  | "feedback"             // 9. Explicación tras responder
+  | "results"              // 10. Resultados (Dominas vs Necesitas practicar)
+  | "generating_review";   // 11. Creando práctica de errores
 
 interface AnswerRecord {
   question: StudyQuestion;
@@ -103,24 +104,6 @@ class SoundFX {
     } catch {}
   }
 
-  playTick() {
-    try {
-      const ctx = this.getCtx();
-      if (!ctx) return;
-      const now = ctx.currentTime;
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.type = "square";
-      osc.frequency.setValueAtTime(750, now);
-      gain.gain.setValueAtTime(0.04, now);
-      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.04);
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-      osc.start(now);
-      osc.stop(now + 0.04);
-    } catch {}
-  }
-
   playVictory() {
     try {
       const ctx = this.getCtx();
@@ -144,7 +127,7 @@ class SoundFX {
 
 const sfx = new SoundFX();
 
-export function RetoRelampagoGame() {
+export function EducationalGamesPlatform() {
   const navigate = useNavigate();
   const qc = useQueryClient();
   const rewardCoins = useServerFn(rewardGameCoins);
@@ -168,24 +151,26 @@ export function RetoRelampagoGame() {
     localStorage.setItem("reto_sound_enabled", next ? "true" : "false");
   };
 
-  // Main Flow Phase
-  const [phase, setPhase] = useState<AppPhase>("select_source");
-  const [sourceTab, setSourceTab] = useState<"preset" | "upload">("preset");
+  // Main Navigation View State
+  const [view, setView] = useState<AppView>("hub");
 
-  // Material Upload Form State
-  const [uploadType, setUploadType] = useState<"text" | "file" | "camera" | "link">("text");
+  // Selection states
+  const [selectedSubject, setSelectedSubject] = useState<SchoolSubject | null>(null);
+  const [selectedTopic, setSelectedTopic] = useState<SubjectTopic | null>(null);
+  const [questionCount, setQuestionCount] = useState<number>(5);
+
+  // Custom Material State
+  const [customUploadType, setCustomUploadType] = useState<"text" | "file" | "camera" | "link">("text");
   const [customText, setCustomText] = useState("");
   const [customLink, setCustomLink] = useState("");
-  const [isProcessingMedia, setIsProcessingMedia] = useState(false);
   const [uploadedFileName, setUploadedFileName] = useState("");
+  const [isExtractingOcr, setIsExtractingOcr] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const cameraInputRef = useRef<HTMLInputElement | null>(null);
 
-  // Active Material & Analysis
-  const [analysis, setAnalysis] = useState<StudyAnalysisResult | null>(null);
-  const [selectedSubtopic, setSelectedSubtopic] = useState<string>("Todos los temas");
-  const [difficulty, setDifficulty] = useState<Difficulty>("easy");
-  const [gameMode, setGameMode] = useState<GameMode>("fast");
+  // Custom AI Analysis Result
+  const [customAnalysis, setCustomAnalysis] = useState<StudyAnalysisResult | null>(null);
+  const [selectedSubtopics, setSelectedSubtopics] = useState<string[]>([]);
 
   // In-Game States
   const [questions, setQuestions] = useState<StudyQuestion[]>([]);
@@ -195,38 +180,51 @@ export function RetoRelampagoGame() {
   const [streak, setStreak] = useState(0);
   const [maxStreak, setMaxStreak] = useState(0);
   const [selectedChoice, setSelectedChoice] = useState<string | null>(null);
-  const [isTimeOut, setIsTimeOut] = useState(false);
   const [answersHistory, setAnswersHistory] = useState<AnswerRecord[]>([]);
   const [earnedReward, setEarnedReward] = useState<{ xp: number; coins: number } | null>(null);
-
-  // Timer: 20 seconds
-  const QUESTION_TIME_LIMIT = 20;
-  const [timeLeft, setTimeLeft] = useState<number>(QUESTION_TIME_LIMIT);
-  const timerRef = useRef<NodeJS.Timeout | null>(null);
-  const questionStartTimeRef = useRef<number>(Date.now());
 
   const currentQ = questions[currentIndex];
 
   // -------------------------------------------------------------
-  // 1. MATERIAL SELECTION / UPLOAD LOGIC
+  // 1. SUBJECT & TOPIC SELECTION
   // -------------------------------------------------------------
-  const handleSelectPreset = (preset: PresetTopic) => {
-    const res: StudyAnalysisResult = {
-      ...preset.preAnalyzed,
-      sourceText: preset.content,
-      isPreset: true,
-      presetId: preset.id,
-    };
-    setAnalysis(res);
-    setSelectedSubtopic(res.detectedTopics[0] || "Todos los temas");
-    setPhase("study_overview");
+  const handleSelectSubject = (subject: SchoolSubject) => {
+    setSelectedSubject(subject);
+    setView("subject_topics");
   };
 
+  const handleOpenStudySheet = (topic: SubjectTopic) => {
+    setSelectedTopic(topic);
+    setQuestionCount(5);
+    setView("study_sheet");
+  };
+
+  const handleStartPresetGame = (topic: SubjectTopic, count: number = 5) => {
+    setSelectedTopic(topic);
+    setQuestionCount(count);
+
+    // Shuffle and slice preset questions
+    const pool = [...topic.presetQuestions].sort(() => 0.5 - Math.random());
+    setQuestions(pool.slice(0, count));
+    setCurrentIndex(0);
+    setLives(3);
+    setScore(0);
+    setStreak(0);
+    setMaxStreak(0);
+    setSelectedChoice(null);
+    setAnswersHistory([]);
+    setEarnedReward(null);
+    setView("playing");
+  };
+
+  // -------------------------------------------------------------
+  // 2. CUSTOM MATERIAL UPLOAD & OCR
+  // -------------------------------------------------------------
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    setIsProcessingMedia(true);
+    setIsExtractingOcr(true);
     setUploadedFileName(file.name);
 
     try {
@@ -242,71 +240,67 @@ export function RetoRelampagoGame() {
           });
 
           if (!ocrRes.text || ocrRes.text.trim().length === 0) {
-            throw new Error("No se detectó texto legible en el archivo. Por favor sube un documento con texto claro o copia tus apuntes.");
+            throw new Error("No se detectó texto legible. Sube un documento con texto claro o copia tus apuntes.");
           }
 
           setCustomText(ocrRes.text);
-          toast.success("¡Texto extraído de tus apuntes con éxito! 📄✨");
+          toast.success("¡Texto de tus apuntes extraído con éxito! 📄✨");
         } catch (err) {
-          toast.error(err instanceof Error ? err.message : "Error al leer el archivo");
+          toast.error(err instanceof Error ? err.message : "Error al procesar el archivo");
         } finally {
-          setIsProcessingMedia(false);
+          setIsExtractingOcr(false);
         }
       };
       reader.readAsDataURL(file);
-    } catch (err) {
-      setIsProcessingMedia(false);
+    } catch {
+      setIsExtractingOcr(false);
       toast.error("Error al cargar el archivo");
     }
   };
 
   const handleAnalyzeCustomMaterial = async () => {
-    let contentToAnalyze = customText.trim();
-    if (uploadType === "link") {
-      if (!customLink.trim()) {
-        toast.error("Por favor ingresa un enlace válido");
-        return;
-      }
-      contentToAnalyze = customLink.trim();
-    }
+    let content = customText.trim();
+    if (customUploadType === "link") content = customLink.trim();
 
-    if (!contentToAnalyze) {
+    if (!content) {
       toast.error("Por favor ingresa o sube el texto de tus apuntes");
       return;
     }
 
-    setPhase("analyzing");
+    setView("analyzing_material");
     try {
       const res = await analyzeMaterialFn({
         data: {
-          content: contentToAnalyze,
+          content,
           sourceName: uploadedFileName || "Mis Apuntes",
         },
       });
-      setAnalysis(res);
-      setSelectedSubtopic(res.detectedTopics[0] || "Todos los temas");
-      setPhase("study_overview");
+
+      setCustomAnalysis(res);
+      setSelectedSubtopics(res.detectedTopics.length > 0 ? res.detectedTopics : ["Conceptos principales"]);
+      setView("custom_topics_select");
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Error al analizar el material");
-      setPhase("select_source");
+      setView("upload_material");
     }
   };
 
-  // -------------------------------------------------------------
-  // 2. START GAME FROM STUDY OVERVIEW
-  // -------------------------------------------------------------
-  const handleStartGame = async () => {
-    if (!analysis) return;
+  const handleToggleSubtopic = (topicName: string) => {
+    setSelectedSubtopics((prev) =>
+      prev.includes(topicName) ? prev.filter((t) => t !== topicName) : [...prev, topicName]
+    );
+  };
 
-    setPhase("generating_game");
-    const questionCount = gameMode === "fast" ? 5 : 10;
+  const handleStartCustomGame = async () => {
+    if (!customAnalysis) return;
 
+    setView("generating_game");
     try {
       const res = await generateQuestionsFn({
         data: {
-          materialText: analysis.sourceText,
-          topicName: `${analysis.title} (${selectedSubtopic})`,
-          difficulty,
+          materialText: customAnalysis.sourceText,
+          topicName: `${customAnalysis.title} - ${selectedSubtopics.join(", ")}`,
+          difficulty: "easy",
           count: questionCount,
         },
       });
@@ -318,83 +312,24 @@ export function RetoRelampagoGame() {
       setStreak(0);
       setMaxStreak(0);
       setSelectedChoice(null);
-      setIsTimeOut(false);
       setAnswersHistory([]);
       setEarnedReward(null);
-      setTimeLeft(QUESTION_TIME_LIMIT);
-      questionStartTimeRef.current = Date.now();
-      setPhase("playing");
+      setView("playing");
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Error al generar preguntas del material");
-      setPhase("study_overview");
+      toast.error(e instanceof Error ? e.message : "Error al generar preguntas");
+      setView("custom_topics_select");
     }
   };
 
   // -------------------------------------------------------------
-  // 3. IN-GAME TIMER HOOK
+  // 3. IN-GAME QUESTION HANDLING
   // -------------------------------------------------------------
-  useEffect(() => {
-    if (phase !== "playing" || gameMode === "practice") {
-      if (timerRef.current) clearInterval(timerRef.current);
-      return;
-    }
-
-    setTimeLeft(QUESTION_TIME_LIMIT);
-    questionStartTimeRef.current = Date.now();
-
-    timerRef.current = setInterval(() => {
-      setTimeLeft((prev) => {
-        if (prev <= 1) {
-          clearInterval(timerRef.current!);
-          handleTimeOut();
-          return 0;
-        }
-        if (prev <= 4 && soundEnabled) {
-          sfx.playTick();
-        }
-        return prev - 1;
-      });
-    }, 1000);
-
-    return () => {
-      if (timerRef.current) clearInterval(timerRef.current);
-    };
-  }, [currentIndex, phase, gameMode]);
-
-  // Handle Timeout
-  const handleTimeOut = () => {
-    if (phase !== "playing") return;
-    setIsTimeOut(true);
-    setSelectedChoice("Sin respuesta (Tiempo agotado)");
-    setPhase("question_feedback");
-
-    if (soundEnabled) sfx.playIncorrect();
-
-    const newLives = Math.max(0, lives - 1);
-    setLives(newLives);
-    setStreak(0);
-
-    const record: AnswerRecord = {
-      question: currentQ,
-      userChoice: "Tiempo agotado",
-      isCorrect: false,
-      timeSpent: QUESTION_TIME_LIMIT,
-      scoreEarned: 0,
-    };
-    setAnswersHistory((prev) => [...prev, record]);
-  };
-
-  // Handle User Choice Selection
   const handleSelectChoice = (choice: string) => {
-    if (phase !== "playing") return;
-
-    if (timerRef.current) clearInterval(timerRef.current);
+    if (view !== "playing") return;
 
     setSelectedChoice(choice);
-    setPhase("question_feedback");
-    setIsTimeOut(false);
+    setView("feedback");
 
-    const timeSpent = Math.max(0.5, (Date.now() - questionStartTimeRef.current) / 1000);
     const isCorrect = choice.trim().toLowerCase() === String(currentQ.correctAnswer).trim().toLowerCase();
 
     let pointsThisTurn = 0;
@@ -414,10 +349,7 @@ export function RetoRelampagoGame() {
       else if (newStreak >= 5) multiplier = 2.0;
       else if (newStreak >= 3) multiplier = 1.5;
 
-      const remainingSec = Math.max(0, QUESTION_TIME_LIMIT - timeSpent);
-      const speedBonus = gameMode === "practice" ? 0 : Math.round(remainingSec * 2.5);
-      pointsThisTurn = Math.round((100 + speedBonus) * multiplier);
-
+      pointsThisTurn = Math.round(100 * multiplier);
       setScore((s) => s + pointsThisTurn);
     } else {
       if (soundEnabled) sfx.playIncorrect();
@@ -429,13 +361,12 @@ export function RetoRelampagoGame() {
       question: currentQ,
       userChoice: choice,
       isCorrect,
-      timeSpent,
+      timeSpent: 5,
       scoreEarned: pointsThisTurn,
     };
     setAnswersHistory((prev) => [...prev, record]);
   };
 
-  // Next Question or Results
   const handleNextQuestion = () => {
     const isLast = currentIndex >= questions.length - 1;
     if (isLast) {
@@ -443,39 +374,12 @@ export function RetoRelampagoGame() {
     } else {
       setCurrentIndex((prev) => prev + 1);
       setSelectedChoice(null);
-      setIsTimeOut(false);
-      setPhase("playing");
+      setView("playing");
     }
   };
 
-  // Keyboard shortcut support
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (phase === "playing" && currentQ) {
-        if (currentQ.type === "true_false") {
-          if (e.key.toLowerCase() === "v" || e.key === "1") handleSelectChoice("Verdadero");
-          if (e.key.toLowerCase() === "f" || e.key === "2") handleSelectChoice("Falso");
-        } else if (currentQ.options && currentQ.options.length > 0) {
-          if (e.key === "1" || e.key.toLowerCase() === "a") handleSelectChoice(currentQ.options[0]);
-          else if (e.key === "2" || e.key.toLowerCase() === "b") handleSelectChoice(currentQ.options[1]);
-          else if (e.key === "3" || e.key.toLowerCase() === "c") handleSelectChoice(currentQ.options[2]);
-          else if (e.key === "4" || e.key.toLowerCase() === "d") handleSelectChoice(currentQ.options[3]);
-        }
-      } else if (phase === "question_feedback") {
-        if (e.key === "Enter" || e.key === " ") {
-          e.preventDefault();
-          handleNextQuestion();
-        }
-      }
-    };
-
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [phase, currentQ, currentIndex, questions, answersHistory, score]);
-
-  // Finish Game
   const handleFinishGame = async (history: AnswerRecord[], finalScore: number) => {
-    setPhase("results");
+    setView("results");
     if (soundEnabled) sfx.playVictory();
 
     const correctCount = history.filter((h) => h.isCorrect).length;
@@ -498,15 +402,14 @@ export function RetoRelampagoGame() {
   };
 
   // -------------------------------------------------------------
-  // 4. "PRACTICAR LO QUE FALLÉ" (DYNAMIC ERROR REVIEW ROUND)
+  // 4. "PRACTICAR MIS ERRORES" (DYNAMIC ERROR PRACTICE LOOP)
   // -------------------------------------------------------------
-  const handlePracticeFailed = async () => {
-    if (!analysis) return;
-
+  const handlePracticeErrors = async () => {
     const failed = answersHistory.filter((a) => !a.isCorrect);
     if (failed.length === 0) return;
 
-    setPhase("generating_review");
+    setView("generating_review");
+    const sourceText = selectedTopic?.explanation || customAnalysis?.sourceText || "Apuntes";
 
     try {
       const failedConcepts = Array.from(new Set(failed.map((f) => f.question.concept)));
@@ -519,14 +422,13 @@ export function RetoRelampagoGame() {
 
       const res = await generateReviewFn({
         data: {
-          materialText: analysis.sourceText,
+          materialText: sourceText,
           failedConcepts,
           failedQuestionsSummary: failedSummary,
           count: Math.min(6, Math.max(3, failed.length)),
         },
       });
 
-      setGameMode("review");
       setQuestions(res.questions);
       setCurrentIndex(0);
       setLives(3);
@@ -534,18 +436,40 @@ export function RetoRelampagoGame() {
       setStreak(0);
       setMaxStreak(0);
       setSelectedChoice(null);
-      setIsTimeOut(false);
       setAnswersHistory([]);
       setEarnedReward(null);
-      setTimeLeft(QUESTION_TIME_LIMIT);
-      questionStartTimeRef.current = Date.now();
-      setPhase("playing");
-      toast.success("¡Ronda de repaso generada para afianzar tus dudas! 🎯✨");
+      setView("playing");
+      toast.success("¡Práctica de refuerzo lista para dominar tus errores! 🎯✨");
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Error al generar preguntas de repaso");
-      setPhase("results");
+      setView("results");
     }
   };
+
+  // Keyboard shortcut listener
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (view === "playing" && currentQ) {
+        if (currentQ.type === "true_false") {
+          if (e.key.toLowerCase() === "v" || e.key === "1") handleSelectChoice("Verdadero");
+          if (e.key.toLowerCase() === "f" || e.key === "2") handleSelectChoice("Falso");
+        } else if (currentQ.options && currentQ.options.length > 0) {
+          if (e.key === "1" || e.key.toLowerCase() === "a") handleSelectChoice(currentQ.options[0]);
+          else if (e.key === "2" || e.key.toLowerCase() === "b") handleSelectChoice(currentQ.options[1]);
+          else if (e.key === "3" || e.key.toLowerCase() === "c") handleSelectChoice(currentQ.options[2]);
+          else if (e.key === "4" || e.key.toLowerCase() === "d") handleSelectChoice(currentQ.options[3]);
+        }
+      } else if (view === "feedback") {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          handleNextQuestion();
+        }
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [view, currentQ, currentIndex, questions, answersHistory, score]);
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col font-sans transition-colors duration-200">
@@ -555,10 +479,16 @@ export function RetoRelampagoGame() {
           <div className="flex items-center gap-3">
             <button
               onClick={() => {
-                if (phase === "playing" || phase === "question_feedback") {
-                  if (confirm("¿Deseas volver al menú de temas?")) setPhase("select_source");
-                } else if (phase === "study_overview" || phase === "results") {
-                  setPhase("select_source");
+                if (view === "playing" || view === "feedback") {
+                  if (confirm("¿Deseas salir de la partida actual?")) setView("hub");
+                } else if (view === "subject_topics" || view === "upload_material") {
+                  setView("hub");
+                } else if (view === "study_sheet") {
+                  setView("subject_topics");
+                } else if (view === "custom_topics_select") {
+                  setView("upload_material");
+                } else if (view === "results") {
+                  setView("hub");
                 } else {
                   navigate({ to: "/games" });
                 }
@@ -571,13 +501,13 @@ export function RetoRelampagoGame() {
             <div>
               <h1 className="font-display text-lg font-black tracking-tight text-blue-600 dark:text-blue-400 flex items-center gap-1.5">
                 <Brain className="size-5 text-purple-600 dark:text-purple-400 fill-purple-600/20" />
-                <span>Estudia y Juega</span>
+                <span>Juegos Educativos</span>
                 <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-purple-500/10 text-purple-600 dark:text-purple-300 border border-purple-500/20 hidden sm:inline-block">
                   IA Adaptativa
                 </span>
               </h1>
               <p className="text-[11px] text-slate-500 dark:text-slate-400 hidden sm:block">
-                Aprende el tema → Juega con tus apuntes → Repasa lo que falles
+                Aprende, practica y comprueba cuánto sabes
               </p>
             </div>
           </div>
@@ -600,296 +530,205 @@ export function RetoRelampagoGame() {
         </div>
       </header>
 
-      {/* Main Container */}
-      <main className="flex-1 max-w-3xl w-full mx-auto p-4 sm:p-6 flex flex-col justify-center">
+      {/* Main Content Area */}
+      <main className="flex-1 max-w-4xl w-full mx-auto p-4 sm:p-6 flex flex-col justify-center">
 
         {/* ========================================================================= */}
-        {/* FASE 1: ¿QUÉ QUIERES ESTUDIAR HOY? (SELECCIÓN / SUBIDA) */}
+        {/* 1. PANTALLA PRINCIPAL: 9 MATERIAS + SUBE TUS PROPIOS APUNTES */}
         {/* ========================================================================= */}
-        {phase === "select_source" && (
-          <div className="space-y-6 animate-in fade-in zoom-in-95 duration-300">
-            {/* Header Card */}
+        {view === "hub" && (
+          <div className="space-y-6 animate-in fade-in zoom-in-95 duration-200">
+            {/* Hero Banner */}
             <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-8 border border-slate-200/80 dark:border-slate-800 shadow-sm text-center relative overflow-hidden">
               <div className="inline-flex size-14 items-center justify-center rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-500/20 mb-3">
                 <GraduationCap className="size-8" />
               </div>
               <h2 className="font-display text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
-                ¿Qué quieres estudiar hoy?
+                🎮 Juegos educativos
               </h2>
-              <p className="mt-2 text-xs sm:text-sm text-slate-600 dark:text-slate-300 max-w-md mx-auto leading-relaxed">
-                Selecciona un tema listo o sube tus propios apuntes. La IA te explicará lo más importante y creará un juego para practicar.
+              <p className="mt-1 text-xs sm:text-sm text-slate-600 dark:text-slate-300 max-w-md mx-auto leading-relaxed">
+                Aprende, practica y comprueba cuánto sabes. Selecciona una materia o sube tus propios apuntes para que la IA cree un juego a tu medida.
               </p>
-
-              {/* Source Tabs */}
-              <div className="mt-6 inline-flex p-1 bg-slate-100 dark:bg-slate-800/80 rounded-2xl border border-slate-200 dark:border-slate-700 flex-wrap justify-center gap-1">
-                <button
-                  onClick={() => setSourceTab("preset")}
-                  className={`px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
-                    sourceTab === "preset"
-                      ? "bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 shadow-sm"
-                      : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
-                  }`}
-                >
-                  <BookOpen className="size-4" />
-                  <span>📖 Usar un tema</span>
-                </button>
-                <button
-                  onClick={() => setSourceTab("upload")}
-                  className={`px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
-                    sourceTab === "upload"
-                      ? "bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 shadow-sm"
-                      : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
-                  }`}
-                >
-                  <Upload className="size-4" />
-                  <span>📎 Subir mi material</span>
-                </button>
-              </div>
             </div>
 
-            {/* TAB A: PRESET TOPICS */}
-            {sourceTab === "preset" && (
-              <div className="space-y-3">
-                <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 px-1 flex items-center gap-1.5">
-                  <Sparkles className="size-3.5 text-blue-500" /> Temas preparados para estudiar
-                </h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {PRESET_STUDY_TOPICS.map((preset) => (
-                    <button
-                      key={preset.id}
-                      onClick={() => handleSelectPreset(preset)}
-                      className="group p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 hover:border-blue-500 dark:hover:border-blue-500 shadow-sm hover:shadow-md transition-all text-left flex flex-col justify-between gap-3 cursor-pointer active:scale-[0.99]"
-                    >
-                      <div>
-                        <div className="flex items-center justify-between mb-2">
-                          <span className="text-2xl p-2 rounded-xl bg-slate-100 dark:bg-slate-800 group-hover:scale-110 transition-transform">
-                            {preset.icon}
-                          </span>
-                          <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded-full bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-900/60">
-                            {preset.badge}
-                          </span>
-                        </div>
-                        <h4 className="text-base font-bold text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
-                          {preset.title}
-                        </h4>
-                        <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-relaxed line-clamp-2">
-                          {preset.summary}
-                        </p>
-                      </div>
-
-                      <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs font-bold text-blue-600 dark:text-blue-400">
-                        <span>Estudiar tema</span>
-                        <ChevronRight className="size-4 group-hover:translate-x-1 transition-transform" />
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* TAB B: UPLOAD CUSTOM MATERIAL */}
-            {sourceTab === "upload" && (
-              <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-7 border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-5">
+            {/* FEATURED CARD: SUBE TUS PROPIOS APUNTES */}
+            <div className="group p-5 sm:p-6 rounded-3xl bg-gradient-to-r from-purple-600 via-indigo-600 to-blue-600 text-white shadow-lg shadow-purple-600/20 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 transition-all duration-300">
+              <div className="flex items-start gap-4">
+                <span className="text-3xl p-3 bg-white/20 rounded-2xl backdrop-blur-sm group-hover:rotate-6 transition-transform">
+                  📎
+                </span>
                 <div>
-                  <h3 className="font-display text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                    <span>📎</span> Crea un juego con tus apuntes
-                  </h3>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 leading-relaxed">
-                    Sube tus apuntes, guía de estudio o material de clase y la IA creará una explicación y un juego para practicar.
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-display text-lg sm:text-xl font-black">
+                      Sube tus propios apuntes
+                    </h3>
+                    <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 bg-white/25 rounded-full tracking-wider">
+                      IA Personalizada
+                    </span>
+                  </div>
+                  <p className="text-xs text-purple-100 mt-1 leading-relaxed max-w-lg">
+                    Sube tu PDF, fotos de tu libreta o notas de clase y deja que la IA cree un juego para estudiar tu examen.
                   </p>
                 </div>
-
-                {/* Upload Form Type Selector */}
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                  {[
-                    { id: "text", label: "✍️ Texto libre", desc: "Copiar / Escribir" },
-                    { id: "file", label: "📄 PDF / Doc", desc: "Documentos" },
-                    { id: "camera", label: "📸 Foto / Cámara", desc: "Foto a libreta" },
-                    { id: "link", label: "🔗 Enlace Web", desc: "Página o artículo" },
-                  ].map((tab) => (
-                    <button
-                      key={tab.id}
-                      onClick={() => setUploadType(tab.id as any)}
-                      className={`p-3 rounded-2xl border text-left transition cursor-pointer ${
-                        uploadType === tab.id
-                          ? "bg-blue-50 dark:bg-blue-950/40 border-blue-500 text-blue-900 dark:text-blue-200 shadow-sm"
-                          : "bg-slate-50 dark:bg-slate-800/60 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:bg-slate-100"
-                      }`}
-                    >
-                      <span className="font-bold text-xs block">{tab.label}</span>
-                      <span className="text-[10px] text-slate-400 block mt-0.5">{tab.desc}</span>
-                    </button>
-                  ))}
-                </div>
-
-                {/* Input forms based on uploadType */}
-                {uploadType === "text" && (
-                  <div className="space-y-2">
-                    <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                      Pega aquí tus apuntes, resumen o texto de estudio:
-                    </label>
-                    <textarea
-                      rows={6}
-                      value={customText}
-                      onChange={(e) => setCustomText(e.target.value)}
-                      placeholder="Ejemplo: La célula es la unidad básica de los seres vivos. Existen células animales y vegetales. La mitocondria genera energía (ATP)..."
-                      className="w-full p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 leading-relaxed"
-                    />
-                  </div>
-                )}
-
-                {uploadType === "file" && (
-                  <div className="space-y-3">
-                    <input
-                      type="file"
-                      ref={fileInputRef}
-                      onChange={handleFileUpload}
-                      accept=".pdf,.png,.jpg,.jpeg,.txt"
-                      className="hidden"
-                    />
-                    <div
-                      onClick={() => fileInputRef.current?.click()}
-                      className="border-2 border-dashed border-slate-300 dark:border-slate-700 hover:border-blue-500 p-6 rounded-2xl text-center cursor-pointer bg-slate-50/50 dark:bg-slate-800/40 transition group"
-                    >
-                      <Upload className="size-8 mx-auto text-blue-500 mb-2 group-hover:scale-110 transition-transform" />
-                      <p className="text-sm font-bold text-slate-800 dark:text-slate-200">
-                        {uploadedFileName ? `Archivo: ${uploadedFileName}` : "Haz clic para subir un PDF o archivo"}
-                      </p>
-                      <p className="text-xs text-slate-400 mt-1">Soporta PDF, imágenes de apuntes o documentos de texto</p>
-                    </div>
-
-                    {customText && (
-                      <div className="p-3 bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-900 rounded-xl text-xs text-emerald-700 dark:text-emerald-300">
-                        ✅ Texto extraído listo ({customText.length} caracteres).
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {uploadType === "camera" && (
-                  <div className="space-y-3">
-                    <input
-                      type="file"
-                      ref={cameraInputRef}
-                      onChange={handleFileUpload}
-                      accept="image/*"
-                      capture="environment"
-                      className="hidden"
-                    />
-                    <div
-                      onClick={() => cameraInputRef.current?.click()}
-                      className="border-2 border-dashed border-slate-300 dark:border-slate-700 hover:border-purple-500 p-6 rounded-2xl text-center cursor-pointer bg-slate-50/50 dark:bg-slate-800/40 transition group"
-                    >
-                      <Camera className="size-8 mx-auto text-purple-500 mb-2 group-hover:scale-110 transition-transform" />
-                      <p className="text-sm font-bold text-slate-800 dark:text-slate-200">
-                        Tomar foto a mi libreta o subir imagen
-                      </p>
-                      <p className="text-xs text-slate-400 mt-1">La IA transcribirá automáticamente tus notas escritas a mano</p>
-                    </div>
-
-                    {customText && (
-                      <div className="p-3 bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-900 rounded-xl text-xs text-emerald-700 dark:text-emerald-300">
-                        ✅ Apuntes escaneados correctamente con OCR.
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {uploadType === "link" && (
-                  <div className="space-y-2">
-                    <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                      Enlace de la página o artículo educativo:
-                    </label>
-                    <div className="flex gap-2">
-                      <input
-                        type="url"
-                        value={customLink}
-                        onChange={(e) => setCustomLink(e.target.value)}
-                        placeholder="https://es.wikipedia.org/wiki/Célula"
-                        className="flex-1 p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      />
-                    </div>
-                  </div>
-                )}
-
-                {/* Analyze and start button */}
-                <button
-                  disabled={isProcessingMedia || (uploadType === "link" ? !customLink.trim() : !customText.trim())}
-                  onClick={handleAnalyzeCustomMaterial}
-                  className="w-full py-4 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-display font-bold text-sm sm:text-base tracking-wide transition shadow-lg shadow-blue-500/25 active:scale-[0.99] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 border-none"
-                >
-                  {isProcessingMedia ? (
-                    <>
-                      <Loader2 className="size-5 animate-spin" />
-                      <span>Extrayendo texto de tus apuntes...</span>
-                    </>
-                  ) : (
-                    <>
-                      <Sparkles className="size-5" />
-                      <span>Analizar apuntes y crear mi juego ✨</span>
-                    </>
-                  )}
-                </button>
               </div>
-            )}
+
+              <button
+                onClick={() => setView("upload_material")}
+                className="w-full sm:w-auto py-3 px-5 rounded-2xl bg-white text-purple-900 hover:bg-purple-50 font-display font-black text-xs sm:text-sm tracking-wide transition shadow-md active:scale-95 cursor-pointer flex items-center justify-center gap-1.5 border-none shrink-0"
+              >
+                <span>+ Crear juego con mi material</span>
+                <ArrowRight className="size-4" />
+              </button>
+            </div>
+
+            {/* 9 SCHOOL SUBJECTS GRID */}
+            <div className="space-y-3">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 px-1 flex items-center gap-1.5">
+                <BookOpen className="size-3.5 text-blue-500" /> Materias de Estudio
+              </h3>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3.5">
+                {SCHOOL_SUBJECTS.map((subject) => (
+                  <button
+                    key={subject.id}
+                    onClick={() => handleSelectSubject(subject)}
+                    className={`group p-5 rounded-3xl bg-white dark:bg-slate-900 border ${subject.borderColor} hover:border-blue-500 dark:hover:border-blue-500 shadow-sm hover:shadow-md transition-all text-left flex flex-col justify-between gap-3 cursor-pointer active:scale-[0.99]`}
+                  >
+                    <div>
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-2xl p-2 rounded-2xl bg-slate-100 dark:bg-slate-800 group-hover:scale-110 transition-transform">
+                          {subject.icon}
+                        </span>
+                        <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full ${subject.badgeColor}`}>
+                          {subject.topics.length} temas
+                        </span>
+                      </div>
+                      <h4 className={`text-base font-bold ${subject.color}`}>
+                        {subject.icon} {subject.name}
+                      </h4>
+                      <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
+                        {subject.description}
+                      </p>
+                    </div>
+
+                    <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs font-bold text-blue-600 dark:text-blue-400">
+                      <span>Ver temas</span>
+                      <ChevronRight className="size-4 group-hover:translate-x-1 transition-transform" />
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
           </div>
         )}
 
         {/* ========================================================================= */}
-        {/* FASE 2: ANALIZANDO MATERIAL POR IA */}
+        {/* 2. SELECCIONAR TEMA DE UNA MATERIA */}
         {/* ========================================================================= */}
-        {phase === "analyzing" && (
-          <div className="bg-white dark:bg-slate-900 rounded-3xl p-10 border border-slate-200/80 dark:border-slate-800 shadow-sm text-center space-y-4 max-w-lg mx-auto animate-in fade-in duration-300">
-            <div className="inline-flex size-20 items-center justify-center rounded-3xl bg-blue-500/10 text-blue-600 dark:text-blue-400 animate-pulse">
-              <Brain className="size-10 animate-bounce" />
+        {view === "subject_topics" && selectedSubject && (
+          <div className="space-y-5 animate-in fade-in zoom-in-95 duration-200">
+            {/* Subject Banner */}
+            <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-200/80 dark:border-slate-800 shadow-sm flex items-center justify-between">
+              <div className="flex items-center gap-3.5">
+                <span className="text-3xl p-3 bg-slate-100 dark:bg-slate-800 rounded-2xl">
+                  {selectedSubject.icon}
+                </span>
+                <div>
+                  <h2 className="font-display text-2xl font-black text-slate-900 dark:text-white">
+                    {selectedSubject.name}
+                  </h2>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                    Selecciona un tema para estudiar la explicación o comenzar a jugar directamente.
+                  </p>
+                </div>
+              </div>
+
+              <button
+                onClick={() => setView("hub")}
+                className="text-xs font-bold px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-300 transition"
+              >
+                Cambiar materia
+              </button>
             </div>
-            <h3 className="font-display text-2xl font-black text-slate-900 dark:text-white">
-              🧠 Analizando tu material...
-            </h3>
-            <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 leading-relaxed">
-              La IA está identificando los conceptos clave, resumiendo los puntos más importantes y preparando tu explicación didáctica.
-            </p>
-            <div className="flex justify-center pt-2">
-              <Loader2 className="size-6 text-blue-500 animate-spin" />
+
+            {/* Topic List */}
+            <div className="space-y-3">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 px-1">
+                Temas disponibles en {selectedSubject.name}:
+              </h3>
+
+              <div className="grid grid-cols-1 gap-3">
+                {selectedSubject.topics.map((topic) => (
+                  <div
+                    key={topic.id}
+                    className="p-5 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"
+                  >
+                    <div>
+                      <h4 className="font-display text-base font-bold text-slate-900 dark:text-white">
+                        {topic.name}
+                      </h4>
+                      <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-relaxed max-w-xl">
+                        {topic.summary}
+                      </p>
+                    </div>
+
+                    <div className="flex items-center gap-2 w-full sm:w-auto shrink-0">
+                      <button
+                        onClick={() => handleOpenStudySheet(topic)}
+                        className="flex-1 sm:flex-initial py-2.5 px-4 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold text-xs transition cursor-pointer flex items-center justify-center gap-1.5"
+                      >
+                        <BookOpen className="size-3.5 text-blue-500" />
+                        <span>📖 Estudiar</span>
+                      </button>
+
+                      <button
+                        onClick={() => handleStartPresetGame(topic, 5)}
+                        className="flex-1 sm:flex-initial py-2.5 px-4 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs transition shadow-md shadow-blue-500/20 active:scale-95 cursor-pointer flex items-center justify-center gap-1.5 border-none"
+                      >
+                        <Play className="size-3.5 fill-white" />
+                        <span>🎮 Jugar</span>
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         )}
 
         {/* ========================================================================= */}
-        {/* FASE 3: EXPLICACIÓN DIDÁCTICA + LO MÁS IMPORTANTE (ESTUDIO PREVIO) */}
+        {/* 3. FICHA DE ESTUDIO: LO QUE DEBES SABER */}
         {/* ========================================================================= */}
-        {phase === "study_overview" && analysis && (
-          <div className="space-y-5 animate-in fade-in zoom-in-95 duration-300">
-            {/* Main Explanation Card */}
+        {view === "study_sheet" && selectedTopic && (
+          <div className="space-y-5 animate-in fade-in zoom-in-95 duration-200">
             <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-8 border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-5">
               <div>
-                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-500/10 text-blue-600 dark:text-blue-400 text-xs font-bold mb-2">
-                  <BookOpen className="size-3.5" />
-                  <span>Paso 1: Estudia el tema</span>
-                </div>
-                <h2 className="font-display text-2xl sm:text-3xl font-black text-slate-900 dark:text-white">
-                  {analysis.title}
+                <span className="text-[10px] font-extrabold uppercase tracking-wider px-2.5 py-1 rounded-full bg-blue-500/10 text-blue-600 dark:text-blue-400">
+                  {selectedSubject?.name || "Materia"}
+                </span>
+                <h2 className="font-display text-2xl sm:text-3xl font-black text-slate-900 dark:text-white mt-2">
+                  {selectedTopic.name}
                 </h2>
               </div>
 
-              {/* Simple Short Explanation */}
+              {/* Short friendly explanation */}
               <div className="p-5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/80">
                 <h4 className="text-xs font-extrabold uppercase tracking-wider text-slate-400 mb-2">
-                  📖 Explicación clara y sencilla
+                  📖 Explicación corta y sencilla
                 </h4>
-                <p className="text-sm sm:text-base text-slate-700 dark:text-slate-200 leading-relaxed whitespace-pre-line">
-                  {analysis.summaryExplanation}
+                <p className="text-sm sm:text-base text-slate-700 dark:text-slate-200 leading-relaxed">
+                  {selectedTopic.explanation}
                 </p>
               </div>
 
-              {/* ⭐ Lo más importante */}
+              {/* 📌 Lo que debes saber */}
               <div className="p-5 rounded-2xl bg-amber-500/10 border border-amber-500/25 space-y-2.5">
                 <h4 className="text-xs font-extrabold uppercase tracking-wider text-amber-600 dark:text-amber-400 flex items-center gap-1.5">
                   <Star className="size-4 fill-amber-500 text-amber-500" />
-                  <span>⭐ Lo más importante</span>
+                  <span>📌 Lo que debes saber</span>
                 </h4>
                 <ul className="space-y-2 text-xs sm:text-sm text-slate-800 dark:text-slate-200 font-medium">
-                  {analysis.keyPoints.map((point, idx) => (
+                  {selectedTopic.keyPoints.map((point, idx) => (
                     <li key={idx} className="flex items-start gap-2">
                       <span className="text-amber-500 font-bold shrink-0 mt-0.5">•</span>
                       <span>{point}</span>
@@ -898,109 +737,62 @@ export function RetoRelampagoGame() {
                 </ul>
               </div>
 
-              {/* Detected Subtopics */}
-              {analysis.detectedTopics.length > 1 && (
-                <div className="space-y-2">
-                  <label className="text-xs font-bold text-slate-500 dark:text-slate-400 block">
-                    Temas detectados en tus apuntes:
-                  </label>
-                  <div className="flex flex-wrap gap-2">
-                    <button
-                      onClick={() => setSelectedSubtopic("Todos los temas")}
-                      className={`px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer ${
-                        selectedSubtopic === "Todos los temas"
-                          ? "bg-blue-600 text-white shadow-sm"
-                          : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200"
-                      }`}
-                    >
-                      Todos los temas
-                    </button>
-                    {analysis.detectedTopics.map((topic, i) => (
-                      <button
+              {/* Examples / Formulas if present */}
+              {selectedTopic.examples && selectedTopic.examples.length > 0 && (
+                <div className="p-4 rounded-2xl bg-blue-50/70 dark:bg-blue-950/30 border border-blue-200/80 dark:border-blue-900/60 space-y-1.5">
+                  <h4 className="text-xs font-bold text-blue-700 dark:text-blue-400">
+                    💡 Ejemplos prácticos:
+                  </h4>
+                  <div className="flex flex-wrap gap-2 pt-1">
+                    {selectedTopic.examples.map((ex, i) => (
+                      <span
                         key={i}
-                        onClick={() => setSelectedSubtopic(topic)}
-                        className={`px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer ${
-                          selectedSubtopic === topic
-                            ? "bg-blue-600 text-white shadow-sm"
-                            : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200"
-                        }`}
+                        className="text-xs font-mono px-3 py-1 bg-white dark:bg-slate-800 rounded-xl border border-blue-200/60 dark:border-blue-800/60 text-slate-700 dark:text-slate-300"
                       >
-                        {topic}
-                      </button>
+                        {ex}
+                      </span>
                     ))}
                   </div>
                 </div>
               )}
 
-              {/* Game Mode & Difficulty Settings */}
-              <div className="pt-3 border-t border-slate-100 dark:border-slate-800 grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {/* Difficulty */}
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-slate-500 dark:text-slate-400">
-                    Nivel de dificultad:
-                  </label>
-                  <div className="grid grid-cols-3 gap-1.5">
-                    {[
-                      { id: "easy", label: "🟢 Fácil", desc: "Directo" },
-                      { id: "medium", label: "🟡 Medio", desc: "Comprensión" },
-                      { id: "hard", label: "🔴 Difícil", desc: "Aplicación" },
-                    ].map((d) => (
-                      <button
-                        key={d.id}
-                        onClick={() => setDifficulty(d.id as Difficulty)}
-                        className={`p-2 rounded-xl text-xs font-bold transition text-center cursor-pointer ${
-                          difficulty === d.id
-                            ? "bg-slate-900 text-white dark:bg-white dark:text-slate-900 shadow-sm"
-                            : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200"
-                        }`}
-                      >
-                        {d.label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Game Mode */}
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-slate-500 dark:text-slate-400">
-                    Modo de juego:
-                  </label>
-                  <div className="grid grid-cols-3 gap-1.5">
-                    {[
-                      { id: "fast", label: "⚡ Reto rápido", desc: "5 preguntas" },
-                      { id: "practice", label: "🧠 Practicar", desc: "Sin tiempo" },
-                      { id: "challenge", label: "🔥 Desafío", desc: "10 preguntas" },
-                    ].map((m) => (
-                      <button
-                        key={m.id}
-                        onClick={() => setGameMode(m.id as GameMode)}
-                        className={`p-2 rounded-xl text-xs font-bold transition text-center cursor-pointer ${
-                          gameMode === m.id
-                            ? "bg-blue-600 text-white shadow-sm"
-                            : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200"
-                        }`}
-                      >
-                        {m.label}
-                      </button>
-                    ))}
-                  </div>
+              {/* Question Count Selector */}
+              <div className="pt-3 border-t border-slate-100 dark:border-slate-800 space-y-2">
+                <label className="text-xs font-bold text-slate-500 dark:text-slate-400 block">
+                  Cantidad de preguntas para la partida:
+                </label>
+                <div className="grid grid-cols-4 gap-2">
+                  {[5, 10, 15, 20].map((num) => (
+                    <button
+                      key={num}
+                      onClick={() => setQuestionCount(num)}
+                      className={`p-3 rounded-2xl text-xs font-bold transition text-center cursor-pointer ${
+                        questionCount === num
+                          ? "bg-blue-600 text-white shadow-sm"
+                          : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200"
+                      }`}
+                    >
+                      {num} preguntas {num === 5 && "(Rápido)"}
+                    </button>
+                  ))}
                 </div>
               </div>
 
               {/* Action Buttons */}
               <div className="pt-2 flex flex-col sm:flex-row gap-3">
                 <button
-                  onClick={handleStartGame}
+                  onClick={() => handleStartPresetGame(selectedTopic, questionCount)}
                   className="flex-1 py-4 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-display font-bold text-base tracking-wide transition shadow-lg shadow-blue-500/25 active:scale-[0.99] cursor-pointer flex items-center justify-center gap-2 border-none"
                 >
                   <Play className="size-5 fill-white" />
-                  <span>🎮 Ya entendí, comenzar juego</span>
+                  <span>🎮 Practicar este tema</span>
                 </button>
+
                 <button
-                  onClick={() => setPhase("select_source")}
+                  onClick={() => setView("subject_topics")}
                   className="py-4 px-6 rounded-2xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold text-sm transition active:scale-[0.99] cursor-pointer"
                 >
-                  Cambiar tema
+                  Ver otros temas
                 </button>
               </div>
             </div>
@@ -1008,20 +800,177 @@ export function RetoRelampagoGame() {
         )}
 
         {/* ========================================================================= */}
-        {/* FASE 4: GENERANDO PREGUNTAS CON IA */}
+        {/* 4. SUBIDA DE APUNTES PROPIOS */}
         {/* ========================================================================= */}
-        {(phase === "generating_game" || phase === "generating_review") && (
-          <div className="bg-white dark:bg-slate-900 rounded-3xl p-10 border border-slate-200/80 dark:border-slate-800 shadow-sm text-center space-y-4 max-w-lg mx-auto animate-in fade-in duration-300">
-            <div className="inline-flex size-16 items-center justify-center rounded-2xl bg-purple-500/10 text-purple-600 dark:text-purple-400 animate-pulse">
-              <Sparkles className="size-8 animate-spin-slow" />
+        {view === "upload_material" && (
+          <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-8 border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-6 animate-in fade-in zoom-in-95 duration-200">
+            <div>
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-purple-500/10 text-purple-600 dark:text-purple-400 text-xs font-bold mb-2">
+                <Sparkles className="size-3.5" />
+                <span>Material Personalizado</span>
+              </div>
+              <h2 className="font-display text-2xl font-black text-slate-900 dark:text-white">
+                📎 Sube tus propios apuntes
+              </h2>
+              <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
+                Sube tu material de estudio (PDF, fotos de libreta o texto) y la IA extraerá los temas principales para generar tu juego.
+              </p>
+            </div>
+
+            {/* Upload Type Selector */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+              {[
+                { id: "text", label: "✍️ Texto libre", desc: "Copiar / Escribir" },
+                { id: "file", label: "📄 PDF / Word", desc: "Documentos" },
+                { id: "camera", label: "📸 Foto / Libreta", desc: "Foto con cámara" },
+                { id: "link", label: "🔗 Enlace Web", desc: "Página o artículo" },
+              ].map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => setCustomUploadType(tab.id as any)}
+                  className={`p-3 rounded-2xl border text-left transition cursor-pointer ${
+                    customUploadType === tab.id
+                      ? "bg-purple-50 dark:bg-purple-950/40 border-purple-500 text-purple-900 dark:text-purple-200 shadow-sm"
+                      : "bg-slate-50 dark:bg-slate-800/60 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:bg-slate-100"
+                  }`}
+                >
+                  <span className="font-bold text-xs block">{tab.label}</span>
+                  <span className="text-[10px] text-slate-400 block mt-0.5">{tab.desc}</span>
+                </button>
+              ))}
+            </div>
+
+            {/* Input by type */}
+            {customUploadType === "text" && (
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                  Pega aquí el contenido de tus apuntes o guía de examen:
+                </label>
+                <textarea
+                  rows={6}
+                  value={customText}
+                  onChange={(e) => setCustomText(e.target.value)}
+                  placeholder="Ejemplo: La fotosíntesis es el proceso mediante el cual las plantas convierten la luz solar en glucosa y oxígeno..."
+                  className="w-full p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 leading-relaxed"
+                />
+              </div>
+            )}
+
+            {customUploadType === "file" && (
+              <div className="space-y-3">
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  onChange={handleFileUpload}
+                  accept=".pdf,.docx,.txt,.png,.jpg,.jpeg"
+                  className="hidden"
+                />
+                <div
+                  onClick={() => fileInputRef.current?.click()}
+                  className="border-2 border-dashed border-slate-300 dark:border-slate-700 hover:border-purple-500 p-6 rounded-2xl text-center cursor-pointer bg-slate-50/50 dark:bg-slate-800/40 transition group"
+                >
+                  <Upload className="size-8 mx-auto text-purple-500 mb-2 group-hover:scale-110 transition-transform" />
+                  <p className="text-sm font-bold text-slate-800 dark:text-slate-200">
+                    {uploadedFileName ? `Archivo: ${uploadedFileName}` : "Haz clic para subir un PDF o Word"}
+                  </p>
+                  <p className="text-xs text-slate-400 mt-1">Soporta PDF, Word, diapositivas o imágenes de apuntes</p>
+                </div>
+
+                {customText && (
+                  <div className="p-3 bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-900 rounded-xl text-xs text-emerald-700 dark:text-emerald-300">
+                    ✅ Texto extraído listo ({customText.length} caracteres).
+                  </div>
+                )}
+              </div>
+            )}
+
+            {customUploadType === "camera" && (
+              <div className="space-y-3">
+                <input
+                  type="file"
+                  ref={cameraInputRef}
+                  onChange={handleFileUpload}
+                  accept="image/*"
+                  capture="environment"
+                  className="hidden"
+                />
+                <div
+                  onClick={() => cameraInputRef.current?.click()}
+                  className="border-2 border-dashed border-slate-300 dark:border-slate-700 hover:border-purple-500 p-6 rounded-2xl text-center cursor-pointer bg-slate-50/50 dark:bg-slate-800/40 transition group"
+                >
+                  <Camera className="size-8 mx-auto text-purple-500 mb-2 group-hover:scale-110 transition-transform" />
+                  <p className="text-sm font-bold text-slate-800 dark:text-slate-200">
+                    Tomar foto a mis apuntes o subir captura
+                  </p>
+                  <p className="text-xs text-slate-400 mt-1">La IA transcribirá las notas de tu libreta</p>
+                </div>
+
+                {customText && (
+                  <div className="p-3 bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-900 rounded-xl text-xs text-emerald-700 dark:text-emerald-300">
+                    ✅ Apuntes escaneados correctamente con OCR.
+                  </div>
+                )}
+              </div>
+            )}
+
+            {customUploadType === "link" && (
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                  Enlace de la página o tema:
+                </label>
+                <input
+                  type="url"
+                  value={customLink}
+                  onChange={(e) => setCustomLink(e.target.value)}
+                  placeholder="https://es.wikipedia.org/wiki/Revolución_Mexicana"
+                  className="w-full p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+                />
+              </div>
+            )}
+
+            {/* Action Buttons */}
+            <div className="pt-2 flex flex-col sm:flex-row gap-3">
+              <button
+                disabled={isExtractingOcr || (customUploadType === "link" ? !customLink.trim() : !customText.trim())}
+                onClick={handleAnalyzeCustomMaterial}
+                className="flex-1 py-4 rounded-2xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-display font-bold text-base tracking-wide transition shadow-lg shadow-purple-500/25 active:scale-[0.99] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 border-none"
+              >
+                {isExtractingOcr ? (
+                  <>
+                    <Loader2 className="size-5 animate-spin" />
+                    <span>Extrayendo texto con IA...</span>
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="size-5" />
+                    <span>Analizar material con IA ✨</span>
+                  </>
+                )}
+              </button>
+
+              <button
+                onClick={() => setView("hub")}
+                className="py-4 px-6 rounded-2xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold text-sm transition"
+              >
+                Cancelar
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* ========================================================================= */}
+        {/* 5. IA ANALIZANDO MATERIAL */}
+        {/* ========================================================================= */}
+        {view === "analyzing_material" && (
+          <div className="bg-white dark:bg-slate-900 rounded-3xl p-10 border border-slate-200/80 dark:border-slate-800 shadow-sm text-center space-y-4 max-w-lg mx-auto animate-in fade-in duration-200">
+            <div className="inline-flex size-20 items-center justify-center rounded-3xl bg-purple-500/10 text-purple-600 dark:text-purple-400 animate-pulse">
+              <Brain className="size-10 animate-bounce" />
             </div>
             <h3 className="font-display text-2xl font-black text-slate-900 dark:text-white">
-              {phase === "generating_review" ? "🎯 Creando ejercicios de refuerzo..." : "🎮 Generando preguntas de tu material..."}
+              🤖 Analizando tu material...
             </h3>
             <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 leading-relaxed">
-              {phase === "generating_review"
-                ? "La IA está diseñando preguntas específicas sobre los conceptos que necesitas repasar."
-                : "Creando preguntas pedagógicas y didácticas ancladas 100% en tu apunte."}
+              La IA está identificando la materia, los temas principales, definiciones, fórmulas y conceptos clave de tus apuntes.
             </p>
             <div className="flex justify-center pt-2">
               <Loader2 className="size-6 text-purple-600 animate-spin" />
@@ -1030,77 +979,158 @@ export function RetoRelampagoGame() {
         )}
 
         {/* ========================================================================= */}
-        {/* FASE 5 & 6: PREGUNTA EN JUEGO & RETROALIMENTACIÓN */}
+        {/* 6. ENCONTRAMOS ESTOS TEMAS (SELECCIÓN DE SUBTEMAS) */}
         {/* ========================================================================= */}
-        {(phase === "playing" || phase === "question_feedback") && currentQ && (
-          <div className="space-y-4 animate-in fade-in duration-200">
-            {/* Top Game Bar */}
-            <div className="bg-white dark:bg-slate-900 rounded-2xl p-4 border border-slate-200/80 dark:border-slate-800 shadow-sm flex flex-col gap-3">
-              <div className="flex items-center justify-between gap-2">
-                <div className="flex items-center gap-2">
-                  <span className="text-xs font-black px-2.5 py-1 rounded-lg bg-blue-500/10 text-blue-600 dark:text-blue-400">
-                    Pregunta {currentIndex + 1} de {questions.length}
-                  </span>
-                  <span className="text-xs text-slate-500 dark:text-slate-400 font-semibold truncate max-w-[150px] sm:max-w-[250px]">
-                    {currentQ.concept || analysis?.title}
-                  </span>
-                </div>
+        {view === "custom_topics_select" && customAnalysis && (
+          <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-8 border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-6 animate-in fade-in zoom-in-95 duration-200">
+            <div>
+              <span className="text-[10px] font-extrabold uppercase tracking-wider px-2.5 py-1 rounded-full bg-purple-500/10 text-purple-600 dark:text-purple-400">
+                Material Analizado
+              </span>
+              <h2 className="font-display text-2xl font-black text-slate-900 dark:text-white mt-2">
+                📚 Encontramos estos temas:
+              </h2>
+              <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
+                Selecciona cuáles temas quieres incluir en las preguntas de tu juego:
+              </p>
+            </div>
 
-                <div className="flex items-center gap-3">
-                  {streak >= 2 && (
-                    <div className="flex items-center gap-1 text-xs font-black text-amber-500 bg-amber-500/10 px-2 py-0.5 rounded-full animate-bounce">
-                      <Flame className="size-3.5 fill-amber-500" />
-                      <span>x{streak}</span>
+            {/* Checkbox List */}
+            <div className="space-y-2.5">
+              {customAnalysis.detectedTopics.map((topicName, idx) => {
+                const isSelected = selectedSubtopics.includes(topicName);
+                return (
+                  <div
+                    key={idx}
+                    onClick={() => handleToggleSubtopic(topicName)}
+                    className={`p-4 rounded-2xl border-2 transition flex items-center justify-between cursor-pointer ${
+                      isSelected
+                        ? "bg-purple-50 dark:bg-purple-950/40 border-purple-500 text-purple-900 dark:text-purple-200 shadow-sm"
+                        : "bg-slate-50 dark:bg-slate-800/60 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:bg-slate-100"
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <span className="text-sm font-bold">{idx + 1}. {topicName}</span>
                     </div>
-                  )}
-
-                  {/* Hearts */}
-                  <div className="flex items-center gap-0.5">
-                    {[1, 2, 3].map((h) => (
-                      <Heart
-                        key={h}
-                        className={`size-4 transition-all duration-300 ${
-                          h <= lives
-                            ? "text-rose-500 fill-rose-500 scale-100"
-                            : "text-slate-300 dark:text-slate-700 scale-90"
-                        }`}
-                      />
-                    ))}
+                    {isSelected ? (
+                      <CheckSquare className="size-5 text-purple-600 dark:text-purple-400" />
+                    ) : (
+                      <Square className="size-5 text-slate-300 dark:text-slate-600" />
+                    )}
                   </div>
+                );
+              })}
+            </div>
 
-                  {/* Score */}
-                  <div className="flex items-center gap-1 font-display font-black text-sm text-slate-800 dark:text-slate-200">
-                    <Trophy className="size-4 text-amber-500" />
-                    <span>{score}</span>
-                  </div>
-                </div>
+            {/* Question count selector */}
+            <div className="space-y-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+              <label className="text-xs font-bold text-slate-500 dark:text-slate-400 block">
+                Número de preguntas:
+              </label>
+              <div className="grid grid-cols-4 gap-2">
+                {[5, 10, 15, 20].map((num) => (
+                  <button
+                    key={num}
+                    onClick={() => setQuestionCount(num)}
+                    className={`p-3 rounded-2xl text-xs font-bold transition text-center cursor-pointer ${
+                      questionCount === num
+                        ? "bg-purple-600 text-white shadow-sm"
+                        : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200"
+                    }`}
+                  >
+                    {num} preguntas
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="pt-2 flex flex-col sm:flex-row gap-3">
+              <button
+                disabled={selectedSubtopics.length === 0}
+                onClick={handleStartCustomGame}
+                className="flex-1 py-4 rounded-2xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-display font-bold text-base tracking-wide transition shadow-lg shadow-purple-500/25 active:scale-[0.99] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 border-none"
+              >
+                <Sparkles className="size-5" />
+                <span>✨ Crear juego</span>
+              </button>
+
+              <button
+                onClick={() => setView("upload_material")}
+                className="py-4 px-6 rounded-2xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold text-sm transition"
+              >
+                Atrás
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* ========================================================================= */}
+        {/* 7. GENERANDO PREGUNTAS CON IA */}
+        {/* ========================================================================= */}
+        {(view === "generating_game" || view === "generating_review") && (
+          <div className="bg-white dark:bg-slate-900 rounded-3xl p-10 border border-slate-200/80 dark:border-slate-800 shadow-sm text-center space-y-4 max-w-lg mx-auto animate-in fade-in duration-200">
+            <div className="inline-flex size-16 items-center justify-center rounded-2xl bg-blue-500/10 text-blue-600 dark:text-blue-400 animate-pulse">
+              <Sparkles className="size-8" />
+            </div>
+            <h3 className="font-display text-2xl font-black text-slate-900 dark:text-white">
+              {view === "generating_review" ? "🔁 Preparando práctica de errores..." : "🎮 Creando preguntas de tu material..."}
+            </h3>
+            <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 leading-relaxed">
+              {view === "generating_review"
+                ? "La IA está generando nuevas preguntas específicas sobre los conceptos que fallaste."
+                : "Construyendo preguntas claras y progresivas basadas en el texto seleccionado."}
+            </p>
+            <div className="flex justify-center pt-2">
+              <Loader2 className="size-6 text-blue-600 animate-spin" />
+            </div>
+          </div>
+        )}
+
+        {/* ========================================================================= */}
+        {/* 8 & 9. EN PARTIDA & RETROALIMENTACIÓN INMEDIATA */}
+        {/* ========================================================================= */}
+        {(view === "playing" || view === "feedback") && currentQ && (
+          <div className="space-y-4 animate-in fade-in duration-200">
+            {/* Status Bar */}
+            <div className="bg-white dark:bg-slate-900 rounded-2xl p-4 border border-slate-200/80 dark:border-slate-800 shadow-sm flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-black px-2.5 py-1 rounded-lg bg-blue-500/10 text-blue-600 dark:text-blue-400">
+                  Pregunta {currentIndex + 1} de {questions.length}
+                </span>
+                <span className="text-xs text-slate-500 dark:text-slate-400 font-semibold truncate max-w-[150px] sm:max-w-[250px]">
+                  {currentQ.concept || selectedTopic?.name || "Estudio"}
+                </span>
               </div>
 
-              {/* Timer Bar */}
-              {gameMode !== "practice" && (
-                <div className="space-y-1">
-                  <div className="flex justify-between items-center text-[10px] font-bold text-slate-400">
-                    <span className="flex items-center gap-1">
-                      <Timer className="size-3 text-slate-400" /> Tiempo restante
-                    </span>
-                    <span className={`font-mono font-bold ${timeLeft <= 5 ? "text-rose-500 font-black animate-pulse" : ""}`}>
-                      {timeLeft}s
-                    </span>
+              <div className="flex items-center gap-3">
+                {streak >= 2 && (
+                  <div className="flex items-center gap-1 text-xs font-black text-amber-500 bg-amber-500/10 px-2 py-0.5 rounded-full animate-bounce">
+                    <Flame className="size-3.5 fill-amber-500" />
+                    <span>x{streak}</span>
                   </div>
-                  <div className="h-2 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
-                    <div
-                      className={`h-full transition-all duration-1000 ease-linear rounded-full ${
-                        timeLeft > 10
-                          ? "bg-blue-500"
-                          : timeLeft > 5
-                          ? "bg-amber-500"
-                          : "bg-rose-500 animate-pulse"
+                )}
+
+                {/* Hearts */}
+                <div className="flex items-center gap-0.5">
+                  {[1, 2, 3].map((h) => (
+                    <Heart
+                      key={h}
+                      className={`size-4 transition-all duration-300 ${
+                        h <= lives
+                          ? "text-rose-500 fill-rose-500 scale-100"
+                          : "text-slate-300 dark:text-slate-700 scale-90"
                       }`}
-                      style={{ width: `${(timeLeft / QUESTION_TIME_LIMIT) * 100}%` }}
                     />
-                  </div>
+                  ))}
                 </div>
-              )}
+
+                {/* Score */}
+                <div className="flex items-center gap-1 font-display font-black text-sm text-slate-800 dark:text-slate-200">
+                  <Trophy className="size-4 text-amber-500" />
+                  <span>{score}</span>
+                </div>
+              </div>
             </div>
 
             {/* Question Card */}
@@ -1110,7 +1140,7 @@ export function RetoRelampagoGame() {
                   {currentQ.type === "true_false" ? "⚖️ Verdadero o Falso" : currentQ.type === "fill_blank" ? "✏️ Completa la frase" : "🅰️ Opción Múltiple"}
                 </span>
                 <span className="text-xs text-slate-400 font-mono">
-                  100 pts {gameMode !== "practice" && "+ bonus"}
+                  100 pts {streak > 1 && `(x${streak >= 10 ? 3 : streak >= 5 ? 2 : 1.5})`}
                 </span>
               </div>
 
@@ -1118,14 +1148,13 @@ export function RetoRelampagoGame() {
                 {currentQ.question}
               </h2>
 
-              {/* RENDER OPTIONS BASED ON QUESTION TYPE */}
-              {/* Type 1: Verdadero o Falso */}
+              {/* Question Choices */}
               {currentQ.type === "true_false" ? (
                 <div className="grid grid-cols-2 gap-3 pt-2">
                   {["Verdadero", "Falso"].map((choice) => {
                     const isChosen = selectedChoice === choice;
                     const isCorrect = choice.toLowerCase() === String(currentQ.correctAnswer).toLowerCase();
-                    const isAnswered = phase === "question_feedback";
+                    const isAnswered = view === "feedback";
 
                     let btnCls = "bg-slate-50 dark:bg-slate-800/70 border-slate-200 dark:border-slate-700 hover:bg-blue-50 text-slate-800 dark:text-slate-200";
                     if (isAnswered) {
@@ -1147,13 +1176,12 @@ export function RetoRelampagoGame() {
                   })}
                 </div>
               ) : (
-                /* Type 2: Multiple Choice / Fill Blank Options */
                 <div className="grid grid-cols-1 gap-3 pt-1">
                   {currentQ.options?.map((option, idx) => {
                     const letter = ["A", "B", "C", "D"][idx] || String(idx + 1);
                     const isChosen = selectedChoice === option;
                     const isCorrect = option.trim().toLowerCase() === String(currentQ.correctAnswer).trim().toLowerCase();
-                    const isAnswered = phase === "question_feedback";
+                    const isAnswered = view === "feedback";
 
                     let btnCls = "bg-slate-50 dark:bg-slate-800/60 border-slate-200 dark:border-slate-700/80 hover:bg-blue-50 hover:border-blue-300 dark:hover:bg-blue-950/30 text-slate-800 dark:text-slate-200";
                     let letterCls = "bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300";
@@ -1198,41 +1226,34 @@ export function RetoRelampagoGame() {
                 </div>
               )}
 
-              {/* Feedback and Educational Explanation ("💡 ¿Por qué?") */}
-              {phase === "question_feedback" && (
+              {/* Immediate Feedback Box (Explicación tras cada respuesta) */}
+              {view === "feedback" && (
                 <div className="mt-6 space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-200 pt-2 border-t border-slate-100 dark:border-slate-800">
                   <div
                     className={`p-3.5 rounded-2xl flex items-center gap-2.5 font-bold text-sm ${
                       selectedChoice?.toLowerCase() === String(currentQ.correctAnswer).toLowerCase()
                         ? "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30"
-                        : isTimeOut
-                        ? "bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-500/30"
                         : "bg-rose-500/15 text-rose-700 dark:text-rose-300 border border-rose-500/30"
                     }`}
                   >
                     {selectedChoice?.toLowerCase() === String(currentQ.correctAnswer).toLowerCase() ? (
                       <>
                         <CheckCircle2 className="size-5 text-emerald-500" />
-                        <span>¡Correcto! {streak > 1 && `(🔥 Racha x${streak})`}</span>
-                      </>
-                    ) : isTimeOut ? (
-                      <>
-                        <AlertCircle className="size-5 text-amber-500" />
-                        <span>⏰ ¡Se acabó el tiempo!</span>
+                        <span>✅ ¡Correcto! {streak > 1 && `(🔥 Racha x${streak})`}</span>
                       </>
                     ) : (
                       <>
                         <XCircle className="size-5 text-rose-500" />
-                        <span>¡Respuesta incorrecta!</span>
+                        <span>❌ Incorrecto. La respuesta correcta es {String(currentQ.correctAnswer)}.</span>
                       </>
                     )}
                   </div>
 
-                  {/* 💡 ¿Por qué? Card */}
+                  {/* Short Explanation */}
                   <div className="p-4 rounded-2xl bg-blue-50/70 dark:bg-blue-950/30 border border-blue-200/80 dark:border-blue-900/60 text-slate-700 dark:text-slate-300 text-xs sm:text-sm leading-relaxed">
                     <p className="font-bold text-blue-700 dark:text-blue-400 flex items-center gap-1.5 mb-1">
                       <Lightbulb className="size-4" />
-                      💡 ¿Por qué?
+                      💡 Explicación:
                     </p>
                     <p>{currentQ.explanation}</p>
                   </div>
@@ -1253,11 +1274,11 @@ export function RetoRelampagoGame() {
         )}
 
         {/* ========================================================================= */}
-        {/* FASE 7: PANTALLA FINAL DE RESULTADOS & DIAGNÓSTICO */}
+        {/* 10. RESULTADOS (DOMINAS VS NECESITAS PRACTICAR + BUCLE DE ERRORES) */}
         {/* ========================================================================= */}
-        {phase === "results" && (
-          <div className="space-y-6 animate-in fade-in zoom-in-95 duration-300 py-2">
-            {/* Main Result Card */}
+        {view === "results" && (
+          <div className="space-y-6 animate-in fade-in zoom-in-95 duration-200 py-2">
+            {/* Header Result Card */}
             <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-8 border border-slate-200/80 dark:border-slate-800 shadow-sm text-center relative overflow-hidden">
               <div className="inline-flex size-16 items-center justify-center rounded-2xl bg-gradient-to-tr from-amber-400 to-yellow-500 text-white shadow-xl shadow-yellow-500/20 mb-3">
                 <Trophy className="size-8" />
@@ -1267,7 +1288,6 @@ export function RetoRelampagoGame() {
                 🎉 ¡Terminaste!
               </h2>
 
-              {/* Ratio & Accuracy */}
               <div className="my-4 flex items-center justify-center gap-6">
                 <div>
                   <span className="font-display text-4xl sm:text-5xl font-black text-blue-600 dark:text-blue-400">
@@ -1293,7 +1313,6 @@ export function RetoRelampagoGame() {
                 </div>
               </div>
 
-              {/* Rewards */}
               {earnedReward && (
                 <div className="inline-flex items-center gap-4 px-4 py-2 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-xs font-bold text-amber-700 dark:text-amber-300 mt-1">
                   <span className="flex items-center gap-1">
@@ -1308,19 +1327,19 @@ export function RetoRelampagoGame() {
               )}
             </div>
 
-            {/* DIAGNOSTIC: LO QUE DOMINAS VS LO QUE DEBES REPASAR */}
+            {/* 🟢 DOMINAS VS 🟡 NECESITAS PRACTICAR */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {/* ✅ Lo que dominas */}
+              {/* 🟢 Dominas */}
               <div className="p-5 rounded-3xl bg-white dark:bg-slate-900 border border-emerald-500/25 shadow-sm space-y-3">
                 <h4 className="font-display text-sm font-bold text-emerald-700 dark:text-emerald-400 flex items-center gap-1.5">
                   <CheckCircle2 className="size-4 text-emerald-500" />
-                  <span>Lo que dominas</span>
+                  <span>🟢 Dominas</span>
                 </h4>
                 <ul className="space-y-1.5 text-xs text-slate-700 dark:text-slate-300">
                   {Array.from(new Set(answersHistory.filter((a) => a.isCorrect).map((a) => a.question.concept))).length > 0 ? (
                     Array.from(new Set(answersHistory.filter((a) => a.isCorrect).map((a) => a.question.concept))).map((c, i) => (
                       <li key={i} className="flex items-center gap-2">
-                        <span className="text-emerald-500 font-bold">✅</span>
+                        <span className="text-emerald-500 font-bold">✓</span>
                         <span>{c}</span>
                       </li>
                     ))
@@ -1330,58 +1349,56 @@ export function RetoRelampagoGame() {
                 </ul>
               </div>
 
-              {/* 📚 Lo que debes repasar */}
-              <div className="p-5 rounded-3xl bg-white dark:bg-slate-900 border border-rose-500/25 shadow-sm space-y-3">
-                <h4 className="font-display text-sm font-bold text-rose-700 dark:text-rose-400 flex items-center gap-1.5">
-                  <BookOpen className="size-4 text-rose-500" />
-                  <span>Lo que debes repasar</span>
+              {/* 🟡 Necesitas practicar */}
+              <div className="p-5 rounded-3xl bg-white dark:bg-slate-900 border border-amber-500/25 shadow-sm space-y-3">
+                <h4 className="font-display text-sm font-bold text-amber-700 dark:text-amber-400 flex items-center gap-1.5">
+                  <BookOpen className="size-4 text-amber-500" />
+                  <span>🟡 Necesitas practicar</span>
                 </h4>
                 <ul className="space-y-1.5 text-xs text-slate-700 dark:text-slate-300">
                   {Array.from(new Set(answersHistory.filter((a) => !a.isCorrect).map((a) => a.question.concept))).length > 0 ? (
                     Array.from(new Set(answersHistory.filter((a) => !a.isCorrect).map((a) => a.question.concept))).map((c, i) => (
                       <li key={i} className="flex items-center gap-2">
-                        <span className="text-rose-500 font-bold">📚</span>
+                        <span className="text-amber-500 font-bold">!</span>
                         <span>{c}</span>
                       </li>
                     ))
                   ) : (
                     <li className="text-emerald-600 dark:text-emerald-400 font-medium">
-                      🌟 ¡Excelente! Dominas todos los conceptos de esta sesión.
+                      🌟 ¡Excelente! Dominas todos los conceptos evaluados.
                     </li>
                   )}
                 </ul>
               </div>
             </div>
 
-            {/* ACTION: "PRACTICAR LO QUE FALLÉ" (AI ADAPTIVE REVIEW BUTTON) */}
+            {/* BUTTON: PRACTICAR MIS ERRORES */}
             {answersHistory.filter((a) => !a.isCorrect).length > 0 && (
               <div className="p-6 rounded-3xl bg-gradient-to-r from-purple-600 via-indigo-600 to-blue-600 text-white shadow-lg shadow-purple-600/20 space-y-3">
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <h3 className="font-display text-lg font-bold flex items-center gap-2">
-                      <Sparkles className="size-5" />
-                      <span>¿Quieres dominar este tema al 100%?</span>
-                    </h3>
-                    <p className="text-xs text-purple-100 mt-1 leading-relaxed">
-                      La IA generará una ronda de ejercicios enfocada únicamente en los {answersHistory.filter((a) => !a.isCorrect).length} conceptos que fallaste.
-                    </p>
-                  </div>
+                <div>
+                  <h3 className="font-display text-lg font-bold flex items-center gap-2">
+                    <Sparkles className="size-5" />
+                    <span>¿Quieres reforzar tus errores?</span>
+                  </h3>
+                  <p className="text-xs text-purple-100 mt-1 leading-relaxed">
+                    La IA creará nuevas preguntas específicamente sobre los {answersHistory.filter((a) => !a.isCorrect).length} conceptos que respondiste mal.
+                  </p>
                 </div>
 
                 <button
-                  onClick={handlePracticeFailed}
+                  onClick={handlePracticeErrors}
                   className="w-full py-3.5 px-4 rounded-2xl bg-white text-purple-900 font-display font-black text-sm tracking-wide transition hover:bg-purple-50 shadow-md active:scale-[0.99] cursor-pointer flex items-center justify-center gap-2 border-none"
                 >
-                  <span>🎯 Practicar lo que fallé</span>
-                  <ArrowRight className="size-4" />
+                  <RefreshCw className="size-4" />
+                  <span>🔁 Practicar mis errores</span>
                 </button>
               </div>
             )}
 
-            {/* DETAILED QUESTION REVIEW */}
+            {/* Detailed Question Review */}
             <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-3">
               <h4 className="font-display text-sm font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
-                <span>📖</span> Detalle de tus respuestas y aprendizaje
+                <span>📖</span> Detalle de preguntas respondidas
               </h4>
 
               <div className="space-y-3">
@@ -1409,7 +1426,7 @@ export function RetoRelampagoGame() {
                     )}
 
                     <div className="text-xs text-slate-600 dark:text-slate-300 bg-blue-50/50 dark:bg-blue-950/20 p-2.5 rounded-xl border border-blue-100 dark:border-blue-900/40 leading-relaxed">
-                      <span className="font-bold text-blue-600 dark:text-blue-400">💡 Aprende: </span>
+                      <span className="font-bold text-blue-600 dark:text-blue-400">💡 Explicación: </span>
                       {item.question.explanation}
                     </div>
                   </div>
@@ -1417,10 +1434,13 @@ export function RetoRelampagoGame() {
               </div>
             </div>
 
-            {/* Bottom Actions */}
+            {/* Bottom Navigation */}
             <div className="flex flex-col sm:flex-row gap-3 pt-2">
               <button
-                onClick={handleStartGame}
+                onClick={() => {
+                  if (selectedTopic) handleStartPresetGame(selectedTopic, questionCount);
+                  else if (customAnalysis) handleStartCustomGame();
+                }}
                 className="flex-1 py-3.5 px-4 rounded-2xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-sm transition shadow-md shadow-blue-500/20 active:scale-95 cursor-pointer flex items-center justify-center gap-2 border-none"
               >
                 <RotateCcw className="size-4" />
@@ -1428,19 +1448,12 @@ export function RetoRelampagoGame() {
               </button>
 
               <button
-                onClick={() => setPhase("select_source")}
+                onClick={() => setView("hub")}
                 className="flex-1 py-3.5 px-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 font-bold text-sm transition active:scale-95 cursor-pointer flex items-center justify-center gap-2"
               >
                 <BookOpen className="size-4 text-blue-500" />
-                <span>Elegir otro tema</span>
+                <span>Elegir otra materia</span>
               </button>
-
-              <Link
-                to="/games"
-                className="py-3.5 px-5 rounded-2xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 font-bold text-sm transition flex items-center justify-center"
-              >
-                Hub de Juegos
-              </Link>
             </div>
           </div>
         )}
@@ -1448,4 +1461,4 @@ export function RetoRelampagoGame() {
     </div>
   );
 }
-export default RetoRelampagoGame;
+export default EducationalGamesPlatform;
