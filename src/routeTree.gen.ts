@@ -28,7 +28,6 @@ import { Route as AuthenticatedGamesSpaceRushRouteImport } from './routes/_authe
 import { Route as AuthenticatedGamesSimuladorExamenesRouteImport } from './routes/_authenticated.games.simulador-examenes'
 import { Route as AuthenticatedGamesRunnerConocimientoRouteImport } from './routes/_authenticated.games.runner-conocimiento'
 import { Route as AuthenticatedGamesRpgAcademicoRouteImport } from './routes/_authenticated.games.rpg-academico'
-import { Route as AuthenticatedGamesRetoRelampagoRouteImport } from './routes/_authenticated.games.reto-relampago'
 import { Route as AuthenticatedGamesQuizClashRouteImport } from './routes/_authenticated.games.quiz-clash'
 import { Route as AuthenticatedGamesOrderIdeaRouteImport } from './routes/_authenticated.games.order-idea'
 import { Route as AuthenticatedGamesMundoConstructorRouteImport } from './routes/_authenticated.games.mundo-constructor'
@@ -145,12 +144,6 @@ const AuthenticatedGamesRpgAcademicoRoute =
   AuthenticatedGamesRpgAcademicoRouteImport.update({
     id: '/rpg-academico',
     path: '/rpg-academico',
-    getParentRoute: () => AuthenticatedGamesRoute,
-  } as any)
-const AuthenticatedGamesRetoRelampagoRoute =
-  AuthenticatedGamesRetoRelampagoRouteImport.update({
-    id: '/reto-relampago',
-    path: '/reto-relampago',
     getParentRoute: () => AuthenticatedGamesRoute,
   } as any)
 const AuthenticatedGamesQuizClashRoute =
@@ -278,7 +271,6 @@ export interface FileRoutesByFullPath {
   '/games/mundo-constructor': typeof AuthenticatedGamesMundoConstructorRoute
   '/games/order-idea': typeof AuthenticatedGamesOrderIdeaRoute
   '/games/quiz-clash': typeof AuthenticatedGamesQuizClashRoute
-  '/games/reto-relampago': typeof AuthenticatedGamesRetoRelampagoRoute
   '/games/rpg-academico': typeof AuthenticatedGamesRpgAcademicoRoute
   '/games/runner-conocimiento': typeof AuthenticatedGamesRunnerConocimientoRoute
   '/games/simulador-examenes': typeof AuthenticatedGamesSimuladorExamenesRoute
@@ -315,7 +307,6 @@ export interface FileRoutesByTo {
   '/games/mundo-constructor': typeof AuthenticatedGamesMundoConstructorRoute
   '/games/order-idea': typeof AuthenticatedGamesOrderIdeaRoute
   '/games/quiz-clash': typeof AuthenticatedGamesQuizClashRoute
-  '/games/reto-relampago': typeof AuthenticatedGamesRetoRelampagoRoute
   '/games/rpg-academico': typeof AuthenticatedGamesRpgAcademicoRoute
   '/games/runner-conocimiento': typeof AuthenticatedGamesRunnerConocimientoRoute
   '/games/simulador-examenes': typeof AuthenticatedGamesSimuladorExamenesRoute
@@ -354,7 +345,6 @@ export interface FileRoutesById {
   '/_authenticated/games/mundo-constructor': typeof AuthenticatedGamesMundoConstructorRoute
   '/_authenticated/games/order-idea': typeof AuthenticatedGamesOrderIdeaRoute
   '/_authenticated/games/quiz-clash': typeof AuthenticatedGamesQuizClashRoute
-  '/_authenticated/games/reto-relampago': typeof AuthenticatedGamesRetoRelampagoRoute
   '/_authenticated/games/rpg-academico': typeof AuthenticatedGamesRpgAcademicoRoute
   '/_authenticated/games/runner-conocimiento': typeof AuthenticatedGamesRunnerConocimientoRoute
   '/_authenticated/games/simulador-examenes': typeof AuthenticatedGamesSimuladorExamenesRoute
@@ -393,7 +383,6 @@ export interface FileRouteTypes {
     | '/games/mundo-constructor'
     | '/games/order-idea'
     | '/games/quiz-clash'
-    | '/games/reto-relampago'
     | '/games/rpg-academico'
     | '/games/runner-conocimiento'
     | '/games/simulador-examenes'
@@ -430,7 +419,6 @@ export interface FileRouteTypes {
     | '/games/mundo-constructor'
     | '/games/order-idea'
     | '/games/quiz-clash'
-    | '/games/reto-relampago'
     | '/games/rpg-academico'
     | '/games/runner-conocimiento'
     | '/games/simulador-examenes'
@@ -468,7 +456,6 @@ export interface FileRouteTypes {
     | '/_authenticated/games/mundo-constructor'
     | '/_authenticated/games/order-idea'
     | '/_authenticated/games/quiz-clash'
-    | '/_authenticated/games/reto-relampago'
     | '/_authenticated/games/rpg-academico'
     | '/_authenticated/games/runner-conocimiento'
     | '/_authenticated/games/simulador-examenes'
@@ -621,13 +608,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedGamesRpgAcademicoRouteImport
       parentRoute: typeof AuthenticatedGamesRoute
     }
-    '/_authenticated/games/reto-relampago': {
-      id: '/_authenticated/games/reto-relampago'
-      path: '/reto-relampago'
-      fullPath: '/games/reto-relampago'
-      preLoaderRoute: typeof AuthenticatedGamesRetoRelampagoRouteImport
-      parentRoute: typeof AuthenticatedGamesRoute
-    }
     '/_authenticated/games/quiz-clash': {
       id: '/_authenticated/games/quiz-clash'
       path: '/quiz-clash'
@@ -759,7 +739,6 @@ interface AuthenticatedGamesRouteChildren {
   AuthenticatedGamesMundoConstructorRoute: typeof AuthenticatedGamesMundoConstructorRoute
   AuthenticatedGamesOrderIdeaRoute: typeof AuthenticatedGamesOrderIdeaRoute
   AuthenticatedGamesQuizClashRoute: typeof AuthenticatedGamesQuizClashRoute
-  AuthenticatedGamesRetoRelampagoRoute: typeof AuthenticatedGamesRetoRelampagoRoute
   AuthenticatedGamesRpgAcademicoRoute: typeof AuthenticatedGamesRpgAcademicoRoute
   AuthenticatedGamesRunnerConocimientoRoute: typeof AuthenticatedGamesRunnerConocimientoRoute
   AuthenticatedGamesSimuladorExamenesRoute: typeof AuthenticatedGamesSimuladorExamenesRoute
@@ -790,7 +769,6 @@ const AuthenticatedGamesRouteChildren: AuthenticatedGamesRouteChildren = {
     AuthenticatedGamesMundoConstructorRoute,
   AuthenticatedGamesOrderIdeaRoute: AuthenticatedGamesOrderIdeaRoute,
   AuthenticatedGamesQuizClashRoute: AuthenticatedGamesQuizClashRoute,
-  AuthenticatedGamesRetoRelampagoRoute: AuthenticatedGamesRetoRelampagoRoute,
   AuthenticatedGamesRpgAcademicoRoute: AuthenticatedGamesRpgAcademicoRoute,
   AuthenticatedGamesRunnerConocimientoRoute:
     AuthenticatedGamesRunnerConocimientoRoute,
