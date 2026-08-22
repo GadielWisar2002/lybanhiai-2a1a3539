@@ -23,6 +23,7 @@ import { Route as AuthenticatedLibraryRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedGamesRouteImport } from './routes/_authenticated.games'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated.dashboard'
 import { Route as AuthenticatedAdminBooksRouteImport } from './routes/_authenticated.admin-books'
+import { Route as AuthenticatedGamesFlashcardsRouteImport } from './routes/_authenticated.games.flashcards'
 import { Route as AuthenticatedGamesWordleRouteImport } from './routes/_authenticated.games.wordle'
 import { Route as AuthenticatedGamesTorreInfinitaRouteImport } from './routes/_authenticated.games.torre-infinita'
 import { Route as AuthenticatedGamesSpaceRushRouteImport } from './routes/_authenticated.games.space-rush'
@@ -116,6 +117,12 @@ const AuthenticatedAdminBooksRoute = AuthenticatedAdminBooksRouteImport.update({
   path: '/admin-books',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedGamesFlashcardsRoute =
+  AuthenticatedGamesFlashcardsRouteImport.update({
+    id: '/flashcards',
+    path: '/flashcards',
+    getParentRoute: () => AuthenticatedGamesRoute,
+  } as any)
 const AuthenticatedGamesWordleRoute =
   AuthenticatedGamesWordleRouteImport.update({
     id: '/wordle',
@@ -271,6 +278,7 @@ export interface FileRoutesByFullPath {
   '/games/criaturas-conocimiento': typeof AuthenticatedGamesCriaturasConocimientoRoute
   '/games/dictation': typeof AuthenticatedGamesDictationRoute
   '/games/escape-room': typeof AuthenticatedGamesEscapeRoomRoute
+  '/games/flashcards': typeof AuthenticatedGamesFlashcardsRoute
   '/games/gold-quest': typeof AuthenticatedGamesGoldQuestRoute
   '/games/hangman': typeof AuthenticatedGamesHangmanRoute
   '/games/laboratorio-inventores': typeof AuthenticatedGamesLaboratorioInventoresRoute
@@ -308,6 +316,7 @@ export interface FileRoutesByTo {
   '/games/criaturas-conocimiento': typeof AuthenticatedGamesCriaturasConocimientoRoute
   '/games/dictation': typeof AuthenticatedGamesDictationRoute
   '/games/escape-room': typeof AuthenticatedGamesEscapeRoomRoute
+  '/games/flashcards': typeof AuthenticatedGamesFlashcardsRoute
   '/games/gold-quest': typeof AuthenticatedGamesGoldQuestRoute
   '/games/hangman': typeof AuthenticatedGamesHangmanRoute
   '/games/laboratorio-inventores': typeof AuthenticatedGamesLaboratorioInventoresRoute
@@ -347,6 +356,7 @@ export interface FileRoutesById {
   '/_authenticated/games/criaturas-conocimiento': typeof AuthenticatedGamesCriaturasConocimientoRoute
   '/_authenticated/games/dictation': typeof AuthenticatedGamesDictationRoute
   '/_authenticated/games/escape-room': typeof AuthenticatedGamesEscapeRoomRoute
+  '/_authenticated/games/flashcards': typeof AuthenticatedGamesFlashcardsRoute
   '/_authenticated/games/gold-quest': typeof AuthenticatedGamesGoldQuestRoute
   '/_authenticated/games/hangman': typeof AuthenticatedGamesHangmanRoute
   '/_authenticated/games/laboratorio-inventores': typeof AuthenticatedGamesLaboratorioInventoresRoute
@@ -386,6 +396,7 @@ export interface FileRouteTypes {
     | '/games/criaturas-conocimiento'
     | '/games/dictation'
     | '/games/escape-room'
+    | '/games/flashcards'
     | '/games/gold-quest'
     | '/games/hangman'
     | '/games/laboratorio-inventores'
@@ -423,6 +434,7 @@ export interface FileRouteTypes {
     | '/games/criaturas-conocimiento'
     | '/games/dictation'
     | '/games/escape-room'
+    | '/games/flashcards'
     | '/games/gold-quest'
     | '/games/hangman'
     | '/games/laboratorio-inventores'
@@ -461,6 +473,7 @@ export interface FileRouteTypes {
     | '/_authenticated/games/criaturas-conocimiento'
     | '/_authenticated/games/dictation'
     | '/_authenticated/games/escape-room'
+    | '/_authenticated/games/flashcards'
     | '/_authenticated/games/gold-quest'
     | '/_authenticated/games/hangman'
     | '/_authenticated/games/laboratorio-inventores'
@@ -744,6 +757,7 @@ interface AuthenticatedGamesRouteChildren {
   AuthenticatedGamesCriaturasConocimientoRoute: typeof AuthenticatedGamesCriaturasConocimientoRoute
   AuthenticatedGamesDictationRoute: typeof AuthenticatedGamesDictationRoute
   AuthenticatedGamesEscapeRoomRoute: typeof AuthenticatedGamesEscapeRoomRoute
+  AuthenticatedGamesFlashcardsRoute: typeof AuthenticatedGamesFlashcardsRoute
   AuthenticatedGamesGoldQuestRoute: typeof AuthenticatedGamesGoldQuestRoute
   AuthenticatedGamesHangmanRoute: typeof AuthenticatedGamesHangmanRoute
   AuthenticatedGamesLaboratorioInventoresRoute: typeof AuthenticatedGamesLaboratorioInventoresRoute
@@ -772,6 +786,7 @@ const AuthenticatedGamesRouteChildren: AuthenticatedGamesRouteChildren = {
     AuthenticatedGamesCriaturasConocimientoRoute,
   AuthenticatedGamesDictationRoute: AuthenticatedGamesDictationRoute,
   AuthenticatedGamesEscapeRoomRoute: AuthenticatedGamesEscapeRoomRoute,
+  AuthenticatedGamesFlashcardsRoute: AuthenticatedGamesFlashcardsRoute,
   AuthenticatedGamesGoldQuestRoute: AuthenticatedGamesGoldQuestRoute,
   AuthenticatedGamesHangmanRoute: AuthenticatedGamesHangmanRoute,
   AuthenticatedGamesLaboratorioInventoresRoute:

@@ -355,6 +355,15 @@ function GamesHub() {
             <section className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
               {[
                 {
+                  id: "flashcards",
+                  title: "🃏 Flashcards de Estudio",
+                  style: "Memoria y Repaso Activo",
+                  desc: "Estudia conceptos, preguntas y fórmulas con tarjetas giratorias 3D. Elige temas de exámenes PAA/EXANI-II, materias o tus apuntes.",
+                  cost: 0,
+                  path: "/games/flashcards",
+                  styleColor: "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20",
+                },
+                {
                   id: "wordle",
                   title: "Juegos Educativos con IA",
                   style: "Estudio + Juego Adaptativo",
