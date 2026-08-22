@@ -5,7 +5,7 @@ import { useTranslation } from "react-i18next";
 import { useState, useEffect } from "react";
 import { generateQuiz, listBooks, generateBookQuiz, generateCustomQuiz, extractTextFromMedia } from "@/lib/quiz.functions";
 import { AppHeader } from "@/components/AppHeader";
-import { Brain, Calculator, Languages, GraduationCap, BookOpen, Sparkles, X, ArrowUpRight, FlaskConical, Award, FileCheck2 } from "lucide-react";
+import { Brain, Calculator, Languages, GraduationCap, BookOpen, Sparkles, X, ArrowUpRight, FlaskConical, Award, FileCheck2, Globe } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/prep")({
@@ -110,6 +110,8 @@ function Prep() {
     { value: "logic", label: t("prep.logic") },
     { value: "language", label: t("prep.language") },
     { value: "chemistry", label: t("prep.chemistry", { defaultValue: "Química" }) },
+    { value: "paa", label: t("prep.paa", { defaultValue: "Examen PAA" }) },
+    { value: "exani", label: t("prep.exani", { defaultValue: "Examen EXANI-II" }) },
     { value: "toefl", label: "TOEFL" },
     { value: "cambridge", label: "Cambridge" },
     { value: "career", label: t("prep.career") },
@@ -152,7 +154,7 @@ function Prep() {
     onError: (e) => toast.error(e instanceof Error ? e.message : "Error"),
   });
 
-  const admissionCats: { Icon: typeof Award; label: string; cat: Cat; color: string; badge: string; desc: string }[] = [
+  const admissionCats: { Icon: any; label: string; cat: Cat; color: string; badge: string; desc: string }[] = [
     {
       Icon: Award,
       label: t("prep.paa", { defaultValue: "Examen PAA" }),
@@ -169,15 +171,29 @@ function Prep() {
       badge: "Ceneval",
       desc: "Comprensión Lectora, Redacción y Módulos",
     },
+    {
+      Icon: Globe,
+      label: "TOEFL",
+      cat: "toefl",
+      color: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
+      badge: "Inglés ETS",
+      desc: "Reading, Listening, Grammar & Vocab",
+    },
+    {
+      Icon: BookOpen,
+      label: "Cambridge",
+      cat: "cambridge",
+      color: "bg-amber-500/10 text-amber-600 dark:text-amber-400",
+      badge: "B2 / C1",
+      desc: "Use of English, Reading & Writing",
+    },
   ];
 
-  const generalCats: { Icon: typeof Brain; label: string; cat: Cat | "book"; color: string }[] = [
+  const generalCats: { Icon: any; label: string; cat: Cat | "book"; color: string }[] = [
     { Icon: Brain, label: t("prep.logic"), cat: "logic", color: "bg-primary/10 text-primary" },
     { Icon: Calculator, label: t("prep.math"), cat: "math", color: "bg-gold/20 text-gold-foreground" },
     { Icon: Languages, label: t("prep.language"), cat: "language", color: "bg-success/15 text-success" },
     { Icon: FlaskConical, label: t("prep.chemistry", { defaultValue: "Química" }), cat: "chemistry", color: "bg-purple-500/10 text-purple-500" },
-    { Icon: GraduationCap, label: "TOEFL", cat: "toefl", color: "bg-primary/10 text-primary" },
-    { Icon: BookOpen, label: "Cambridge", cat: "cambridge", color: "bg-gold/20 text-gold-foreground" },
     { Icon: Sparkles, label: t("prep.career"), cat: "career", color: "bg-success/15 text-success" },
     { Icon: BookOpen, label: t("prep.book", { defaultValue: "Mis Libros" }), cat: "book", color: "bg-primary/10 text-primary" },
   ];
