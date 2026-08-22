@@ -1,4 +1,4 @@
-export type Cat = "career" | "toefl" | "cambridge" | "logic" | "math" | "language" | "chemistry";
+export type Cat = "career" | "toefl" | "cambridge" | "logic" | "math" | "language" | "chemistry" | "paa" | "exani";
 export type Lang = "es" | "en" | "fr";
 
 export const LEVELS: Record<Lang, { value: string; label: string }[]> = {
@@ -23,6 +23,64 @@ export const LEVELS: Record<Lang, { value: string; label: string }[]> = {
 };
 
 export const TOPICS: Record<Cat, Record<Lang, string[]>> = {
+  paa: {
+    es: [
+      "Lectura y Comprensión Crítica",
+      "Redacción y Estructura de la Lengua",
+      "Razonamiento Cuantitativo (Aritmética y Álgebra)",
+      "Geometría y Medición",
+      "Análisis de Datos y Probabilidad",
+      "Simulador General PAA (College Board)",
+    ],
+    en: [
+      "Critical Reading & Comprehension",
+      "Writing and Language Structure",
+      "Quantitative Reasoning (Arithmetic & Algebra)",
+      "Geometry and Measurement",
+      "Data Analysis and Probability",
+      "PAA General Simulator (College Board)",
+    ],
+    fr: [
+      "Lecture critique et compréhension",
+      "Rédaction et structure de la langue",
+      "Raisonnement quantitatif",
+      "Géométrie et mesure",
+      "Analyse de données et probabilité",
+      "Simulateur général PAA",
+    ],
+  },
+  exani: {
+    es: [
+      "Comprensión Lectora",
+      "Redacción Indirecta",
+      "Pensamiento Matemático",
+      "Inglés (Diagnóstico)",
+      "Módulo: Ciencias de la Salud (Biología y Química)",
+      "Módulo: Ingenierías (Física y Matemáticas)",
+      "Módulo: Administración y Economía",
+      "Simulador General EXANI-II (Ceneval)",
+    ],
+    en: [
+      "Reading Comprehension",
+      "Indirect Writing",
+      "Mathematical Thinking",
+      "English (Diagnostic)",
+      "Module: Health Sciences (Biology & Chemistry)",
+      "Module: Engineering (Physics & Math)",
+      "Module: Business & Economics",
+      "EXANI-II General Simulator (Ceneval)",
+    ],
+    fr: [
+      "Compréhension de lecture",
+      "Rédaction indirecte",
+      "Pensée mathématique",
+      "Anglais (Diagnostique)",
+      "Module : Sciences de la santé",
+      "Module : Ingénierie (Physique et Maths)",
+      "Module : Administration et Économie",
+      "Simulateur général EXANI-II",
+    ],
+  },
   math: {
     es: ["Números reales", "Polinomios", "Factorización", "Ecuaciones cuadráticas", "Funciones lineales", "Razones y proporciones", "Trigonometría básica", "Probabilidad"],
     en: ["Real numbers", "Polynomials", "Factoring", "Quadratic equations", "Linear functions", "Ratios and proportions", "Basic trigonometry", "Probability"],

@@ -118,9 +118,12 @@
     "noResults": "Pas encore de recommandations. Complète ton profil pour les générer."
   },
   "prep": {
-    "title": "Préparation", "subtitle": "Quiz pour ta carrière et examens d'anglais",
+    "title": "Préparation", "subtitle": "Quiz pour ta carrière, examens d'admission et anglais",
     "career": "Carrière", "english": "Anglais", "toefl": "TOEFL", "cambridge": "Cambridge",
     "logic": "Logique", "math": "Maths", "language": "Langue", "chemistry": "Chimie", "modules": "modules",
+    "paa": "Examen PAA", "exani": "Examen EXANI-II", "admissionExams": "Examens d'admission",
+    "paaSubtitle": "College Board · Admission Universitaire",
+    "exaniSubtitle": "Ceneval · Entrée à l'Université",
     "book": "Mes Livres",
     "startQuiz": "Commencer le quiz", "generateQuiz": "Générer un quiz par IA",
     "formTitle": "Générateur de quiz",

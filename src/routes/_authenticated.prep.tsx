@@ -5,7 +5,7 @@ import { useTranslation } from "react-i18next";
 import { useState, useEffect } from "react";
 import { generateQuiz, listBooks, generateBookQuiz, generateCustomQuiz, extractTextFromMedia } from "@/lib/quiz.functions";
 import { AppHeader } from "@/components/AppHeader";
-import { Brain, Calculator, Languages, GraduationCap, BookOpen, Sparkles, X, ArrowUpRight, FlaskConical } from "lucide-react";
+import { Brain, Calculator, Languages, GraduationCap, BookOpen, Sparkles, X, ArrowUpRight, FlaskConical, Award, FileCheck2 } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/prep")({
@@ -152,7 +152,26 @@ function Prep() {
     onError: (e) => toast.error(e instanceof Error ? e.message : "Error"),
   });
 
-  const cats: { Icon: typeof Brain; label: string; cat: Cat | "book"; color: string }[] = [
+  const admissionCats: { Icon: typeof Award; label: string; cat: Cat; color: string; badge: string; desc: string }[] = [
+    {
+      Icon: Award,
+      label: t("prep.paa", { defaultValue: "Examen PAA" }),
+      cat: "paa",
+      color: "bg-blue-500/10 text-blue-600 dark:text-blue-400",
+      badge: "College Board",
+      desc: "Lectura, Redacción y Razonamiento Cuantitativo",
+    },
+    {
+      Icon: GraduationCap,
+      label: t("prep.exani", { defaultValue: "Examen EXANI-II" }),
+      cat: "exani",
+      color: "bg-purple-500/10 text-purple-600 dark:text-purple-400",
+      badge: "Ceneval",
+      desc: "Comprensión Lectora, Redacción y Módulos",
+    },
+  ];
+
+  const generalCats: { Icon: typeof Brain; label: string; cat: Cat | "book"; color: string }[] = [
     { Icon: Brain, label: t("prep.logic"), cat: "logic", color: "bg-primary/10 text-primary" },
     { Icon: Calculator, label: t("prep.math"), cat: "math", color: "bg-gold/20 text-gold-foreground" },
     { Icon: Languages, label: t("prep.language"), cat: "language", color: "bg-success/15 text-success" },
@@ -162,6 +181,8 @@ function Prep() {
     { Icon: Sparkles, label: t("prep.career"), cat: "career", color: "bg-success/15 text-success" },
     { Icon: BookOpen, label: t("prep.book", { defaultValue: "Mis Libros" }), cat: "book", color: "bg-primary/10 text-primary" },
   ];
+
+  const cats = [...admissionCats, ...generalCats];
 
   const openForm = (cat: Cat | "book") => {
     setOpenCat(cat);
@@ -178,24 +199,70 @@ function Prep() {
   return (
     <>
       <AppHeader />
-      <div className="mx-auto max-w-md px-5 pt-4">
-        <h1 className="font-display text-2xl font-bold">{t("prep.title")}</h1>
-        <p className="mt-1 text-sm text-muted-foreground">{t("prep.subtitle")}</p>
+      <div className="mx-auto max-w-md px-5 pt-4 pb-8 space-y-6">
+        <div>
+          <h1 className="font-display text-2xl font-bold">{t("prep.title")}</h1>
+          <p className="mt-1 text-sm text-muted-foreground">{t("prep.subtitle")}</p>
+        </div>
 
-        <div className="mt-6 grid grid-cols-2 gap-3">
-          {cats.map((c) => (
-            <button
-              key={c.cat}
-              onClick={() => openForm(c.cat)}
-              className="flex flex-col items-center gap-2 rounded-2xl border border-border bg-card p-5 text-center shadow-[var(--shadow-card)] transition active:scale-95"
-            >
-              <div className={`grid size-12 place-items-center rounded-2xl ${c.color}`}>
-                <c.Icon className="size-6" />
-              </div>
-              <span className="font-display font-semibold">{c.label}</span>
-              <span className="text-[11px] text-muted-foreground">{t("prep.generateQuiz")}</span>
-            </button>
-          ))}
+        {/* ======================================================== */}
+        {/* APARTADO DESTACADO: EXÁMENES DE ADMISIÓN */}
+        {/* ======================================================== */}
+        <div className="space-y-2.5">
+          <div className="flex items-center justify-between px-0.5">
+            <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+              <Award className="size-3.5 text-primary" /> {t("prep.admissionExams", { defaultValue: "Exámenes de Admisión" })}
+            </span>
+            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-primary/10 text-primary">
+              Universidades
+            </span>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            {admissionCats.map((c) => (
+              <button
+                key={c.cat}
+                onClick={() => openForm(c.cat)}
+                className="group relative flex flex-col items-center gap-2 rounded-2xl border border-primary/20 bg-gradient-to-b from-card to-primary/5 p-4 text-center shadow-[var(--shadow-card)] transition hover:border-primary/50 active:scale-95 cursor-pointer text-left overflow-hidden"
+              >
+                <div className="absolute top-2.5 right-2.5">
+                  <span className="text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-primary/15 text-primary">
+                    {c.badge}
+                  </span>
+                </div>
+                <div className={`grid size-12 place-items-center rounded-2xl ${c.color} group-hover:scale-105 transition-transform mt-1`}>
+                  <c.Icon className="size-6" />
+                </div>
+                <span className="font-display font-bold text-sm text-foreground">{c.label}</span>
+                <span className="text-[10px] text-muted-foreground line-clamp-1">{t("prep.generateQuiz")}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* ======================================================== */}
+        {/* MATERIAS Y HABILIDADES */}
+        {/* ======================================================== */}
+        <div className="space-y-2.5">
+          <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground px-0.5 block">
+            Materias y Habilidades
+          </span>
+
+          <div className="grid grid-cols-2 gap-3">
+            {generalCats.map((c) => (
+              <button
+                key={c.cat}
+                onClick={() => openForm(c.cat)}
+                className="flex flex-col items-center gap-2 rounded-2xl border border-border bg-card p-5 text-center shadow-[var(--shadow-card)] transition active:scale-95 cursor-pointer"
+              >
+                <div className={`grid size-12 place-items-center rounded-2xl ${c.color}`}>
+                  <c.Icon className="size-6" />
+                </div>
+                <span className="font-display font-semibold">{c.label}</span>
+                <span className="text-[11px] text-muted-foreground">{t("prep.generateQuiz")}</span>
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 

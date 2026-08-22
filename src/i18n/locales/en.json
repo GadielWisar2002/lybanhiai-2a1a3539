@@ -118,9 +118,12 @@
     "noResults": "No recommendations yet. Complete your profile to generate them."
   },
   "prep": {
-    "title": "Preparation", "subtitle": "Quizzes for your career and English exams",
+    "title": "Preparation", "subtitle": "Quizzes for your career, admission exams, and English",
     "career": "Career", "english": "English", "toefl": "TOEFL", "cambridge": "Cambridge",
     "logic": "Logic", "math": "Math", "language": "Language", "chemistry": "Chemistry", "modules": "modules",
+    "paa": "PAA Exam", "exani": "EXANI-II Exam", "admissionExams": "Admission Exams",
+    "paaSubtitle": "College Board · University Admission",
+    "exaniSubtitle": "Ceneval · Higher Education Entrance",
     "book": "My Books",
     "startQuiz": "Start quiz", "generateQuiz": "Generate quiz with AI",
     "formTitle": "Quiz Generator",

@@ -3,7 +3,7 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 const GenSchema = z.object({
-  category: z.enum(["career", "toefl", "cambridge", "logic", "math", "language", "chemistry"]),
+  category: z.enum(["career", "toefl", "cambridge", "logic", "math", "language", "chemistry", "paa", "exani"]),
   topic: z.string().max(120),
   language: z.enum(["es", "en", "fr"]).default("es"),
   level: z.string().max(60).optional(),
@@ -20,8 +20,14 @@ export const generateQuiz = createServerFn({ method: "POST" })
 
     const langLabel = data.language === "es" ? "Spanish" : data.language === "fr" ? "French" : "English";
     const levelClause = data.level ? ` Target school level: ${data.level}.` : "";
-    const sys = `Generate a ${data.count}-question multiple-choice quiz in ${langLabel}.${levelClause} Each question has 4 options, exactly one correct.`;
-    const userMsg = `Category: ${data.category}. Topic: ${data.topic}. Make it educational and appropriate for teenagers preparing for university.`;
+    let examClause = "";
+    if (data.category === "paa") {
+      examClause = " This is for the College Board PAA (Prueba de Aptitud Académica) university admission exam. Questions must match the authentic College Board PAA style and format.";
+    } else if (data.category === "exani") {
+      examClause = " This is for the Ceneval EXANI-II university entrance exam. Questions must follow official Ceneval EXANI-II standards and modules.";
+    }
+    const sys = `Generate a ${data.count}-question multiple-choice quiz in ${langLabel}.${levelClause}${examClause} Each question has 4 options, exactly one correct.`;
+    const userMsg = `Category: ${data.category}. Topic: ${data.topic}. Make it educational and appropriate for high school students preparing for university entrance.`;
 
     const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
