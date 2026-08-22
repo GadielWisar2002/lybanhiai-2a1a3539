@@ -5,7 +5,7 @@ import { PAA_OFFICIAL_QUESTIONS } from "./paa-official-bank";
 
 const GenSchema = z.object({
   category: z.enum(["career", "toefl", "cambridge", "logic", "math", "language", "chemistry", "paa", "exani"]),
-  topic: z.string().max(120),
+  topic: z.string().max(500),
   language: z.enum(["es", "en", "fr"]).default("es"),
   level: z.string().max(60).optional(),
   count: z.number().int().min(3).max(10).default(8),
@@ -17,38 +17,40 @@ export const generateQuiz = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
 
-    // 1. Check for authentic pre-verified PAA questions
+    // 1. Check for authentic pre-verified PAA questions with multi-topic support
     if (data.category === "paa") {
-      let filtered = [...PAA_OFFICIAL_QUESTIONS];
       const topicLower = data.topic.toLowerCase();
-      if (topicLower.includes("vocabulario") || topicLower.includes("contexto") || topicLower.includes("inferencia")) {
-        filtered = PAA_OFFICIAL_QUESTIONS.filter(
-          (q) => q.section === "lectura" && (q.subtopic.includes("Vocabulario") || q.subtopic.includes("Inferencias") || q.subtopic.includes("Tema"))
-        );
-      } else if (topicLower.includes("literario") || topicLower.includes("figuras") || topicLower.includes("retóricas")) {
-        filtered = PAA_OFFICIAL_QUESTIONS.filter(
-          (q) => q.section === "lectura" && (q.subtopic.includes("Figuras") || q.subtopic.includes("Géneros"))
-        );
-      } else if (topicLower.includes("redacción") || topicLower.includes("redaccion") || topicLower.includes("operaciones") || topicLower.includes("generalizar") || topicLower.includes("omitir")) {
-        filtered = PAA_OFFICIAL_QUESTIONS.filter((q) => q.section === "redaccion");
-      } else if (topicLower.includes("descuentos") || topicLower.includes("desigualdades") || topicLower.includes("aritmética") || topicLower.includes("aritmetica")) {
-        filtered = PAA_OFFICIAL_QUESTIONS.filter(
-          (q) => q.section === "matematicas" && (q.subtopic.includes("Porcentajes") || q.subtopic.includes("Desigualdades") || q.subtopic.includes("Velocidad"))
-        );
-      } else if (topicLower.includes("álgebra") || topicLower.includes("algebra") || topicLower.includes("geometría") || topicLower.includes("geometria") || topicLower.includes("rectas")) {
-        filtered = PAA_OFFICIAL_QUESTIONS.filter(
-          (q) => q.section === "matematicas" && (q.subtopic.includes("Geometría") || q.subtopic.includes("Pendiente"))
-        );
-      } else if (topicLower.includes("probabilidad") || topicLower.includes("estadística") || topicLower.includes("estadistica")) {
-        filtered = PAA_OFFICIAL_QUESTIONS.filter(
-          (q) => q.section === "matematicas" && (q.subtopic.includes("Estadística") || q.subtopic.includes("Probabilidad"))
-        );
-      } else if (topicLower.includes("inglés") || topicLower.includes("ingles") || topicLower.includes("grammar") || topicLower.includes("english")) {
-        filtered = PAA_OFFICIAL_QUESTIONS.filter((q) => q.section === "ingles");
-      }
+      const selectedQuestions = PAA_OFFICIAL_QUESTIONS.filter((q) => {
+        if (topicLower.includes("simulador") || topicLower.includes("completo")) return true;
+        const subLower = q.subtopic.toLowerCase();
+        const secLower = q.section.toLowerCase();
 
-      if (filtered.length >= 3) {
-        const pool = filtered.length >= data.count ? filtered : PAA_OFFICIAL_QUESTIONS;
+        if (topicLower.includes("vocabulario") || topicLower.includes("inferencia")) {
+          if (secLower === "lectura" && (subLower.includes("vocabulario") || subLower.includes("inferencia") || subLower.includes("tema"))) return true;
+        }
+        if (topicLower.includes("literario") || topicLower.includes("figuras") || topicLower.includes("retórica") || topicLower.includes("retorica")) {
+          if (secLower === "lectura" && (subLower.includes("figuras") || subLower.includes("géneros") || subLower.includes("generos"))) return true;
+        }
+        if (topicLower.includes("redacción") || topicLower.includes("redaccion") || topicLower.includes("operaciones") || topicLower.includes("generalizar") || topicLower.includes("omitir")) {
+          if (secLower === "redaccion") return true;
+        }
+        if (topicLower.includes("descuentos") || topicLower.includes("desigualdades") || topicLower.includes("aritmética") || topicLower.includes("aritmetica")) {
+          if (secLower === "matematicas" && (subLower.includes("porcentajes") || subLower.includes("desigualdades") || subLower.includes("velocidad"))) return true;
+        }
+        if (topicLower.includes("álgebra") || topicLower.includes("algebra") || topicLower.includes("geometría") || topicLower.includes("geometria") || topicLower.includes("rectas")) {
+          if (secLower === "matematicas" && (subLower.includes("geometría") || subLower.includes("geometria") || subLower.includes("pendiente"))) return true;
+        }
+        if (topicLower.includes("probabilidad") || topicLower.includes("estadística") || topicLower.includes("estadistica")) {
+          if (secLower === "matematicas" && (subLower.includes("estadística") || subLower.includes("estadistica") || subLower.includes("probabilidad"))) return true;
+        }
+        if (topicLower.includes("inglés") || topicLower.includes("ingles") || topicLower.includes("grammar") || topicLower.includes("english")) {
+          if (secLower === "ingles") return true;
+        }
+        return false;
+      });
+
+      const pool = selectedQuestions.length >= 3 ? selectedQuestions : PAA_OFFICIAL_QUESTIONS;
+      if (pool.length >= 3) {
         const shuffledQuestions = pool
           .sort(() => 0.5 - Math.random())
           .slice(0, data.count)

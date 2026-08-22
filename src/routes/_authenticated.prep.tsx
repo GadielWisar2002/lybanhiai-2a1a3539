@@ -31,6 +31,7 @@ function Prep() {
   const [level, setLevel] = useState(LEVELS[lang][1].value);
   const [count, setCount] = useState<number>(5);
   const [topic, setTopic] = useState<string>("");
+  const [selectedTopics, setSelectedTopics] = useState<string[]>([]);
   const [selectedSubject, setSelectedSubject] = useState<string>("");
   const [selectedChapterId, setSelectedChapterId] = useState<string>("");
 
@@ -71,10 +72,13 @@ function Prep() {
 
     if (openCat) {
       if (openCat !== "book") {
-        setTopic(TOPICS[openCat][lang][0]);
+        const defaultTopic = TOPICS[openCat][lang][0];
+        setTopic(defaultTopic);
+        setSelectedTopics([defaultTopic]);
       } else {
         setSelectedSubject("");
         setSelectedChapterId("");
+        setSelectedTopics([]);
         
         let initialGrade: "secundaria" | "preparatoria" = "preparatoria";
         let initialObjective: "estudiar" | "admision" = "estudiar";
@@ -203,10 +207,33 @@ function Prep() {
   const openForm = (cat: Cat | "book") => {
     setOpenCat(cat);
     if (cat !== "book") {
-      setTopic(TOPICS[cat][lang][0]);
+      const defaultTopic = TOPICS[cat][lang][0];
+      setTopic(defaultTopic);
+      setSelectedTopics([defaultTopic]);
     } else {
       setTopic("");
+      setSelectedTopics([]);
       setSelectedChapterId("");
+    }
+  };
+
+  const handleToggleTopic = (tp: string) => {
+    setSelectedTopics((prev) => {
+      if (prev.includes(tp)) {
+        if (prev.length === 1) return prev;
+        return prev.filter((t) => t !== tp);
+      } else {
+        return [...prev, tp];
+      }
+    });
+  };
+
+  const handleSelectAllTopics = (cat: Cat) => {
+    const all = TOPICS[cat][lang];
+    if (selectedTopics.length === all.length) {
+      setSelectedTopics([all[0]]);
+    } else {
+      setSelectedTopics([...all]);
     }
   };
 
@@ -890,22 +917,46 @@ function Prep() {
                   </div>
                 )}
 
-                <div className="mt-3 rounded-2xl border border-border p-3">
-                  <span className="block text-[10px] font-semibold tracking-wider text-muted-foreground">
-                    {t("prep.topicPick", { defaultValue: "TEMA (ELIGE UNO)" }).toUpperCase()}
-                  </span>
-                  <div className="mt-2 flex flex-wrap gap-2">
+                <div className="mt-3 rounded-2xl border border-border p-3.5 space-y-2.5">
+                  <div className="flex items-center justify-between">
+                    <span className="block text-[10px] font-bold tracking-wider text-muted-foreground uppercase">
+                      Temas a evaluar ({selectedTopics.length} seleccionados)
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => handleSelectAllTopics(openCat as Cat)}
+                      className="text-[11px] font-bold text-primary hover:underline cursor-pointer"
+                    >
+                      {selectedTopics.length === TOPICS[openCat as Cat][lang].length ? "Deseleccionar" : "Seleccionar todos"}
+                    </button>
+                  </div>
+
+                  <p className="text-[11px] text-muted-foreground">
+                    Elige uno o varios temas para combinarlos en tu quiz:
+                  </p>
+
+                  <div className="flex flex-wrap gap-2 pt-1">
                     {TOPICS[openCat as Cat][lang].map((tp) => {
-                      const on = topic === tp;
+                      const on = selectedTopics.includes(tp);
                       return (
                         <button
                           key={tp}
-                          onClick={() => setTopic(tp)}
-                          className={`rounded-full border px-3 py-1.5 text-xs font-medium transition ${
-                            on ? "border-primary bg-primary/10 text-primary" : "border-border bg-card text-foreground"
+                          type="button"
+                          onClick={() => handleToggleTopic(tp)}
+                          className={`rounded-xl border px-3 py-1.5 text-xs font-medium transition cursor-pointer flex items-center gap-1.5 active:scale-95 text-left ${
+                            on
+                              ? "border-primary bg-primary/10 text-primary font-bold shadow-sm"
+                              : "border-border bg-card text-muted-foreground hover:text-foreground hover:bg-muted/50"
                           }`}
                         >
-                          {tp}
+                          <span
+                            className={`size-3.5 rounded flex items-center justify-center text-[9px] border shrink-0 ${
+                              on ? "bg-primary text-primary-foreground border-primary" : "border-muted-foreground/40"
+                            }`}
+                          >
+                            {on ? "✓" : ""}
+                          </span>
+                          <span>{tp}</span>
                         </button>
                       );
                     })}
@@ -913,16 +964,17 @@ function Prep() {
                 </div>
 
                 <button
-                  disabled={mut.isPending || !topic}
+                  disabled={mut.isPending || selectedTopics.length === 0}
                   onClick={() => {
                     const isAdm = openCat === "paa" || openCat === "exani" || openCat === "toefl" || openCat === "cambridge";
                     const finalLevel = isAdm ? "Admisión Universitaria / Certificación" : level;
-                    mut.mutate({ category: openCat as Cat, topic, level: finalLevel, count });
+                    const combinedTopic = selectedTopics.join(" · ");
+                    mut.mutate({ category: openCat as Cat, topic: combinedTopic, level: finalLevel, count });
                   }}
-                  className="mt-4 inline-flex h-12 w-full items-center justify-center gap-2 rounded-2xl border border-border bg-card font-semibold transition active:scale-[0.99] disabled:opacity-60 cursor-pointer"
+                  className="mt-4 inline-flex h-12 w-full items-center justify-center gap-2 rounded-2xl border border-border bg-card font-semibold transition active:scale-[0.99] disabled:opacity-60 cursor-pointer shadow-sm hover:border-primary/50"
                 >
                   <Sparkles className="size-4" />
-                  {t("prep.generateQuiz")}
+                  {t("prep.generateQuiz")} ({selectedTopics.length} {selectedTopics.length === 1 ? "tema" : "temas"})
                   <ArrowUpRight className="size-4" />
                 </button>
               </>
