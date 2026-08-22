@@ -1,6 +1,6 @@
 {
   "app": { "name": "Lybanhi", "tagline": "Descubre qué estudiar y prepárate para lograrlo" },
-  "nav": { "dashboard": "Inicio", "library": "Biblioteca", "prep": "Prep", "games": "Juegos", "profile": "Perfil" },
+  "nav": { "dashboard": "Inicio", "study": "Estudiar", "library": "Historial", "prep": "Prep", "games": "Juegos", "profile": "Perfil" },
   "common": {
     "continue": "Continuar", "back": "Anterior", "next": "Siguiente", "save": "Guardar", "cancel": "Cancelar",
     "loading": "Cargando…", "error": "Algo salió mal", "retry": "Reintentar",

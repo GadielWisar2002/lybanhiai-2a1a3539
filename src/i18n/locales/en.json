@@ -1,6 +1,6 @@
 {
   "app": { "name": "Lybanhi", "tagline": "Discover what to study and prepare to achieve it" },
-  "nav": { "dashboard": "Home", "library": "Library", "prep": "Prep", "games": "Games", "profile": "Profile" },
+  "nav": { "dashboard": "Home", "study": "Study", "library": "History", "prep": "Prep", "games": "Games", "profile": "Profile" },
   "common": {
     "continue": "Continue", "back": "Back", "next": "Next", "save": "Save", "cancel": "Cancel",
     "loading": "Loading…", "error": "Something went wrong", "retry": "Retry",

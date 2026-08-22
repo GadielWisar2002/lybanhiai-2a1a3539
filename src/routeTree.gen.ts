@@ -17,6 +17,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRecommendationsRouteImport } from './routes/_authenticated.recommendations'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated.profile'
 import { Route as AuthenticatedPrepRouteImport } from './routes/_authenticated.prep'
+import { Route as AuthenticatedStudyRouteImport } from './routes/_authenticated.study'
 import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authenticated.onboarding'
 import { Route as AuthenticatedLibraryRouteImport } from './routes/_authenticated.library'
 import { Route as AuthenticatedGamesRouteImport } from './routes/_authenticated.games'
@@ -83,6 +84,11 @@ const AuthenticatedProfileRoute = AuthenticatedProfileRouteImport.update({
 const AuthenticatedPrepRoute = AuthenticatedPrepRouteImport.update({
   id: '/prep',
   path: '/prep',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedStudyRoute = AuthenticatedStudyRouteImport.update({
+  id: '/study',
+  path: '/study',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
 const AuthenticatedOnboardingRoute = AuthenticatedOnboardingRouteImport.update({
@@ -254,6 +260,7 @@ export interface FileRoutesByFullPath {
   '/library': typeof AuthenticatedLibraryRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/prep': typeof AuthenticatedPrepRoute
+  '/study': typeof AuthenticatedStudyRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/recommendations': typeof AuthenticatedRecommendationsRoute
   '/games/battle-royale': typeof AuthenticatedGamesBattleRoyaleRoute
@@ -290,6 +297,7 @@ export interface FileRoutesByTo {
   '/library': typeof AuthenticatedLibraryRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/prep': typeof AuthenticatedPrepRoute
+  '/study': typeof AuthenticatedStudyRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/recommendations': typeof AuthenticatedRecommendationsRoute
   '/games/battle-royale': typeof AuthenticatedGamesBattleRoyaleRoute
@@ -328,6 +336,7 @@ export interface FileRoutesById {
   '/_authenticated/library': typeof AuthenticatedLibraryRoute
   '/_authenticated/onboarding': typeof AuthenticatedOnboardingRoute
   '/_authenticated/prep': typeof AuthenticatedPrepRoute
+  '/_authenticated/study': typeof AuthenticatedStudyRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/_authenticated/recommendations': typeof AuthenticatedRecommendationsRoute
   '/_authenticated/games/battle-royale': typeof AuthenticatedGamesBattleRoyaleRoute
@@ -366,6 +375,7 @@ export interface FileRouteTypes {
     | '/library'
     | '/onboarding'
     | '/prep'
+    | '/study'
     | '/profile'
     | '/recommendations'
     | '/games/battle-royale'
@@ -402,6 +412,7 @@ export interface FileRouteTypes {
     | '/library'
     | '/onboarding'
     | '/prep'
+    | '/study'
     | '/profile'
     | '/recommendations'
     | '/games/battle-royale'
@@ -439,6 +450,7 @@ export interface FileRouteTypes {
     | '/_authenticated/library'
     | '/_authenticated/onboarding'
     | '/_authenticated/prep'
+    | '/_authenticated/study'
     | '/_authenticated/profile'
     | '/_authenticated/recommendations'
     | '/_authenticated/games/battle-royale'
@@ -789,6 +801,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedLibraryRoute: typeof AuthenticatedLibraryRoute
   AuthenticatedOnboardingRoute: typeof AuthenticatedOnboardingRoute
   AuthenticatedPrepRoute: typeof AuthenticatedPrepRoute
+  AuthenticatedStudyRoute: typeof AuthenticatedStudyRoute
   AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
   AuthenticatedRecommendationsRoute: typeof AuthenticatedRecommendationsRoute
   AuthenticatedPrepQuizQuizIdRoute: typeof AuthenticatedPrepQuizQuizIdRoute
@@ -801,6 +814,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedLibraryRoute: AuthenticatedLibraryRoute,
   AuthenticatedOnboardingRoute: AuthenticatedOnboardingRoute,
   AuthenticatedPrepRoute: AuthenticatedPrepRoute,
+  AuthenticatedStudyRoute: AuthenticatedStudyRoute,
   AuthenticatedProfileRoute: AuthenticatedProfileRoute,
   AuthenticatedRecommendationsRoute: AuthenticatedRecommendationsRoute,
   AuthenticatedPrepQuizQuizIdRoute: AuthenticatedPrepQuizQuizIdRoute,

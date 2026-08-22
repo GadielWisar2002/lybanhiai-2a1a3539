@@ -1,11 +1,11 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useTranslation } from "react-i18next";
 import { useState, useEffect } from "react";
 import { generateQuiz, listBooks, generateBookQuiz, generateCustomQuiz, extractTextFromMedia } from "@/lib/quiz.functions";
 import { AppHeader } from "@/components/AppHeader";
-import { Brain, Calculator, Languages, GraduationCap, BookOpen, Sparkles, X, ArrowUpRight, FlaskConical, Award, FileCheck2, Globe } from "lucide-react";
+import { Brain, Calculator, Languages, GraduationCap, BookOpen, Sparkles, X, ArrowUpRight, FlaskConical, Award, FileCheck2, Globe, ArrowRight } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/prep")({
@@ -247,6 +247,29 @@ function Prep() {
           <h1 className="font-display text-2xl font-bold">{t("prep.title")}</h1>
           <p className="mt-1 text-sm text-muted-foreground">{t("prep.subtitle")}</p>
         </div>
+
+        {/* ======================================================== */}
+        {/* BANNER DIRECTO AL CENTRO DE ESTUDIO */}
+        {/* ======================================================== */}
+        <Link
+          to="/study"
+          className="flex items-center justify-between p-3.5 rounded-2xl border border-primary/20 bg-gradient-to-r from-primary/10 via-primary/5 to-card hover:border-primary/40 transition shadow-sm group cursor-pointer"
+        >
+          <div className="flex items-center gap-3">
+            <div className="grid size-10 place-items-center rounded-xl bg-primary/15 text-primary shrink-0">
+              <BookOpen className="size-5" />
+            </div>
+            <div>
+              <span className="block text-xs font-bold text-foreground group-hover:text-primary transition-colors">
+                ¿Quieres repasar antes del examen?
+              </span>
+              <span className="block text-[11px] text-muted-foreground">
+                Lee las explicaciones y fórmulas en el Centro de Estudio 📖
+              </span>
+            </div>
+          </div>
+          <ArrowRight className="size-4 text-primary group-hover:translate-x-1 transition-transform shrink-0" />
+        </Link>
 
         {/* ======================================================== */}
         {/* APARTADO DESTACADO: EXÁMENES DE ADMISIÓN */}

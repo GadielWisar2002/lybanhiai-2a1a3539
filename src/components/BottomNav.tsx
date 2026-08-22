@@ -6,7 +6,7 @@ export function BottomNav() {
   const { t } = useTranslation();
   const items = [
     { to: "/dashboard", icon: Home, label: t("nav.dashboard") },
-    { to: "/library", icon: BookOpen, label: t("nav.library") },
+    { to: "/study", icon: BookOpen, label: t("nav.study", { defaultValue: "Estudiar" }) },
     { to: "/prep", icon: NotebookPen, label: t("nav.prep") },
     { to: "/games", icon: Gamepad2, label: t("nav.games") },
     { to: "/profile", icon: User, label: t("nav.profile") },
