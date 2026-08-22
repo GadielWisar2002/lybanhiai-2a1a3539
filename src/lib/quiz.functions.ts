@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { PAA_OFFICIAL_QUESTIONS } from "./paa-official-bank";
+import { EXANI_OFFICIAL_QUESTIONS } from "./exani-official-bank";
 
 const GenSchema = z.object({
   category: z.enum(["career", "toefl", "cambridge", "logic", "math", "language", "chemistry", "paa", "exani"]),
@@ -81,6 +82,88 @@ export const generateQuiz = createServerFn({ method: "POST" })
       }
     }
 
+    // 2. Check for authentic pre-verified EXANI-II questions with multi-topic support
+    if (data.category === "exani") {
+      const topicLower = data.topic.toLowerCase();
+      const selectedQuestions = EXANI_OFFICIAL_QUESTIONS.filter((q) => {
+        if (topicLower.includes("simulador") || topicLower.includes("completo") || topicLower.includes("general")) return true;
+        const subLower = q.subtopic.toLowerCase();
+        const secLower = q.section.toLowerCase();
+
+        if (topicLower.includes("comprensión") || topicLower.includes("comprension") || topicLower.includes("lectora")) {
+          if (secLower.includes("comprension") || subLower.includes("comprensión") || subLower.includes("lectora")) return true;
+        }
+        if (topicLower.includes("redacción") || topicLower.includes("redaccion") || topicLower.includes("indirecta")) {
+          if (secLower.includes("redaccion") || subLower.includes("redacción") || subLower.includes("indirecta")) return true;
+        }
+        if (topicLower.includes("pensamiento") || topicLower.includes("matemático") || topicLower.includes("matematico")) {
+          if (secLower.includes("pensamiento") || subLower.includes("pensamiento")) return true;
+        }
+        if (topicLower.includes("inglés") || topicLower.includes("ingles") || topicLower.includes("diagnóstico") || topicLower.includes("diagnostico") || topicLower.includes("b1")) {
+          if (secLower.includes("ingles") || subLower.includes("inglés")) return true;
+        }
+        if (topicLower.includes("salud") || topicLower.includes("biología") || topicLower.includes("biologia") || topicLower.includes("premedicina") || topicLower.includes("médico")) {
+          if (secLower.includes("salud") || secLower.includes("biologia") || subLower.includes("salud") || subLower.includes("biología")) return true;
+        }
+        if (topicLower.includes("ingenierías") || topicLower.includes("ingenierias") || topicLower.includes("física") || topicLower.includes("fisica")) {
+          if (secLower.includes("fisica") || subLower.includes("física") || subLower.includes("ingenierías")) return true;
+        }
+        if (topicLower.includes("administración") || topicLower.includes("administracion") || topicLower.includes("economía") || topicLower.includes("economia")) {
+          if (secLower.includes("administracion") || secLower.includes("economia") || subLower.includes("administración") || subLower.includes("economía")) return true;
+        }
+        if (topicLower.includes("derecho") || topicLower.includes("sociales") || topicLower.includes("social")) {
+          if (secLower.includes("derecho") || secLower.includes("sociales") || subLower.includes("derecho") || subLower.includes("sociales")) return true;
+        }
+        if (topicLower.includes("filosofía") || topicLower.includes("filosofia") || topicLower.includes("literatura")) {
+          if (secLower.includes("filosofia") || secLower.includes("literatura") || subLower.includes("filosofía") || subLower.includes("literatura")) return true;
+        }
+        if (topicLower.includes("aritmética") || topicLower.includes("aritmetica") || topicLower.includes("financieras") || topicLower.includes("financiera")) {
+          if (secLower.includes("aritmetica") || secLower.includes("financieras") || subLower.includes("aritmética") || subLower.includes("financieras")) return true;
+        }
+        if (topicLower.includes("probabilidad") || topicLower.includes("estadística") || topicLower.includes("estadistica")) {
+          if (secLower.includes("probabilidad") || subLower.includes("probabilidad") || subLower.includes("estadística")) return true;
+        }
+        if (topicLower.includes("química") || topicLower.includes("quimica") || topicLower.includes("experimentales")) {
+          if (secLower.includes("quimica") || secLower.includes("experimentales") || subLower.includes("química") || subLower.includes("experimentales")) return true;
+        }
+        if (topicLower.includes("psicología") || topicLower.includes("psicologia")) {
+          if (secLower.includes("psicologia") || subLower.includes("psicología")) return true;
+        }
+        return false;
+      });
+
+      const pool = selectedQuestions.length >= 3 ? selectedQuestions : EXANI_OFFICIAL_QUESTIONS;
+      if (pool.length >= 3) {
+        const shuffledQuestions = pool
+          .sort(() => 0.5 - Math.random())
+          .slice(0, data.count)
+          .map((item) => {
+            const correctOpt = item.options[item.correctIndex];
+            const opts = [...item.options].sort(() => 0.5 - Math.random());
+            return {
+              q: item.q,
+              options: opts,
+              correctIndex: opts.indexOf(correctOpt),
+              explanation: item.explanation,
+            };
+          });
+
+        const { data: row, error } = await supabase
+          .from("quizzes")
+          .insert({
+            user_id: userId,
+            category: data.category,
+            topic: data.topic,
+            language: data.language,
+            questions: shuffledQuestions as never,
+          })
+          .select("id")
+          .single();
+
+        if (!error && row) return { quizId: row.id };
+      }
+    }
+
     const apiKey = process.env.LOVABLE_API_KEY;
     if (!apiKey) throw new Error("AI gateway not configured");
 
@@ -95,7 +178,9 @@ Model the questions strictly on authentic College Board PAA exercise styles:
 - MATEMÁTICAS: Percentage discounts with final price, linear inequalities (e.g. 2x - 3 < 7), opposing speed/travel problems, perimeter with algebraic expressions, line slopes m = (y2-y1)/(x2-x1), missing terms for an average, and classic card/dice probability.
 - INGLÉS: Subject-verb agreement (goes), proper negation (doesn't like), short schedule texts with detail & inference questions, and combining sentences concisely.`;
     } else if (data.category === "exani") {
-      examClause = " This is for the Ceneval EXANI-II university entrance exam. Questions must follow official Ceneval EXANI-II standards and modules.";
+      examClause = ` This is strictly for the Ceneval EXANI-II (2025) university admission exam.
+Each question must have exactly 3 multiple-choice options (A, B, C), exactly one correct.
+Questions must strictly follow the official Guía para el sustentante EXANI-II Ceneval (Comprensión lectora, Redacción indirecta con normativa del DPD 2005, Pensamiento matemático, Inglés diagnóstico B1, y módulos específicos como Ciencias de la salud, Premedicina, Ingenierías, Administración, Derecho, etc.).`;
     }
     const sys = `Generate a ${data.count}-question multiple-choice quiz in ${langLabel}.${levelClause}${examClause} Each question has 4 options, exactly one correct. Randomize the position of the correct answer among options (A, B, C, D).`;
     const userMsg = `Category: ${data.category}. Topic: ${data.topic}. Make it educational and appropriate for high school students preparing for university entrance.`;
