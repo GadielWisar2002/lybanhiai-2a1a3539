@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { PAA_OFFICIAL_QUESTIONS } from "./paa-official-bank";
 
 const GenSchema = z.object({
   category: z.enum(["career", "toefl", "cambridge", "logic", "math", "language", "chemistry", "paa", "exani"]),
@@ -15,6 +16,69 @@ export const generateQuiz = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => GenSchema.parse(input))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
+
+    // 1. Check for authentic pre-verified PAA questions
+    if (data.category === "paa") {
+      let filtered = [...PAA_OFFICIAL_QUESTIONS];
+      const topicLower = data.topic.toLowerCase();
+      if (topicLower.includes("vocabulario") || topicLower.includes("contexto") || topicLower.includes("inferencia")) {
+        filtered = PAA_OFFICIAL_QUESTIONS.filter(
+          (q) => q.section === "lectura" && (q.subtopic.includes("Vocabulario") || q.subtopic.includes("Inferencias") || q.subtopic.includes("Tema"))
+        );
+      } else if (topicLower.includes("literario") || topicLower.includes("figuras") || topicLower.includes("retóricas")) {
+        filtered = PAA_OFFICIAL_QUESTIONS.filter(
+          (q) => q.section === "lectura" && (q.subtopic.includes("Figuras") || q.subtopic.includes("Géneros"))
+        );
+      } else if (topicLower.includes("redacción") || topicLower.includes("redaccion") || topicLower.includes("operaciones") || topicLower.includes("generalizar") || topicLower.includes("omitir")) {
+        filtered = PAA_OFFICIAL_QUESTIONS.filter((q) => q.section === "redaccion");
+      } else if (topicLower.includes("descuentos") || topicLower.includes("desigualdades") || topicLower.includes("aritmética") || topicLower.includes("aritmetica")) {
+        filtered = PAA_OFFICIAL_QUESTIONS.filter(
+          (q) => q.section === "matematicas" && (q.subtopic.includes("Porcentajes") || q.subtopic.includes("Desigualdades") || q.subtopic.includes("Velocidad"))
+        );
+      } else if (topicLower.includes("álgebra") || topicLower.includes("algebra") || topicLower.includes("geometría") || topicLower.includes("geometria") || topicLower.includes("rectas")) {
+        filtered = PAA_OFFICIAL_QUESTIONS.filter(
+          (q) => q.section === "matematicas" && (q.subtopic.includes("Geometría") || q.subtopic.includes("Pendiente"))
+        );
+      } else if (topicLower.includes("probabilidad") || topicLower.includes("estadística") || topicLower.includes("estadistica")) {
+        filtered = PAA_OFFICIAL_QUESTIONS.filter(
+          (q) => q.section === "matematicas" && (q.subtopic.includes("Estadística") || q.subtopic.includes("Probabilidad"))
+        );
+      } else if (topicLower.includes("inglés") || topicLower.includes("ingles") || topicLower.includes("grammar") || topicLower.includes("english")) {
+        filtered = PAA_OFFICIAL_QUESTIONS.filter((q) => q.section === "ingles");
+      }
+
+      if (filtered.length >= 3) {
+        const pool = filtered.length >= data.count ? filtered : PAA_OFFICIAL_QUESTIONS;
+        const shuffledQuestions = pool
+          .sort(() => 0.5 - Math.random())
+          .slice(0, data.count)
+          .map((item) => {
+            const correctOpt = item.options[item.correctIndex];
+            const opts = [...item.options].sort(() => 0.5 - Math.random());
+            return {
+              q: item.q,
+              options: opts,
+              correctIndex: opts.indexOf(correctOpt),
+              explanation: item.explanation,
+            };
+          });
+
+        const { data: row, error } = await supabase
+          .from("quizzes")
+          .insert({
+            user_id: userId,
+            category: data.category,
+            topic: data.topic,
+            language: data.language,
+            questions: shuffledQuestions as never,
+          })
+          .select("id")
+          .single();
+
+        if (!error && row) return { quizId: row.id };
+      }
+    }
+
     const apiKey = process.env.LOVABLE_API_KEY;
     if (!apiKey) throw new Error("AI gateway not configured");
 
@@ -22,11 +86,16 @@ export const generateQuiz = createServerFn({ method: "POST" })
     const levelClause = data.level ? ` Target school level: ${data.level}.` : "";
     let examClause = "";
     if (data.category === "paa") {
-      examClause = " This is for the College Board PAA (Prueba de Aptitud Académica) university admission exam. Questions must match the authentic College Board PAA style and format.";
+      examClause = ` This is strictly for the College Board PAA (Prueba de Aptitud Académica) university admission exam.
+Model the questions strictly on authentic College Board PAA exercise styles:
+- LECTURA: Short reading passages with bolded words for vocabulary in context ("la palabra 'X' se usa en el sentido de..."), implicit meaning / inferences ("la expresión 'Y' sugiere que..."), and literary analysis (personificación, símil, cuento vs ensayo).
+- REDACCIÓN: Numbered sentence segments (1) ... (2) ... (3) ... with questions identifying operations: generalización, omisión sin pérdida de información, or adición de lenguaje figurado.
+- MATEMÁTICAS: Percentage discounts with final price, linear inequalities (e.g. 2x - 3 < 7), opposing speed/travel problems, perimeter with algebraic expressions, line slopes m = (y2-y1)/(x2-x1), missing terms for an average, and classic card/dice probability.
+- INGLÉS: Subject-verb agreement (goes), proper negation (doesn't like), short schedule texts with detail & inference questions, and combining sentences concisely.`;
     } else if (data.category === "exani") {
       examClause = " This is for the Ceneval EXANI-II university entrance exam. Questions must follow official Ceneval EXANI-II standards and modules.";
     }
-    const sys = `Generate a ${data.count}-question multiple-choice quiz in ${langLabel}.${levelClause}${examClause} Each question has 4 options, exactly one correct.`;
+    const sys = `Generate a ${data.count}-question multiple-choice quiz in ${langLabel}.${levelClause}${examClause} Each question has 4 options, exactly one correct. Randomize the position of the correct answer among options (A, B, C, D).`;
     const userMsg = `Category: ${data.category}. Topic: ${data.topic}. Make it educational and appropriate for high school students preparing for university entrance.`;
 
     const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
