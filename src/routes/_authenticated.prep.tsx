@@ -834,38 +834,61 @@ function Prep() {
               </div>
             ) : (
               <>
-                <div className="mt-5 grid grid-cols-2 gap-3">
-                  <label className="rounded-2xl border border-border p-3">
-                    <span className="block text-[10px] font-semibold tracking-wider text-muted-foreground">
-                      {t("prep.level", { defaultValue: "NIVEL ESCOLAR" }).toUpperCase()}
-                    </span>
-                    <select
-                      value={level}
-                      onChange={(e) => setLevel(e.target.value)}
-                      className="mt-1 w-full bg-transparent text-sm font-medium outline-none"
-                    >
-                      {LEVELS[lang].map((l) => (
-                        <option key={l.value} value={l.value}>{l.label}</option>
-                      ))}
-                    </select>
-                  </label>
-                  <label className="rounded-2xl border border-border p-3">
-                    <span className="block text-[10px] font-semibold tracking-wider text-muted-foreground">
-                      {t("prep.count", { defaultValue: "NÚMERO DE PREGUNTAS" }).toUpperCase()}
-                    </span>
-                    <select
-                      value={count}
-                      onChange={(e) => setCount(Number(e.target.value))}
-                      className="mt-1 w-full bg-transparent text-sm font-medium outline-none"
-                    >
-                      {COUNTS.map((n) => (
-                        <option key={n} value={n}>
-                          {n} {t("prep.questionsWord", { defaultValue: "preguntas" })}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-                </div>
+                {openCat === "paa" || openCat === "exani" || openCat === "toefl" || openCat === "cambridge" ? (
+                  /* EXÁMENES DE ADMISIÓN: Sin selector de nivel escolar */
+                  <div className="mt-5">
+                    <label className="block rounded-2xl border border-border p-3.5 bg-card/60">
+                      <span className="block text-[10px] font-semibold tracking-wider text-muted-foreground uppercase">
+                        {t("prep.count", { defaultValue: "NÚMERO DE PREGUNTAS" })}
+                      </span>
+                      <select
+                        value={count}
+                        onChange={(e) => setCount(Number(e.target.value))}
+                        className="mt-1 w-full bg-transparent text-sm font-medium outline-none cursor-pointer"
+                      >
+                        {COUNTS.map((n) => (
+                          <option key={n} value={n}>
+                            {n} {t("prep.questionsWord", { defaultValue: "preguntas" })}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                  </div>
+                ) : (
+                  /* MATERIAS GENERALES: Con nivel escolar y número de preguntas */
+                  <div className="mt-5 grid grid-cols-2 gap-3">
+                    <label className="rounded-2xl border border-border p-3">
+                      <span className="block text-[10px] font-semibold tracking-wider text-muted-foreground">
+                        {t("prep.level", { defaultValue: "NIVEL ESCOLAR" }).toUpperCase()}
+                      </span>
+                      <select
+                        value={level}
+                        onChange={(e) => setLevel(e.target.value)}
+                        className="mt-1 w-full bg-transparent text-sm font-medium outline-none cursor-pointer"
+                      >
+                        {LEVELS[lang].map((l) => (
+                          <option key={l.value} value={l.value}>{l.label}</option>
+                        ))}
+                      </select>
+                    </label>
+                    <label className="rounded-2xl border border-border p-3">
+                      <span className="block text-[10px] font-semibold tracking-wider text-muted-foreground">
+                        {t("prep.count", { defaultValue: "NÚMERO DE PREGUNTAS" }).toUpperCase()}
+                      </span>
+                      <select
+                        value={count}
+                        onChange={(e) => setCount(Number(e.target.value))}
+                        className="mt-1 w-full bg-transparent text-sm font-medium outline-none cursor-pointer"
+                      >
+                        {COUNTS.map((n) => (
+                          <option key={n} value={n}>
+                            {n} {t("prep.questionsWord", { defaultValue: "preguntas" })}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                  </div>
+                )}
 
                 <div className="mt-3 rounded-2xl border border-border p-3">
                   <span className="block text-[10px] font-semibold tracking-wider text-muted-foreground">
@@ -891,7 +914,11 @@ function Prep() {
 
                 <button
                   disabled={mut.isPending || !topic}
-                  onClick={() => mut.mutate({ category: openCat as Cat, topic, level, count })}
+                  onClick={() => {
+                    const isAdm = openCat === "paa" || openCat === "exani" || openCat === "toefl" || openCat === "cambridge";
+                    const finalLevel = isAdm ? "Admisión Universitaria / Certificación" : level;
+                    mut.mutate({ category: openCat as Cat, topic, level: finalLevel, count });
+                  }}
                   className="mt-4 inline-flex h-12 w-full items-center justify-center gap-2 rounded-2xl border border-border bg-card font-semibold transition active:scale-[0.99] disabled:opacity-60 cursor-pointer"
                 >
                   <Sparkles className="size-4" />
