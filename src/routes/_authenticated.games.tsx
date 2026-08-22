@@ -373,7 +373,7 @@ function GamesHub() {
                   styleColor: "bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20",
                 }
               ].map((game) => {
-                const isUnlocked = (isDeveloper && devMode) || unlockedGames.includes(game.id);
+                const isUnlocked = game.cost === 0 || (isDeveloper && devMode) || unlockedGames.includes(game.id);
                 return (
                   <div key={game.id} className="relative rounded-3xl border border-border bg-card p-5 shadow-[var(--shadow-card)] flex flex-col justify-between overflow-hidden">
                     <div>
