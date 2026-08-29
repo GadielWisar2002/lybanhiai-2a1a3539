@@ -199,10 +199,10 @@ const WORLDS: Record<WorldId, WorldTheme> = {
 };
 
 const LEVELS_CONFIG = [
-  { level: 1, name: "Principiante", reqQuestions: 5, timePerQ: 10, creatureSpeed: 0.9, bonusCoins: 5, bonusXp: 50 },
-  { level: 2, name: "Explorador", reqQuestions: 8, timePerQ: 8, creatureSpeed: 1.15, bonusCoins: 10, bonusXp: 100 },
-  { level: 3, name: "Experto", reqQuestions: 10, timePerQ: 7, creatureSpeed: 1.35, bonusCoins: 15, bonusXp: 175 },
-  { level: 4, name: "Maestro", reqQuestions: 12, timePerQ: 5, creatureSpeed: 1.6, bonusCoins: 25, bonusXp: 250 },
+  { level: 1, name: "Principiante", reqQuestions: 5, timePerQ: 10, creatureSpeed: 0.8, bonusCoins: 5, bonusXp: 50 },
+  { level: 2, name: "Explorador", reqQuestions: 8, timePerQ: 8, creatureSpeed: 1.0, bonusCoins: 10, bonusXp: 100 },
+  { level: 3, name: "Experto", reqQuestions: 10, timePerQ: 7, creatureSpeed: 1.2, bonusCoins: 15, bonusXp: 175 },
+  { level: 4, name: "Maestro", reqQuestions: 12, timePerQ: 5, creatureSpeed: 1.5, bonusCoins: 25, bonusXp: 250 },
 ];
 
 function SmartEscapeGame() {
@@ -215,7 +215,7 @@ function SmartEscapeGame() {
   const analyzeMaterialFn = useServerFn(analyzeStudyMaterial);
   const generateQuestionsFn = useServerFn(generateStudyGameQuestions);
 
-  // Vistas de la aplicación
+  // Vistas
   const [screen, setScreen] = useState<
     "home" | "world_select" | "material_select" | "level_map" | "upload" | "playing" | "gameover" | "victory" | "closet"
   >("home");
@@ -279,7 +279,7 @@ function SmartEscapeGame() {
   const [playerLane, setPlayerLane] = useState<number>(1); // 0 = Left, 1 = Center, 2 = Right
   const [isJumping, setIsJumping] = useState(false);
   const [playerDistanceMeters, setPlayerDistanceMeters] = useState(0);
-  const [creatureDistanceMeters, setCreatureDistanceMeters] = useState(40); // 0 (caught) to 80m
+  const [creatureDistanceMeters, setCreatureDistanceMeters] = useState(50); // 0 to 80m
   const [playerSpeed, setPlayerSpeed] = useState(1.0);
   const [gameXp, setGameXp] = useState(0);
   const [collectedCoins, setCollectedCoins] = useState(0);
@@ -382,7 +382,7 @@ function SmartEscapeGame() {
     }
   };
 
-  // Jump trigger
+  // Jump
   const triggerJump = useCallback(() => {
     if (isJumping) return;
     setIsJumping(true);
@@ -419,9 +419,7 @@ function SmartEscapeGame() {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [screen, isPaused, selectedOption, currentQuestion, triggerJump]);
 
-  // ========================================================
-  // RECONOCER MATERIAL DE ESTUDIO GUARDADO PARA LA MATERIA
-  // ========================================================
+  // Identificar materiales guardados
   const getSubjectMaterials = (worldId: WorldId): SubjectTopic[] => {
     const subject = SCHOOL_SUBJECTS.find((s) => s.id === worldId);
     if (subject && subject.topics.length > 0) {
@@ -430,9 +428,7 @@ function SmartEscapeGame() {
     return [];
   };
 
-  // ========================================================
-  // GENERAR PREGUNTAS 100% FIEL AL MATERIAL PROVISTO
-  // ========================================================
+  // Generar preguntas estrictas
   const buildQuestionsFromMaterial = (
     worldId: WorldId,
     topicId: string,
@@ -442,7 +438,7 @@ function SmartEscapeGame() {
 
     if (worldId === "paa") {
       rawQuestions = PAA_OFFICIAL_QUESTIONS.map((q, idx) => {
-        let opts: [string, string, string, string] = [
+        const opts: [string, string, string, string] = [
           q.options[0] || "Opción A",
           q.options[1] || "Opción B",
           q.options[2] || "Opción C",
@@ -460,7 +456,7 @@ function SmartEscapeGame() {
       });
     } else if (worldId === "exani") {
       rawQuestions = EXANI_OFFICIAL_QUESTIONS.map((q, idx) => {
-        let opts: [string, string, string, string] = [
+        const opts: [string, string, string, string] = [
           q.options[0] || "Opción A",
           q.options[1] || "Opción B",
           q.options[2] || "Opción C",
@@ -482,8 +478,7 @@ function SmartEscapeGame() {
         const topic = subject.topics.find((t) => t.id === topicId) || subject.topics[0];
         if (topic && topic.presetQuestions && topic.presetQuestions.length > 0) {
           rawQuestions = topic.presetQuestions.map((pq, idx) => {
-            // Asegurar exactamente 4 opciones
-            let opts: [string, string, string, string] = [
+            const opts: [string, string, string, string] = [
               pq.options[0] || "A",
               pq.options[1] || "B",
               pq.options[2] || "C",
@@ -503,18 +498,12 @@ function SmartEscapeGame() {
       }
     }
 
-    if (rawQuestions.length === 0) {
-      return [];
-    }
-
-    // Mezclar y tomar la cantidad solicitada
+    if (rawQuestions.length === 0) return [];
     const shuffled = [...rawQuestions].sort(() => 0.5 - Math.random());
     return shuffled.slice(0, count);
   };
 
-  // ========================================================
-  // INICIAR PARTIDA DIRECTAMENTE CON EL MATERIAL
-  // ========================================================
+  // Iniciar partida con el material
   const startGameWithMaterial = async (worldId: WorldId, topicId: string, levelNum: number) => {
     const lvlConfig = LEVELS_CONFIG[levelNum - 1] || LEVELS_CONFIG[0];
     let questions: GameQuestion[] = [];
@@ -557,7 +546,7 @@ function SmartEscapeGame() {
           });
         }
         toast.success("¡Preguntas generadas desde tu material!", { id: toastId });
-      } catch (err) {
+      } catch {
         toast.error("Error al procesar con IA.", { id: toastId });
         setIsGeneratingAi(false);
         return;
@@ -573,7 +562,6 @@ function SmartEscapeGame() {
       return;
     }
 
-    // Inicializar estado de la partida
     setSelectedWorld(worldId);
     setSelectedTopicId(topicId);
     setSelectedLevel(levelNum);
@@ -590,7 +578,7 @@ function SmartEscapeGame() {
     setPlayerLane(1);
     setIsJumping(false);
     setPlayerDistanceMeters(0);
-    setCreatureDistanceMeters(45);
+    setCreatureDistanceMeters(50); // Inicia a 50 metros de distancia
     setPlayerSpeed(1.0);
     setGameXp(0);
     setCollectedCoins(0);
@@ -609,9 +597,7 @@ function SmartEscapeGame() {
     setScreen("playing");
   };
 
-  // ========================================================
-  // CUENTA REGRESIVA DE PREGUNTAS (TICKER)
-  // ========================================================
+  // Temporizador de preguntas
   useEffect(() => {
     if (screen !== "playing" || isPaused || selectedOption !== null) return;
 
@@ -634,9 +620,7 @@ function SmartEscapeGame() {
     handleAnswerOption(-1);
   };
 
-  // ========================================================
-  // RESPUESTA DE PREGUNTA & EFECTOS EN GAMEPLAY
-  // ========================================================
+  // Respuesta
   const handleAnswerOption = (optionIndex: number) => {
     if (selectedOption !== null || !currentQuestion) return;
     setSelectedOption(optionIndex);
@@ -656,7 +640,6 @@ function SmartEscapeGame() {
       setGameXp((xp) => xp + 50 + streak * 10);
       setCollectedCoins((c) => c + 2);
 
-      // Boost inmediato de velocidad y alejamiento del perseguidor
       setPlayerSpeed((sp) => Math.min(2.5, sp + 0.4));
       setCreatureDistanceMeters((dist) => Math.min(75, dist + 18));
       toast.success("¡CORRECTO! ⚡ +50 XP y velocidad aumentada", { duration: 1200 });
@@ -672,10 +655,9 @@ function SmartEscapeGame() {
         setStreak(0);
         setLives((l) => Math.max(0, l - 1));
 
-        // Personaje pierde velocidad y la criatura se acerca
-        setPlayerSpeed(0.6);
+        setPlayerSpeed(0.7);
         setCreatureDistanceMeters((dist) => {
-          const next = dist - 20;
+          const next = dist - 15;
           if (next <= 0) {
             triggerGameOver();
             return 0;
@@ -694,7 +676,6 @@ function SmartEscapeGame() {
       return;
     }
 
-    // Avanzar a la siguiente pregunta automáticamente tras 1 segundo
     setTimeout(() => {
       const nextIdx = currentQIndex + 1;
       if (nextIdx >= questionsPool.length) {
@@ -707,7 +688,7 @@ function SmartEscapeGame() {
         setSelectedOption(null);
         setAnswerFeedback(null);
       }
-    }, 1100);
+    }, 1000);
   };
 
   const triggerGameOver = () => {
@@ -748,9 +729,7 @@ function SmartEscapeGame() {
     }
   };
 
-  // ========================================================
-  // MOTOR CANVAS RUNNER 3D PERSPECTIVA (60 FPS)
-  // ========================================================
+  // Motor Canvas 3D Runner (Ajuste dinámico de resolución sin zoom)
   useEffect(() => {
     if (screen !== "playing") return;
 
@@ -771,14 +750,26 @@ function SmartEscapeGame() {
 
     let trackItems: TrackItem[] = [
       { lane: 0, z: 0.2, type: "coin" },
-      { lane: 1, z: 0.4, type: "obstacle" },
-      { lane: 2, z: 0.6, type: "star" },
-      { lane: 1, z: 0.85, type: "turbo" },
+      { lane: 1, z: 0.45, type: "obstacle" },
+      { lane: 2, z: 0.7, type: "star" },
+      { lane: 1, z: 0.9, type: "turbo" },
     ];
+
+    const resizeCanvas = () => {
+      if (!canvas) return;
+      const rect = canvas.getBoundingClientRect();
+      if (rect.width > 0 && rect.height > 0) {
+        canvas.width = rect.width;
+        canvas.height = rect.height;
+      }
+    };
+
+    resizeCanvas();
+    window.addEventListener("resize", resizeCanvas);
 
     const gameLoop = (timestamp: number) => {
       if (!lastTimeRef.current) lastTimeRef.current = timestamp;
-      const dt = Math.min(0.1, (timestamp - lastTimeRef.current) / 1000);
+      const dt = Math.min(0.08, (timestamp - lastTimeRef.current) / 1000);
       lastTimeRef.current = timestamp;
 
       if (!isPaused) {
@@ -787,7 +778,7 @@ function SmartEscapeGame() {
         setTimeElapsed((t) => t + dt);
 
         if (activeFreezeTime <= 0) {
-          const creatureApproach = lvlConfig.creatureSpeed * (effectiveSpeed < 1 ? 4.5 : 1.8) * dt;
+          const creatureApproach = lvlConfig.creatureSpeed * (effectiveSpeed < 1 ? 3.0 : 1.2) * dt;
           setCreatureDistanceMeters((dist) => {
             const next = dist - creatureApproach;
             if (next <= 0) {
@@ -802,11 +793,11 @@ function SmartEscapeGame() {
         if (activeMagnetTime > 0) setActiveMagnetTime((t) => Math.max(0, t - dt));
         if (activeFreezeTime > 0) setActiveFreezeTime((t) => Math.max(0, t - dt));
 
-        roadOffset += effectiveSpeed * 400 * dt;
+        roadOffset += effectiveSpeed * 350 * dt;
         if (roadOffset > 1000) roadOffset = 0;
 
         trackItems.forEach((item) => {
-          item.z += effectiveSpeed * 0.48 * dt;
+          item.z += effectiveSpeed * 0.42 * dt;
 
           if (activeMagnetTime > 0 && (item.type === "coin" || item.type === "star")) {
             item.lane += (playerLane - item.lane) * 0.15;
@@ -843,8 +834,8 @@ function SmartEscapeGame() {
                     toast.info("🛡️ ¡Escudo absorbió el choque!");
                   } else {
                     playSfx("wrong");
-                    setPlayerSpeed(0.65);
-                    setCreatureDistanceMeters((d) => Math.max(1, d - 8));
+                    setPlayerSpeed(0.7);
+                    setCreatureDistanceMeters((d) => Math.max(1, d - 6));
                     setLives((l) => Math.max(0, l - 1));
                     item.z = 2;
                   }
@@ -868,21 +859,23 @@ function SmartEscapeGame() {
       }
 
       // Render
-      const w = canvas.width;
-      const h = canvas.height;
+      const w = canvas.width || 400;
+      const h = canvas.height || 220;
       ctx.clearRect(0, 0, w, h);
 
-      const horizonY = h * 0.38;
+      // Sky
+      const horizonY = h * 0.35;
       const skyGrad = ctx.createLinearGradient(0, 0, 0, horizonY);
       skyGrad.addColorStop(0, "#020617");
       skyGrad.addColorStop(1, theme.trackColor);
       ctx.fillStyle = skyGrad;
       ctx.fillRect(0, 0, w, horizonY);
 
+      // Cyber Grid
       ctx.strokeStyle = theme.gridColor;
       ctx.lineWidth = 0.5;
-      ctx.globalAlpha = 0.25;
-      for (let i = 0; i < w; i += 20) {
+      ctx.globalAlpha = 0.3;
+      for (let i = 0; i < w; i += 24) {
         ctx.beginPath();
         ctx.moveTo(i, 0);
         ctx.lineTo(w / 2, horizonY);
@@ -890,8 +883,9 @@ function SmartEscapeGame() {
       }
       ctx.globalAlpha = 1.0;
 
-      const roadTopW = w * 0.25;
-      const roadBottomW = w * 0.92;
+      // Road
+      const roadTopW = Math.max(80, w * 0.22);
+      const roadBottomW = Math.min(w * 0.94, 600);
       const roadTopX = (w - roadTopW) / 2;
       const roadBottomX = (w - roadBottomW) / 2;
 
@@ -907,10 +901,11 @@ function SmartEscapeGame() {
       ctx.closePath();
       ctx.fill();
 
+      // Neon Borders
       ctx.strokeStyle = theme.gridColor;
-      ctx.lineWidth = 2.5;
+      ctx.lineWidth = 3;
       ctx.shadowColor = theme.gridColor;
-      ctx.shadowBlur = 10;
+      ctx.shadowBlur = 12;
       ctx.beginPath();
       ctx.moveTo(roadTopX, horizonY);
       ctx.lineTo(roadBottomX, h);
@@ -918,6 +913,7 @@ function SmartEscapeGame() {
       ctx.lineTo(roadBottomX + roadBottomW, h);
       ctx.stroke();
 
+      // Lanes
       const lane1Top = roadTopX + roadTopW * 0.33;
       const lane1Bot = roadBottomX + roadBottomW * 0.33;
       const lane2Top = roadTopX + roadTopW * 0.66;
@@ -935,7 +931,7 @@ function SmartEscapeGame() {
       ctx.setLineDash([]);
       ctx.shadowBlur = 0;
 
-      // Meta a lo lejos
+      // Meta
       const progressToGoal = Math.min(1, (currentQIndex + 1) / Math.max(1, questionsPool.length));
       if (progressToGoal > 0.8) {
         ctx.fillStyle = "#ffffff";
@@ -946,7 +942,7 @@ function SmartEscapeGame() {
         ctx.fillText("🏁 META", w / 2, horizonY - 7);
       }
 
-      // Dibujar objetos en pista
+      // Track Items
       const sortedItems = [...trackItems].sort((a, b) => a.z - b.z);
       sortedItems.forEach((item) => {
         const itemY = horizonY + (h - horizonY) * item.z;
@@ -997,26 +993,28 @@ function SmartEscapeGame() {
         ctx.restore();
       });
 
-      // Dibujar Jugador
+      // Player
       const playerZ = 0.95;
       const playerRoadW = roadTopW + (roadBottomW - roadTopW) * playerZ;
       const playerRoadX = (w - playerRoadW) / 2;
       const pLaneW = playerRoadW / 3;
       const targetPlayerX = playerRoadX + pLaneW * playerLane + pLaneW / 2;
-      const playerBaseY = h - 45 - (isJumping ? 55 : 0);
+      const playerBaseY = h - 35 - (isJumping ? 45 : 0);
 
+      // Sombra
       ctx.fillStyle = "rgba(0,0,0,0.5)";
       ctx.beginPath();
-      ctx.ellipse(targetPlayerX, h - 38, 20, 6, 0, 0, Math.PI * 2);
+      ctx.ellipse(targetPlayerX, h - 28, 18, 5, 0, 0, Math.PI * 2);
       ctx.fill();
 
+      // Aura Turbo / Escudo
       if (activeTurboTime > 0) {
         ctx.strokeStyle = "#38bdf8";
         ctx.lineWidth = 3;
         ctx.shadowColor = "#38bdf8";
         ctx.shadowBlur = 12;
         ctx.beginPath();
-        ctx.ellipse(targetPlayerX, playerBaseY + 8, 24, 30, 0, 0, Math.PI * 2);
+        ctx.ellipse(targetPlayerX, playerBaseY + 6, 22, 26, 0, 0, Math.PI * 2);
         ctx.stroke();
         ctx.shadowBlur = 0;
       }
@@ -1024,7 +1022,7 @@ function SmartEscapeGame() {
         ctx.strokeStyle = "#10b981";
         ctx.lineWidth = 3;
         ctx.beginPath();
-        ctx.ellipse(targetPlayerX, playerBaseY + 8, 26, 32, 0, 0, Math.PI * 2);
+        ctx.ellipse(targetPlayerX, playerBaseY + 6, 24, 28, 0, 0, Math.PI * 2);
         ctx.stroke();
       }
 
@@ -1034,82 +1032,82 @@ function SmartEscapeGame() {
       ctx.save();
       ctx.translate(targetPlayerX, playerBaseY);
 
-      const legOffset = Math.sin(timestamp * 0.015) * 5;
+      const legOffset = Math.sin(timestamp * 0.015) * 4;
 
       ctx.fillStyle = "#1e293b";
-      ctx.fillRect(-7, 16 + legOffset, 5, 10);
-      ctx.fillRect(2, 16 - legOffset, 5, 10);
+      ctx.fillRect(-6, 12 + legOffset, 4, 8);
+      ctx.fillRect(2, 12 - legOffset, 4, 8);
       ctx.fillStyle = "#38bdf8";
-      ctx.fillRect(-8, 24 + legOffset, 7, 5);
-      ctx.fillRect(1, 24 - legOffset, 7, 5);
+      ctx.fillRect(-7, 18 + legOffset, 6, 4);
+      ctx.fillRect(1, 18 - legOffset, 6, 4);
 
       ctx.fillStyle = equippedOutfit.color;
       ctx.beginPath();
-      ctx.roundRect(-10, 0, 20, 18, 4);
+      ctx.roundRect(-8, 0, 16, 14, 3);
       ctx.fill();
 
       ctx.fillStyle = "#fcd34d";
       ctx.beginPath();
-      ctx.arc(0, -7, 9, 0, Math.PI * 2);
+      ctx.arc(0, -6, 7, 0, Math.PI * 2);
       ctx.fill();
 
       ctx.fillStyle = equippedHair.color;
       ctx.beginPath();
-      ctx.arc(0, -10, 10, Math.PI, Math.PI * 2);
+      ctx.arc(0, -8, 8, Math.PI, Math.PI * 2);
       ctx.fill();
 
       ctx.fillStyle = "#0f172a";
-      ctx.fillRect(-3.5, -7, 2, 2);
-      ctx.fillRect(1.5, -7, 2, 2);
+      ctx.fillRect(-3, -6, 1.5, 1.5);
+      ctx.fillRect(1.5, -6, 1.5, 1.5);
 
       ctx.restore();
 
-      // Dibujar Criatura Perseguidora
-      const creatureZ = Math.max(0.08, 1 - creatureDistanceMeters / 55);
+      // Criatura Perseguidora
+      const creatureZ = Math.max(0.08, 1 - creatureDistanceMeters / 60);
       const cRoadW = roadTopW + (roadBottomW - roadTopW) * creatureZ;
       const cRoadX = (w - cRoadW) / 2;
       const cX = cRoadX + cRoadW / 2;
       const cY = horizonY + (h - horizonY) * creatureZ;
-      const cScale = 0.35 + creatureZ * 0.85;
+      const cScale = 0.35 + creatureZ * 0.8;
 
       ctx.save();
-      ctx.translate(cX, cY - 16);
+      ctx.translate(cX, cY - 14);
       ctx.scale(cScale, cScale);
 
       if (activeFreezeTime > 0) {
         ctx.fillStyle = "rgba(56, 189, 248, 0.4)";
         ctx.strokeStyle = "#38bdf8";
         ctx.lineWidth = 2;
-        ctx.strokeRect(-22, -22, 44, 44);
-        ctx.fillRect(-22, -22, 44, 44);
+        ctx.strokeRect(-20, -20, 40, 40);
+        ctx.fillRect(-20, -20, 40, 40);
       }
 
       ctx.fillStyle = theme.monsterColor;
       ctx.shadowColor = theme.monsterColor;
       ctx.shadowBlur = 12;
       ctx.beginPath();
-      ctx.arc(0, 0, 20, 0, Math.PI * 2);
+      ctx.arc(0, 0, 18, 0, Math.PI * 2);
       ctx.fill();
       ctx.shadowBlur = 0;
 
       ctx.fillStyle = "#ffffff";
       ctx.beginPath();
-      ctx.arc(-7, -3, 5, 0, Math.PI * 2);
-      ctx.arc(7, -3, 5, 0, Math.PI * 2);
+      ctx.arc(-6, -3, 4, 0, Math.PI * 2);
+      ctx.arc(6, -3, 4, 0, Math.PI * 2);
       ctx.fill();
       ctx.fillStyle = "#ef4444";
       ctx.beginPath();
-      ctx.arc(-7, -3, 2.5, 0, Math.PI * 2);
-      ctx.arc(7, -3, 2.5, 0, Math.PI * 2);
+      ctx.arc(-6, -3, 2, 0, Math.PI * 2);
+      ctx.arc(6, -3, 2, 0, Math.PI * 2);
       ctx.fill();
 
       ctx.fillStyle = "#ffffff";
       ctx.beginPath();
-      ctx.moveTo(-8, 6);
-      ctx.lineTo(-4, 12);
-      ctx.lineTo(0, 6);
-      ctx.lineTo(4, 12);
-      ctx.lineTo(8, 6);
+      ctx.moveTo(-6, 5);
+      ctx.lineTo(-3, 10);
+      ctx.lineTo(0, 5);
+      ctx.lineTo(3, 10);
+      ctx.lineTo(6, 5);
       ctx.closePath();
       ctx.fill();
 
@@ -1121,6 +1119,7 @@ function SmartEscapeGame() {
     animFrameIdRef.current = requestAnimationFrame(gameLoop);
 
     return () => {
+      window.removeEventListener("resize", resizeCanvas);
       if (animFrameIdRef.current) cancelAnimationFrame(animFrameIdRef.current);
     };
   }, [screen, isPaused, selectedWorld, selectedLevel, playerLane, isJumping, playerSpeed, activeTurboTime, hasShield, activeMagnetTime, activeFreezeTime, creatureDistanceMeters, currentQIndex, questionsPool.length]);
@@ -1150,7 +1149,7 @@ function SmartEscapeGame() {
   const availableTopics = getSubjectMaterials(selectedWorld);
 
   return (
-    <div className="fixed inset-0 w-full h-full max-h-screen bg-slate-950 text-foreground flex flex-col font-sans select-none overflow-hidden">
+    <div className="fixed inset-0 z-50 w-full h-full max-h-screen bg-slate-950 text-white flex flex-col font-sans select-none overflow-hidden">
       {/* ======================================================== */}
       {/* 1. LOBBY PRINCIPAL */}
       {/* ======================================================== */}
@@ -1161,7 +1160,7 @@ function SmartEscapeGame() {
             <div className="flex items-center justify-between">
               <button
                 onClick={() => navigate({ to: "/games" })}
-                className="flex items-center gap-1.5 text-xs font-bold text-muted-foreground hover:text-foreground transition cursor-pointer"
+                className="flex items-center gap-1.5 text-xs font-bold text-slate-400 hover:text-white transition cursor-pointer"
               >
                 <ArrowLeft className="size-4" />
                 <span>Volver a Juegos</span>
@@ -1170,7 +1169,7 @@ function SmartEscapeGame() {
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => setSoundEnabled(!soundEnabled)}
-                  className="p-2 rounded-xl bg-slate-900 border border-slate-800 text-muted-foreground hover:text-foreground"
+                  className="p-2 rounded-xl bg-slate-900 border border-slate-800 text-slate-400 hover:text-white"
                 >
                   {soundEnabled ? <Volume2 className="size-4 text-emerald-400" /> : <VolumeX className="size-4" />}
                 </button>
@@ -1189,7 +1188,7 @@ function SmartEscapeGame() {
               <h1 className="font-display text-3xl md:text-4xl font-black bg-gradient-to-r from-cyan-400 via-purple-400 to-pink-500 bg-clip-text text-transparent">
                 SMART ESCAPE
               </h1>
-              <p className="text-xs text-muted-foreground max-w-xs mx-auto leading-relaxed">
+              <p className="text-xs text-slate-400 max-w-xs mx-auto leading-relaxed">
                 ¡Corre, esquiva a la criatura y responde preguntas basadas en tu material guardado!
               </p>
             </div>
@@ -1228,7 +1227,7 @@ function SmartEscapeGame() {
             <div className="grid grid-cols-2 gap-2">
               <button
                 onClick={() => setScreen("closet")}
-                className="h-11 rounded-2xl border border-slate-800 bg-slate-900 hover:border-purple-500/40 text-foreground text-xs font-bold flex items-center justify-center gap-2 transition cursor-pointer"
+                className="h-11 rounded-2xl border border-slate-800 bg-slate-900 hover:border-purple-500/40 text-white text-xs font-bold flex items-center justify-center gap-2 transition cursor-pointer"
               >
                 <Shirt className="size-4 text-purple-400" />
                 <span>Personalizar</span>
@@ -1239,7 +1238,7 @@ function SmartEscapeGame() {
                   setSelectedWorld("custom");
                   setScreen("upload");
                 }}
-                className="h-11 rounded-2xl border border-slate-800 bg-slate-900 hover:border-cyan-500/40 text-foreground text-xs font-bold flex items-center justify-center gap-2 transition cursor-pointer"
+                className="h-11 rounded-2xl border border-slate-800 bg-slate-900 hover:border-cyan-500/40 text-white text-xs font-bold flex items-center justify-center gap-2 transition cursor-pointer"
               >
                 <Upload className="size-4 text-cyan-400" />
                 <span>Subir Apuntes</span>
@@ -1257,7 +1256,7 @@ function SmartEscapeGame() {
           <div className="flex items-center justify-between">
             <button
               onClick={() => setScreen("home")}
-              className="flex items-center gap-1.5 text-xs font-bold text-muted-foreground hover:text-foreground transition cursor-pointer"
+              className="flex items-center gap-1.5 text-xs font-bold text-slate-400 hover:text-white transition cursor-pointer"
             >
               <ArrowLeft className="size-4" />
               <span>Atrás</span>
@@ -1266,8 +1265,8 @@ function SmartEscapeGame() {
           </div>
 
           <div>
-            <h2 className="font-display text-xl font-bold text-foreground">Elige la Materia a Estudiar</h2>
-            <p className="text-xs text-muted-foreground">El juego cargará el material guardado de esa materia para generar las preguntas:</p>
+            <h2 className="font-display text-xl font-bold text-white">Elige la Materia a Estudiar</h2>
+            <p className="text-xs text-slate-400">El juego cargará el material guardado de esa materia para generar las preguntas:</p>
           </div>
 
           <div className="grid grid-cols-1 gap-2.5 pb-12">
@@ -1293,21 +1292,21 @@ function SmartEscapeGame() {
                     <span className="text-2xl">{w.icon}</span>
                     <div>
                       <div className="flex items-center gap-1.5">
-                        <span className="text-xs font-bold text-foreground group-hover:text-purple-300 transition-colors">
+                        <span className="text-xs font-bold text-white group-hover:text-purple-300 transition-colors">
                           {w.badge}
                         </span>
                         <span className="text-[9px] font-semibold px-2 py-0.2 rounded-full bg-slate-800 text-slate-300">
                           {w.name}
                         </span>
                       </div>
-                      <span className="text-[10px] text-muted-foreground block line-clamp-1">{w.desc}</span>
+                      <span className="text-[10px] text-slate-400 block line-clamp-1">{w.desc}</span>
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
                     <span className="text-xs font-bold text-rose-400 flex items-center gap-0.5">
                       <span>{w.monsterEmoji}</span>
                     </span>
-                    <ChevronRight className="size-4 text-muted-foreground group-hover:translate-x-1 transition-transform" />
+                    <ChevronRight className="size-4 text-slate-400 group-hover:translate-x-1 transition-transform" />
                   </div>
                 </button>
               );
@@ -1317,14 +1316,14 @@ function SmartEscapeGame() {
       )}
 
       {/* ======================================================== */}
-      {/* 2.1 SELECCIÓN DE MATERIAL GUARDADO DENTRO DE LA MATERIA */}
+      {/* 2.1 SELECCIÓN DE MATERIAL GUARDADO */}
       {/* ======================================================== */}
       {screen === "material_select" && (
         <div className="flex-1 w-full h-full overflow-y-auto p-4 md:p-6 max-w-lg mx-auto space-y-4 animate-fade-in">
           <div className="flex items-center justify-between">
             <button
               onClick={() => setScreen("world_select")}
-              className="flex items-center gap-1.5 text-xs font-bold text-muted-foreground hover:text-foreground transition cursor-pointer"
+              className="flex items-center gap-1.5 text-xs font-bold text-slate-400 hover:text-white transition cursor-pointer"
             >
               <ArrowLeft className="size-4" />
               <span>Cambiar Materia</span>
@@ -1333,23 +1332,22 @@ function SmartEscapeGame() {
           </div>
 
           <div>
-            <h2 className="font-display text-xl font-bold text-foreground">Material de Estudio Guardado</h2>
-            <p className="text-xs text-muted-foreground">
+            <h2 className="font-display text-xl font-bold text-white">Material de Estudio Guardado</h2>
+            <p className="text-xs text-slate-400">
               Selecciona el tema cuyo contenido se usará para formular las preguntas del juego:
             </p>
           </div>
 
           {availableTopics.length === 0 ? (
-            /* AVISO REQUERIDO CUANDO NO HAY MATERIAL GUARDADO */
             <div className="p-6 rounded-3xl border border-amber-500/40 bg-amber-950/20 text-center space-y-4 my-4">
               <div className="size-12 rounded-2xl bg-amber-500/20 text-amber-400 grid place-items-center mx-auto">
                 <BookOpen className="size-6" />
               </div>
               <div className="space-y-1">
-                <h3 className="text-sm font-bold text-foreground">
+                <h3 className="text-sm font-bold text-white">
                   📚 Primero agrega material de estudio para poder generar las preguntas de este juego.
                 </h3>
-                <p className="text-xs text-muted-foreground">
+                <p className="text-xs text-slate-400">
                   Para cumplir con la regla pedagógica, las preguntas solo pueden formularse a partir de un texto real.
                 </p>
               </div>
@@ -1374,13 +1372,12 @@ function SmartEscapeGame() {
                 >
                   <div className="flex items-start justify-between gap-2">
                     <div>
-                      <h4 className="text-xs font-bold text-foreground">{topic.name}</h4>
-                      <p className="text-[10px] text-muted-foreground line-clamp-2 mt-0.5">{topic.summary}</p>
+                      <h4 className="text-xs font-bold text-white">{topic.name}</h4>
+                      <p className="text-[10px] text-slate-400 line-clamp-2 mt-0.5">{topic.summary}</p>
                     </div>
                     <span className="text-xl shrink-0">{currentTheme.icon}</span>
                   </div>
 
-                  {/* Extracto del material */}
                   <div className="p-2.5 rounded-xl bg-slate-950/80 border border-slate-800/80 text-[10px] text-slate-300 font-mono line-clamp-2 leading-relaxed">
                     📖 "{topic.explanation.slice(0, 140)}..."
                   </div>
@@ -1390,7 +1387,7 @@ function SmartEscapeGame() {
                       setSelectedTopicId(topic.id);
                       setScreen("level_map");
                     }}
-                    className="w-full h-10 rounded-xl bg-primary text-primary-foreground text-xs font-bold flex items-center justify-center gap-2 transition active:scale-95 cursor-pointer hover:brightness-110"
+                    className="w-full h-10 rounded-xl bg-primary text-white text-xs font-bold flex items-center justify-center gap-2 transition active:scale-95 cursor-pointer hover:brightness-110"
                   >
                     <span>Usar este Material en Smart Escape</span>
                     <ChevronRight className="size-3.5" />
@@ -1410,7 +1407,7 @@ function SmartEscapeGame() {
           <div className="flex items-center justify-between">
             <button
               onClick={() => (selectedWorld === "paa" || selectedWorld === "exani" ? setScreen("world_select") : setScreen("material_select"))}
-              className="flex items-center gap-1.5 text-xs font-bold text-muted-foreground hover:text-foreground transition cursor-pointer"
+              className="flex items-center gap-1.5 text-xs font-bold text-slate-400 hover:text-white transition cursor-pointer"
             >
               <ArrowLeft className="size-4" />
               <span>Cambiar Material</span>
@@ -1421,21 +1418,21 @@ function SmartEscapeGame() {
           <div className="p-4 rounded-3xl border border-purple-500/30 bg-purple-950/30 flex items-center gap-3">
             <span className="text-3xl">{currentTheme.icon}</span>
             <div>
-              <h3 className="text-sm font-bold text-foreground">
+              <h3 className="text-sm font-bold text-white">
                 {selectedWorld === "paa"
                   ? "Simulador PAA College Board"
                   : selectedWorld === "exani"
                   ? "Simulador EXANI-II Ceneval"
                   : availableTopics.find((t) => t.id === selectedTopicId)?.name || currentTheme.name}
               </h3>
-              <p className="text-[11px] text-muted-foreground">
+              <p className="text-[11px] text-slate-400">
                 Perseguidor: <strong className="text-rose-400">{currentTheme.monsterName}</strong> {currentTheme.monsterEmoji}
               </p>
             </div>
           </div>
 
           <div className="space-y-3 pb-12">
-            <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground px-0.5 block">
+            <span className="text-xs font-bold uppercase tracking-wider text-slate-400 px-0.5 block">
               Selecciona tu Nivel:
             </span>
 
@@ -1449,10 +1446,10 @@ function SmartEscapeGame() {
                 >
                   <div className="flex items-center justify-between">
                     <div>
-                      <span className="text-xs font-bold text-foreground">
+                      <span className="text-xs font-bold text-white">
                         Nivel {lvl.level} — {lvl.name}
                       </span>
-                      <div className="flex items-center gap-2 text-[10px] text-muted-foreground mt-0.5">
+                      <div className="flex items-center gap-2 text-[10px] text-slate-400 mt-0.5">
                         <span>📚 {lvl.reqQuestions} preguntas del material</span>
                         <span>⏱️ {lvl.timePerQ}s por pregunta</span>
                       </div>
@@ -1470,7 +1467,7 @@ function SmartEscapeGame() {
 
                   <button
                     onClick={() => startGameWithMaterial(selectedWorld, selectedTopicId, lvl.level)}
-                    className="w-full h-11 rounded-xl bg-primary text-primary-foreground text-xs font-bold flex items-center justify-center gap-2 shadow-sm transition active:scale-95 cursor-pointer hover:brightness-110"
+                    className="w-full h-11 rounded-xl bg-primary text-white text-xs font-bold flex items-center justify-center gap-2 shadow-sm transition active:scale-95 cursor-pointer hover:brightness-110"
                   >
                     <Play className="size-3.5 fill-current" />
                     <span>Iniciar Carrera (Nivel {lvl.level})</span>
@@ -1490,7 +1487,7 @@ function SmartEscapeGame() {
           <div className="flex items-center justify-between">
             <button
               onClick={() => setScreen("world_select")}
-              className="flex items-center gap-1.5 text-xs font-bold text-muted-foreground hover:text-foreground transition cursor-pointer"
+              className="flex items-center gap-1.5 text-xs font-bold text-slate-400 hover:text-white transition cursor-pointer"
             >
               <ArrowLeft className="size-4" />
               <span>Atrás</span>
@@ -1504,8 +1501,8 @@ function SmartEscapeGame() {
                 <Upload className="size-5" />
               </div>
               <div>
-                <h3 className="text-sm font-bold text-foreground">Sube tus apuntes para Smart Escape</h3>
-                <p className="text-[11px] text-muted-foreground">
+                <h3 className="text-sm font-bold text-white">Sube tus apuntes para Smart Escape</h3>
+                <p className="text-[11px] text-slate-400">
                   El juego creará preguntas basadas <strong>únicamente</strong> en este documento.
                 </p>
               </div>
@@ -1558,7 +1555,7 @@ function SmartEscapeGame() {
               value={customText}
               onChange={(e) => setCustomText(e.target.value)}
               placeholder="O pega aquí el texto o resumen que deseas estudiar..."
-              className="h-32 w-full rounded-xl border border-slate-800 bg-slate-950 p-3 text-xs text-foreground focus:border-primary focus:outline-none resize-none leading-relaxed"
+              className="h-32 w-full rounded-xl border border-slate-800 bg-slate-950 p-3 text-xs text-white focus:border-primary focus:outline-none resize-none leading-relaxed"
             />
 
             <button
@@ -1574,12 +1571,12 @@ function SmartEscapeGame() {
       )}
 
       {/* ======================================================== */}
-      {/* 5. PANTALLA COMPLETA DE PARTIDA (RUNNER + HUD + PREGUNTAS) */}
+      {/* 5. PANTALLA COMPLETA DE PARTIDA (100% VISIBLE Y CRISTALINA) */}
       {/* ======================================================== */}
       {screen === "playing" && (
-        <div className="flex-1 w-full h-full max-h-screen flex flex-col justify-between overflow-hidden bg-slate-950 relative select-none">
-          {/* Top Header */}
-          <header className="h-12 w-full shrink-0 border-b border-slate-800/80 bg-slate-900/90 backdrop-blur px-3 flex items-center justify-between gap-2 z-30">
+        <div className="fixed inset-0 z-50 w-full h-full max-h-screen flex flex-col justify-between overflow-hidden bg-slate-950 text-white select-none">
+          {/* Header Superior */}
+          <header className="h-12 w-full shrink-0 border-b border-slate-800 bg-slate-900/95 backdrop-blur px-3 flex items-center justify-between gap-2 z-30">
             {/* Vidas, XP & Monedas */}
             <div className="flex items-center gap-2.5">
               <div className="flex items-center gap-0.5" title="Vidas">
@@ -1604,8 +1601,8 @@ function SmartEscapeGame() {
               </span>
             </div>
 
-            {/* Radar Center: Distancia Jugador <-> Monstruo */}
-            <div className="flex items-center gap-1.5 bg-slate-950/80 border border-slate-800 px-2.5 py-1 rounded-full text-[10px] font-bold">
+            {/* Radar: Distancia Jugador <-> Monstruo */}
+            <div className="flex items-center gap-1.5 bg-slate-950 border border-slate-800 px-3 py-1 rounded-full text-[11px] font-bold">
               <span className="text-cyan-400">🏃 {Math.round(playerDistanceMeters)}m</span>
               <span className="text-slate-600">|</span>
               <span
@@ -1618,9 +1615,9 @@ function SmartEscapeGame() {
               </span>
             </div>
 
-            {/* Tiempo & Pausa */}
+            {/* Tiempo & Salir/Pausa */}
             <div className="flex items-center gap-2">
-              <span className="text-[10px] font-bold text-muted-foreground font-mono">
+              <span className="text-[11px] font-bold text-slate-400 font-mono">
                 ⏱️ {Math.floor(timeElapsed / 60)}:{(Math.floor(timeElapsed) % 60).toString().padStart(2, "0")}
               </span>
               <button
@@ -1632,73 +1629,79 @@ function SmartEscapeGame() {
             </div>
           </header>
 
-          {/* Centro: Escenario 3D Runner */}
-          <div className="flex-1 w-full min-h-[160px] max-h-[38vh] md:max-h-[44vh] relative overflow-hidden bg-slate-950">
-            <canvas ref={canvasRef} width={420} height={280} className="w-full h-full object-cover block" />
+          {/* Centro: Escenario 3D Runner Canvas */}
+          <div className="flex-1 w-full min-h-[140px] max-h-[40vh] md:max-h-[46vh] relative overflow-hidden bg-slate-950">
+            <canvas ref={canvasRef} className="w-full h-full block" />
 
-            {/* Alerta de Perseguidor cuando está muy cerca */}
-            {creatureDistanceMeters < 16 && (
+            {/* Alerta de Perseguidor solo cuando está a menos de 15 metros */}
+            {creatureDistanceMeters < 15 && (
               <div className="absolute top-2 inset-x-3 pointer-events-none z-20">
-                <div className="bg-rose-500/25 border border-rose-500/50 text-rose-300 text-[10px] font-black px-3 py-0.5 rounded-full flex items-center justify-center gap-1.5 animate-pulse backdrop-blur">
-                  <AlertTriangle className="size-3" />
-                  <span>¡{currentTheme.monsterName} ESTÁ A {Math.round(creatureDistanceMeters)} METROS!</span>
+                <div className="bg-rose-600/90 border border-rose-400 text-white text-[11px] font-black px-3 py-1 rounded-full flex items-center justify-center gap-1.5 animate-pulse shadow-lg backdrop-blur">
+                  <AlertTriangle className="size-3.5" />
+                  <span>¡{currentTheme.monsterName.toUpperCase()} ESTÁ A {Math.round(creatureDistanceMeters)} METROS!</span>
                 </div>
               </div>
             )}
           </div>
 
-          {/* Parte Inferior: Pregunta extraída del material, Opciones y Timer */}
-          <div className="w-full shrink-0 border-t border-slate-800/80 bg-slate-900/95 backdrop-blur px-3 pt-2.5 pb-3 space-y-2 z-30 max-w-xl mx-auto">
+          {/* ======================================================== */}
+          {/* PARTE INFERIOR: TARJETA DE PREGUNTA & OPCIONES (ALTO CONTRASTE) */}
+          {/* ======================================================== */}
+          <div className="w-full shrink-0 border-t-2 border-purple-500/40 bg-slate-900 p-3 sm:p-4 space-y-2.5 z-30 max-w-2xl mx-auto shadow-2xl">
             {/* Header de la Pregunta + Temporizador */}
             <div className="flex items-center justify-between text-xs">
-              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-300 line-clamp-1 max-w-[200px]">
-                {currentQuestion?.topic || `Pregunta ${currentQIndex + 1} de ${questionsPool.length}`}
+              <span className="text-[11px] font-extrabold px-3 py-1 rounded-full bg-purple-600 text-white shadow-sm line-clamp-1 max-w-[280px]">
+                📖 {currentQuestion?.topic || `Pregunta ${currentQIndex + 1}`}
               </span>
 
               {/* Countdown Timer */}
-              <div className="flex items-center gap-1.5 font-bold">
+              <div className="flex items-center gap-1.5 font-black bg-slate-950 px-2.5 py-1 rounded-full border border-slate-800">
                 <Clock className="size-3.5 text-amber-400" />
-                <span className={`text-xs font-mono ${qTimer <= 3 ? "text-rose-400 font-black animate-pulse" : "text-amber-400"}`}>
+                <span className={`text-xs font-mono ${qTimer <= 3 ? "text-rose-400 font-black animate-pulse" : "text-amber-300"}`}>
                   {qTimer}s
                 </span>
               </div>
             </div>
 
-            {/* Barra de tiempo de la pregunta */}
-            <div className="h-1.5 w-full bg-slate-950 rounded-full overflow-hidden">
+            {/* Barra de tiempo */}
+            <div className="h-2 w-full bg-slate-950 rounded-full overflow-hidden border border-slate-800">
               <div
                 className={`h-full transition-all duration-300 ${
-                  qTimer <= 3 ? "bg-rose-500" : "bg-gradient-to-r from-purple-500 to-cyan-400"
+                  qTimer <= 3 ? "bg-rose-500" : "bg-gradient-to-r from-purple-500 via-cyan-400 to-emerald-400"
                 }`}
                 style={{ width: `${timerPercentage}%` }}
               />
             </div>
 
-            {/* Texto de la Pregunta */}
+            {/* Texto de la Pregunta (BLANCO BRILLANTE Y LEGIBLE) */}
             {currentQuestion ? (
-              <h3 className="text-xs font-bold text-foreground leading-snug px-1 line-clamp-2 min-h-[32px] flex items-center">
+              <h3 className="text-sm sm:text-base font-extrabold text-white leading-snug px-1 line-clamp-2 min-h-[36px] flex items-center drop-shadow-sm">
                 {currentQuestion.question}
               </h3>
             ) : (
-              <div className="text-xs text-muted-foreground italic min-h-[32px] flex items-center">
-                Cargando pregunta...
+              <div className="text-xs text-slate-400 italic min-h-[36px] flex items-center">
+                Cargando siguiente pregunta del material...
               </div>
             )}
 
-            {/* 4 Opciones de Respuesta en Cuadrícula 2x2 */}
+            {/* 4 Opciones de Respuesta (Botones grandes y textos blancos) */}
             {currentQuestion && (
-              <div className="grid grid-cols-2 gap-1.5">
+              <div className="grid grid-cols-2 gap-2">
                 {currentQuestion.options.map((opt, idx) => {
                   const letters = ["A", "B", "C", "D"];
                   const isSelected = selectedOption === idx;
                   const isCorrect = idx === currentQuestion.correctIndex;
 
-                  let optClass = "border-slate-800 bg-slate-950/80 text-foreground hover:border-purple-500/40";
+                  let optClass = "border-2 border-slate-700 bg-slate-800 hover:bg-slate-700 hover:border-purple-400 text-white";
+                  let badgeClass = "bg-slate-700 text-cyan-300 border border-slate-600";
+
                   if (selectedOption !== null) {
                     if (isCorrect) {
-                      optClass = "border-emerald-500 bg-emerald-500/25 text-emerald-300 font-bold";
+                      optClass = "border-2 border-emerald-400 bg-emerald-600 text-white font-black shadow-lg shadow-emerald-500/20";
+                      badgeClass = "bg-emerald-800 text-white border-emerald-300";
                     } else if (isSelected) {
-                      optClass = "border-rose-500 bg-rose-500/25 text-rose-300 font-bold";
+                      optClass = "border-2 border-rose-400 bg-rose-600 text-white font-black shadow-lg shadow-rose-500/20";
+                      badgeClass = "bg-rose-800 text-white border-rose-300";
                     }
                   }
 
@@ -1707,14 +1710,14 @@ function SmartEscapeGame() {
                       key={idx}
                       disabled={selectedOption !== null}
                       onClick={() => handleAnswerOption(idx)}
-                      className={`p-2 rounded-xl border text-left text-[11px] leading-tight transition active:scale-95 cursor-pointer flex items-center gap-2 ${optClass}`}
+                      className={`p-2.5 sm:p-3 rounded-xl text-left text-xs sm:text-sm font-bold leading-tight transition active:scale-95 cursor-pointer flex items-center gap-2.5 shadow-md ${optClass}`}
                     >
-                      <span className="size-5 rounded-lg bg-slate-800/80 font-black text-[10px] grid place-items-center shrink-0">
+                      <span className={`size-6 rounded-lg font-black text-xs grid place-items-center shrink-0 ${badgeClass}`}>
                         {letters[idx]}
                       </span>
-                      <span className="line-clamp-2 flex-1">{opt}</span>
+                      <span className="line-clamp-2 flex-1 text-white font-bold">{opt}</span>
                       {selectedOption !== null && isCorrect && (
-                        <CheckCircle2 className="size-3.5 text-emerald-400 shrink-0" />
+                        <CheckCircle2 className="size-4 text-white shrink-0" />
                       )}
                     </button>
                   );
@@ -1722,19 +1725,19 @@ function SmartEscapeGame() {
               </div>
             )}
 
-            {/* Controles de Movimiento en Pantalla (◀, ▶, SALTAR) */}
+            {/* Controles de Movimiento y Salto */}
             <div className="flex items-center justify-between gap-2 pt-1">
-              <div className="flex gap-1.5">
+              <div className="flex gap-2">
                 <button
                   onClick={() => setPlayerLane((p) => Math.max(0, p - 1))}
-                  className="size-11 rounded-xl bg-slate-800 border border-slate-700 active:bg-purple-600 text-white font-black text-sm flex items-center justify-center transition active:scale-90 cursor-pointer"
+                  className="size-11 rounded-xl bg-slate-800 hover:bg-slate-700 border-2 border-slate-600 active:bg-purple-600 text-white font-black text-base flex items-center justify-center transition active:scale-90 cursor-pointer shadow-md"
                   title="Mover Izquierda (A)"
                 >
                   ◀
                 </button>
                 <button
                   onClick={() => setPlayerLane((p) => Math.min(2, p + 1))}
-                  className="size-11 rounded-xl bg-slate-800 border border-slate-700 active:bg-purple-600 text-white font-black text-sm flex items-center justify-center transition active:scale-90 cursor-pointer"
+                  className="size-11 rounded-xl bg-slate-800 hover:bg-slate-700 border-2 border-slate-600 active:bg-purple-600 text-white font-black text-base flex items-center justify-center transition active:scale-90 cursor-pointer shadow-md"
                   title="Mover Derecha (D)"
                 >
                   ▶
@@ -1743,11 +1746,11 @@ function SmartEscapeGame() {
 
               <button
                 onClick={triggerJump}
-                className="flex-1 h-11 rounded-xl bg-gradient-to-r from-purple-600 to-cyan-600 active:brightness-125 text-white font-display text-xs font-black flex items-center justify-center gap-1.5 shadow-md transition active:scale-95 cursor-pointer"
+                className="flex-1 h-11 rounded-xl bg-gradient-to-r from-purple-600 via-indigo-600 to-cyan-600 active:brightness-125 text-white font-display text-xs sm:text-sm font-black flex items-center justify-center gap-1.5 shadow-lg transition active:scale-95 cursor-pointer"
                 title="Saltar (Espacio / W)"
               >
-                <ArrowUp className="size-3.5" />
-                <span>SALTAR</span>
+                <ArrowUp className="size-4" />
+                <span>SALTAR (ESPACIO)</span>
               </button>
             </div>
           </div>
@@ -1762,22 +1765,22 @@ function SmartEscapeGame() {
           <div className="space-y-1">
             <span className="text-5xl animate-bounce block">💀</span>
             <h2 className="font-display text-2xl font-black text-rose-500">¡Te alcanzaron!</h2>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-xs text-slate-400">
               {currentTheme.monsterName} corrió más rápido esta vez. ¡Repasa tus conceptos y vuelve a escapar!
             </p>
           </div>
 
           <div className="p-4 rounded-3xl border border-slate-800 bg-slate-900 space-y-2 text-xs text-left">
             <div className="flex justify-between py-1 border-b border-slate-800">
-              <span className="text-muted-foreground">Distancia recorrida:</span>
-              <span className="font-bold text-foreground">{Math.round(playerDistanceMeters)} metros</span>
+              <span className="text-slate-400">Distancia recorrida:</span>
+              <span className="font-bold text-white">{Math.round(playerDistanceMeters)} metros</span>
             </div>
             <div className="flex justify-between py-1 border-b border-slate-800">
-              <span className="text-muted-foreground">Preguntas acertadas:</span>
+              <span className="text-slate-400">Preguntas acertadas:</span>
               <span className="font-bold text-emerald-400">{correctAnswersCount} correctas</span>
             </div>
             <div className="flex justify-between py-1">
-              <span className="text-muted-foreground">Monedas ganadas:</span>
+              <span className="text-slate-400">Monedas ganadas:</span>
               <span className="font-bold text-gold-foreground">+{collectedCoins} 🪙</span>
             </div>
           </div>
@@ -1793,7 +1796,7 @@ function SmartEscapeGame() {
 
             <button
               onClick={() => navigate({ to: "/study" })}
-              className="w-full h-12 rounded-2xl border border-slate-800 bg-slate-900 text-foreground font-bold text-xs flex items-center justify-center gap-2 hover:border-purple-500/40 transition active:scale-95 cursor-pointer"
+              className="w-full h-12 rounded-2xl border border-slate-800 bg-slate-900 text-white font-bold text-xs flex items-center justify-center gap-2 hover:border-purple-500/40 transition active:scale-95 cursor-pointer"
             >
               <BookOpen className="size-4 text-purple-400" />
               <span>Repasar material en Estudio</span>
@@ -1801,7 +1804,7 @@ function SmartEscapeGame() {
 
             <button
               onClick={() => setScreen("level_map")}
-              className="w-full h-12 rounded-2xl border border-slate-800 text-muted-foreground font-bold text-xs flex items-center justify-center gap-2 hover:text-foreground transition cursor-pointer"
+              className="w-full h-12 rounded-2xl border border-slate-800 text-slate-400 font-bold text-xs flex items-center justify-center gap-2 hover:text-white transition cursor-pointer"
             >
               <span>Volver al mapa</span>
             </button>
@@ -1823,26 +1826,26 @@ function SmartEscapeGame() {
             <h2 className="font-display text-2xl font-black bg-gradient-to-r from-emerald-400 via-cyan-400 to-indigo-400 bg-clip-text text-transparent">
               ¡ESCAPE EXITOSO! 🏆
             </h2>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-xs text-slate-400">
               ¡Has escapado de {currentTheme.monsterName} y completado el Nivel {selectedLevel}!
             </p>
           </div>
 
           <div className="p-4 rounded-3xl border border-emerald-500/30 bg-emerald-950/20 space-y-2 text-xs text-left">
             <div className="flex justify-between py-1 border-b border-slate-800">
-              <span className="text-muted-foreground">⭐ Experiencia:</span>
+              <span className="text-slate-400">⭐ Experiencia:</span>
               <span className="font-bold text-cyan-400">+{currentLvlConfig.bonusXp + correctAnswersCount * 25} XP</span>
             </div>
             <div className="flex justify-between py-1 border-b border-slate-800">
-              <span className="text-muted-foreground">🪙 Monedas:</span>
+              <span className="text-slate-400">🪙 Monedas:</span>
               <span className="font-bold text-gold-foreground">+{currentLvlConfig.bonusCoins + collectedCoins} Monedas</span>
             </div>
             <div className="flex justify-between py-1 border-b border-slate-800">
-              <span className="text-muted-foreground">📚 Aciertos:</span>
+              <span className="text-slate-400">📚 Aciertos:</span>
               <span className="font-bold text-emerald-400">{correctAnswersCount} / {questionsPool.length}</span>
             </div>
             <div className="flex justify-between py-1">
-              <span className="text-muted-foreground">🔥 Racha Máxima:</span>
+              <span className="text-slate-400">🔥 Racha Máxima:</span>
               <span className="font-bold text-purple-400">{maxStreak} seguidas</span>
             </div>
           </div>
@@ -1860,7 +1863,7 @@ function SmartEscapeGame() {
 
             <button
               onClick={() => setScreen("level_map")}
-              className="w-full h-12 rounded-2xl border border-slate-800 bg-slate-900 text-foreground font-bold text-xs flex items-center justify-center gap-2 transition active:scale-95 cursor-pointer"
+              className="w-full h-12 rounded-2xl border border-slate-800 bg-slate-900 text-white font-bold text-xs flex items-center justify-center gap-2 transition active:scale-95 cursor-pointer"
             >
               <span>Volver al Mapa de Niveles</span>
             </button>
@@ -1876,7 +1879,7 @@ function SmartEscapeGame() {
           <div className="flex items-center justify-between">
             <button
               onClick={() => setScreen("home")}
-              className="flex items-center gap-1.5 text-xs font-bold text-muted-foreground hover:text-foreground transition cursor-pointer"
+              className="flex items-center gap-1.5 text-xs font-bold text-slate-400 hover:text-white transition cursor-pointer"
             >
               <ArrowLeft className="size-4" />
               <span>Atrás</span>
@@ -1888,8 +1891,8 @@ function SmartEscapeGame() {
           </div>
 
           <div>
-            <h2 className="font-display text-xl font-bold">Armario y Personalización</h2>
-            <p className="text-xs text-muted-foreground">Desbloquea atuendos con las monedas ganadas en tus carreras:</p>
+            <h2 className="font-display text-xl font-bold text-white">Armario y Personalización</h2>
+            <p className="text-xs text-slate-400">Desbloquea atuendos con las monedas ganadas en tus carreras:</p>
           </div>
 
           <div className="space-y-2.5 pb-12">
@@ -1907,8 +1910,8 @@ function SmartEscapeGame() {
                   <div className="flex items-center gap-3">
                     <span className="text-2xl">{item.icon}</span>
                     <div>
-                      <span className="text-xs font-bold text-foreground block">{item.name}</span>
-                      <span className="text-[10px] text-muted-foreground capitalize">{item.category}</span>
+                      <span className="text-xs font-bold text-white block">{item.name}</span>
+                      <span className="text-[10px] text-slate-400 capitalize">{item.category}</span>
                     </div>
                   </div>
 

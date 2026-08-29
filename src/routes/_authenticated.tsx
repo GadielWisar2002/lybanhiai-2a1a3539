@@ -76,14 +76,15 @@ function AuthLayout() {
   const onOnboarding = location.pathname.startsWith("/onboarding");
   const searchParams = new URLSearchParams(typeof window !== "undefined" ? window.location.search : "");
   const isAvatarFullScreen = location.pathname === "/games" && (searchParams.get("tab") === "avatar" || (location.search as any)?.tab === "avatar");
+  const isFullScreenGame = isAvatarFullScreen || location.pathname.startsWith("/games/smart-escape");
 
   if (!onboardingDone && !onOnboarding) return <Navigate to="/onboarding" />;
   if (onboardingDone && onOnboarding) return <Navigate to="/dashboard" />;
 
   return (
-    <div className={`min-h-screen bg-background ${isAvatarFullScreen ? "" : "pb-20"}`}>
+    <div className={`min-h-screen bg-background ${isFullScreenGame ? "" : "pb-20"}`}>
       <Outlet />
-      {!onOnboarding && !isAvatarFullScreen && <BottomNav />}
+      {!onOnboarding && !isFullScreenGame && <BottomNav />}
     </div>
   );
 }
