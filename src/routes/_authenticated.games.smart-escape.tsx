@@ -314,6 +314,7 @@ function SmartEscapeGame() {
 
   // Powerups
   const [activeTurboTime, setActiveTurboTime] = useState(0);
+  const [activeFreezeTime, setActiveFreezeTime] = useState(0);
   const [hasShield, setHasShield] = useState(false);
 
   // Smooth Physics & Game Loop State (Mutable Refs for 60 FPS)
