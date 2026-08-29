@@ -23,6 +23,7 @@ import { Route as AuthenticatedLibraryRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedGamesRouteImport } from './routes/_authenticated.games'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated.dashboard'
 import { Route as AuthenticatedAdminBooksRouteImport } from './routes/_authenticated.admin-books'
+import { Route as AuthenticatedGamesSmartEscapeRouteImport } from './routes/_authenticated.games.smart-escape'
 import { Route as AuthenticatedGamesFlashcardsRouteImport } from './routes/_authenticated.games.flashcards'
 import { Route as AuthenticatedGamesWordleRouteImport } from './routes/_authenticated.games.wordle'
 import { Route as AuthenticatedGamesTorreInfinitaRouteImport } from './routes/_authenticated.games.torre-infinita'
@@ -117,6 +118,12 @@ const AuthenticatedAdminBooksRoute = AuthenticatedAdminBooksRouteImport.update({
   path: '/admin-books',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedGamesSmartEscapeRoute =
+  AuthenticatedGamesSmartEscapeRouteImport.update({
+    id: '/smart-escape',
+    path: '/smart-escape',
+    getParentRoute: () => AuthenticatedGamesRoute,
+  } as any)
 const AuthenticatedGamesFlashcardsRoute =
   AuthenticatedGamesFlashcardsRouteImport.update({
     id: '/flashcards',
@@ -289,6 +296,7 @@ export interface FileRoutesByFullPath {
   '/games/rpg-academico': typeof AuthenticatedGamesRpgAcademicoRoute
   '/games/runner-conocimiento': typeof AuthenticatedGamesRunnerConocimientoRoute
   '/games/simulador-examenes': typeof AuthenticatedGamesSimuladorExamenesRoute
+  '/games/smart-escape': typeof AuthenticatedGamesSmartEscapeRoute
   '/games/space-rush': typeof AuthenticatedGamesSpaceRushRoute
   '/games/torre-infinita': typeof AuthenticatedGamesTorreInfinitaRoute
   '/games/wordle': typeof AuthenticatedGamesWordleRoute
@@ -327,6 +335,7 @@ export interface FileRoutesByTo {
   '/games/rpg-academico': typeof AuthenticatedGamesRpgAcademicoRoute
   '/games/runner-conocimiento': typeof AuthenticatedGamesRunnerConocimientoRoute
   '/games/simulador-examenes': typeof AuthenticatedGamesSimuladorExamenesRoute
+  '/games/smart-escape': typeof AuthenticatedGamesSmartEscapeRoute
   '/games/space-rush': typeof AuthenticatedGamesSpaceRushRoute
   '/games/torre-infinita': typeof AuthenticatedGamesTorreInfinitaRoute
   '/games/wordle': typeof AuthenticatedGamesWordleRoute
@@ -367,6 +376,7 @@ export interface FileRoutesById {
   '/_authenticated/games/rpg-academico': typeof AuthenticatedGamesRpgAcademicoRoute
   '/_authenticated/games/runner-conocimiento': typeof AuthenticatedGamesRunnerConocimientoRoute
   '/_authenticated/games/simulador-examenes': typeof AuthenticatedGamesSimuladorExamenesRoute
+  '/_authenticated/games/smart-escape': typeof AuthenticatedGamesSmartEscapeRoute
   '/_authenticated/games/space-rush': typeof AuthenticatedGamesSpaceRushRoute
   '/_authenticated/games/torre-infinita': typeof AuthenticatedGamesTorreInfinitaRoute
   '/_authenticated/games/wordle': typeof AuthenticatedGamesWordleRoute
@@ -407,6 +417,7 @@ export interface FileRouteTypes {
     | '/games/rpg-academico'
     | '/games/runner-conocimiento'
     | '/games/simulador-examenes'
+    | '/games/smart-escape'
     | '/games/space-rush'
     | '/games/torre-infinita'
     | '/games/wordle'
@@ -445,6 +456,7 @@ export interface FileRouteTypes {
     | '/games/rpg-academico'
     | '/games/runner-conocimiento'
     | '/games/simulador-examenes'
+    | '/games/smart-escape'
     | '/games/space-rush'
     | '/games/torre-infinita'
     | '/games/wordle'
@@ -484,6 +496,7 @@ export interface FileRouteTypes {
     | '/_authenticated/games/rpg-academico'
     | '/_authenticated/games/runner-conocimiento'
     | '/_authenticated/games/simulador-examenes'
+    | '/_authenticated/games/smart-escape'
     | '/_authenticated/games/space-rush'
     | '/_authenticated/games/torre-infinita'
     | '/_authenticated/games/wordle'
@@ -768,6 +781,7 @@ interface AuthenticatedGamesRouteChildren {
   AuthenticatedGamesRpgAcademicoRoute: typeof AuthenticatedGamesRpgAcademicoRoute
   AuthenticatedGamesRunnerConocimientoRoute: typeof AuthenticatedGamesRunnerConocimientoRoute
   AuthenticatedGamesSimuladorExamenesRoute: typeof AuthenticatedGamesSimuladorExamenesRoute
+  AuthenticatedGamesSmartEscapeRoute: typeof AuthenticatedGamesSmartEscapeRoute
   AuthenticatedGamesSpaceRushRoute: typeof AuthenticatedGamesSpaceRushRoute
   AuthenticatedGamesTorreInfinitaRoute: typeof AuthenticatedGamesTorreInfinitaRoute
   AuthenticatedGamesWordleRoute: typeof AuthenticatedGamesWordleRoute
@@ -801,6 +815,7 @@ const AuthenticatedGamesRouteChildren: AuthenticatedGamesRouteChildren = {
     AuthenticatedGamesRunnerConocimientoRoute,
   AuthenticatedGamesSimuladorExamenesRoute:
     AuthenticatedGamesSimuladorExamenesRoute,
+  AuthenticatedGamesSmartEscapeRoute: AuthenticatedGamesSmartEscapeRoute,
   AuthenticatedGamesSpaceRushRoute: AuthenticatedGamesSpaceRushRoute,
   AuthenticatedGamesTorreInfinitaRoute: AuthenticatedGamesTorreInfinitaRoute,
   AuthenticatedGamesWordleRoute: AuthenticatedGamesWordleRoute,

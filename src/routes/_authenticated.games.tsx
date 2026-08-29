@@ -320,26 +320,45 @@ function GamesHub() {
         {activeTab === "play" && (
           <div className="mt-6 space-y-8 animate-in fade-in duration-300">
             {/* Juegos Premium Educativos Section */}
-            <div className="rounded-3xl border border-purple-500/20 bg-gradient-to-r from-purple-950/20 via-slate-900/10 to-indigo-950/20 p-6 shadow-[0_0_50px_-12px_rgba(168,85,247,0.15)] relative overflow-hidden group">
+            <div className="rounded-3xl border border-purple-500/30 bg-gradient-to-r from-purple-950/40 via-slate-900/30 to-indigo-950/40 p-6 shadow-[0_0_50px_-12px_rgba(168,85,247,0.25)] relative overflow-hidden group">
               {/* Glow effects */}
-              <div className="absolute -right-20 -top-20 h-48 w-48 rounded-full bg-purple-500/10 blur-[80px] group-hover:bg-purple-500/20 transition-all duration-700 pointer-events-none" />
-              <div className="absolute -left-20 -bottom-20 h-48 w-48 rounded-full bg-indigo-500/10 blur-[80px] group-hover:bg-indigo-500/20 transition-all duration-700 pointer-events-none" />
+              <div className="absolute -right-20 -top-20 h-48 w-48 rounded-full bg-purple-500/15 blur-[80px] group-hover:bg-purple-500/25 transition-all duration-700 pointer-events-none" />
+              <div className="absolute -left-20 -bottom-20 h-48 w-48 rounded-full bg-cyan-500/15 blur-[80px] group-hover:bg-cyan-500/25 transition-all duration-700 pointer-events-none" />
               
-              <div className="relative space-y-1.5">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <span className="inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-purple-500 to-indigo-500 px-3 py-1 text-[9px] font-bold uppercase tracking-wider text-white shadow-md shadow-purple-500/25">
-                    ✨ Premium & Competitivo
-                  </span>
-                  <span className="inline-flex items-center gap-1 rounded-full bg-rose-500/15 border border-rose-500/25 px-2.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-rose-400">
-                    Próximamente
-                  </span>
+              <div className="relative flex flex-col md:flex-row items-start md:items-center justify-between gap-5">
+                <div className="space-y-2 max-w-xl">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-purple-500 to-indigo-500 px-3 py-1 text-[9px] font-bold uppercase tracking-wider text-white shadow-md shadow-purple-500/25">
+                      ✨ NUEVO JUEGO PREMIUM
+                    </span>
+                    <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/15 border border-emerald-500/25 px-2.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-emerald-400">
+                      ⚡ 60 FPS 3D Runner
+                    </span>
+                  </div>
+                  <h2 className="font-display text-2xl md:text-3xl font-black bg-gradient-to-r from-purple-300 via-pink-300 to-cyan-300 bg-clip-text text-transparent">
+                    🏃 Smart Escape: Carrera por el Conocimiento
+                  </h2>
+                  <p className="text-xs text-muted-foreground leading-relaxed">
+                    ¡Corre por escenarios futuristas mientras una criatura te persigue! Responde preguntas basadas <strong>exclusivamente en tu material de estudio</strong> para ganar velocidad, esquivar obstáculos, recoger power-ups y escapar.
+                  </p>
+                  <div className="flex items-center gap-3 pt-1 text-[11px] font-semibold text-slate-300">
+                    <span className="flex items-center gap-1 text-cyan-400">⚡ Boosts de velocidad</span>
+                    <span>•</span>
+                    <span className="flex items-center gap-1 text-purple-400">👾 Criaturas en persecución</span>
+                    <span>•</span>
+                    <span className="flex items-center gap-1 text-gold-foreground">🪙 Armario y skins</span>
+                  </div>
                 </div>
-                <h2 className="font-display text-2xl font-black bg-gradient-to-r from-purple-400 via-pink-400 to-indigo-400 bg-clip-text text-transparent">
-                  Juegos Premium Educativos
-                </h2>
-                <p className="text-xs text-muted-foreground max-w-2xl leading-relaxed">
-                  Nuevos desafíos diseñados para el desarrollo académico avanzado y la competencia intercolegial de alto rendimiento.
-                </p>
+
+                <div className="shrink-0 w-full md:w-auto">
+                  <button
+                    onClick={() => navigate({ to: "/games/smart-escape" as any })}
+                    className="w-full md:w-auto h-12 px-6 rounded-2xl bg-gradient-to-r from-purple-600 via-indigo-600 to-cyan-600 hover:brightness-110 text-white font-display text-sm font-black flex items-center justify-center gap-2 shadow-lg shadow-purple-500/30 transition active:scale-95 cursor-pointer border-none"
+                  >
+                    <Gamepad2 className="size-4" />
+                    <span>JUGAR SMART ESCAPE</span>
+                  </button>
+                </div>
               </div>
             </div>
 
@@ -354,6 +373,15 @@ function GamesHub() {
             {/* Normal Games Grid */}
             <section className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
               {[
+                {
+                  id: "smart-escape",
+                  title: "🏃 Smart Escape",
+                  style: "3D Runner & Persecución",
+                  desc: "Corre, salta y esquiva a la criatura respondiendo preguntas de tus apuntes a toda velocidad.",
+                  cost: 0,
+                  path: "/games/smart-escape",
+                  styleColor: "bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20",
+                },
                 {
                   id: "flashcards",
                   title: "🃏 Flashcards de Estudio",
