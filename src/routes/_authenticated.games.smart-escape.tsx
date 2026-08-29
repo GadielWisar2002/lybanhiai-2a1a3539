@@ -83,13 +83,15 @@ interface WorldTheme {
   icon: string;
   badge: string;
   desc: string;
-  trackColor: string;
-  gridColor: string;
-  skyColor: string;
-  sceneryItem: string; // 'tree' | 'pillar' | 'lab' | 'crystal'
+  groundColor: string;
+  roadColor: string;
+  roadLineColor: string;
+  skyTopColor: string;
+  skyBottomColor: string;
   monsterName: string;
   monsterEmoji: string;
   monsterColor: string;
+  monsterSecondary: string;
 }
 
 const WORLDS: Record<WorldId, WorldTheme> = {
@@ -99,13 +101,15 @@ const WORLDS: Record<WorldId, WorldTheme> = {
     icon: "🧪",
     badge: "Química",
     desc: "Materia, estados de agregación, mezclas y reacciones.",
-    trackColor: "#062817",
-    gridColor: "#10b981",
-    skyColor: "#021209",
-    sceneryItem: "lab",
+    groundColor: "#052e16",
+    roadColor: "#0f172a",
+    roadLineColor: "#10b981",
+    skyTopColor: "#022c22",
+    skyBottomColor: "#064e3b",
     monsterName: "Nebulón Químico",
     monsterEmoji: "🧪",
     monsterColor: "#10b981",
+    monsterSecondary: "#047857",
   },
   matematicas: {
     id: "matematicas",
@@ -113,13 +117,15 @@ const WORLDS: Record<WorldId, WorldTheme> = {
     icon: "🔢",
     badge: "Matemáticas",
     desc: "Operaciones básicas, jerarquía PEMDAS, fracciones y álgebra.",
-    trackColor: "#0f172a",
-    gridColor: "#38bdf8",
-    skyColor: "#030712",
-    sceneryItem: "pillar",
+    groundColor: "#0f172a",
+    roadColor: "#1e293b",
+    roadLineColor: "#38bdf8",
+    skyTopColor: "#020617",
+    skyBottomColor: "#0f172a",
     monsterName: "Gorgon Glitch",
     monsterEmoji: "👾",
     monsterColor: "#06b6d4",
+    monsterSecondary: "#0891b2",
   },
   biologia: {
     id: "biologia",
@@ -127,13 +133,15 @@ const WORLDS: Record<WorldId, WorldTheme> = {
     icon: "🧬",
     badge: "Biología",
     desc: "La célula, fotosíntesis, ADN y biodiversidad.",
-    trackColor: "#290c29",
-    gridColor: "#ec4899",
-    skyColor: "#110211",
-    sceneryItem: "tree",
+    groundColor: "#2e1065",
+    roadColor: "#1e1b4b",
+    roadLineColor: "#ec4899",
+    skyTopColor: "#170529",
+    skyBottomColor: "#4c0519",
     monsterName: "Virus Voraz",
     monsterEmoji: "🦠",
     monsterColor: "#ec4899",
+    monsterSecondary: "#be185d",
   },
   historia: {
     id: "historia",
@@ -141,13 +149,15 @@ const WORLDS: Record<WorldId, WorldTheme> = {
     icon: "🏛️",
     badge: "Historia",
     desc: "Culturas prehispánicas, Independencia y Revolución.",
-    trackColor: "#271705",
-    gridColor: "#f59e0b",
-    skyColor: "#0f0701",
-    sceneryItem: "pillar",
+    groundColor: "#451a03",
+    roadColor: "#292524",
+    roadLineColor: "#f59e0b",
+    skyTopColor: "#1c1917",
+    skyBottomColor: "#78350f",
     monsterName: "Coloso del Tiempo",
     monsterEmoji: "🗿",
     monsterColor: "#f59e0b",
+    monsterSecondary: "#b45309",
   },
   ingles: {
     id: "ingles",
@@ -155,13 +165,15 @@ const WORLDS: Record<WorldId, WorldTheme> = {
     icon: "🇬🇧",
     badge: "Inglés",
     desc: "Gramática, tiempos verbales y vocabulario clave.",
-    trackColor: "#150d33",
-    gridColor: "#a855f7",
-    skyColor: "#080417",
-    sceneryItem: "pillar",
+    groundColor: "#1e1b4b",
+    roadColor: "#0f172a",
+    roadLineColor: "#a855f7",
+    skyTopColor: "#0f172a",
+    skyBottomColor: "#3b0764",
     monsterName: "Grammar Phantom",
     monsterEmoji: "👻",
     monsterColor: "#a855f7",
+    monsterSecondary: "#7e22ce",
   },
   paa: {
     id: "paa",
@@ -169,13 +181,15 @@ const WORLDS: Record<WorldId, WorldTheme> = {
     icon: "🏆",
     badge: "Admisión Universitaria",
     desc: "Lectura crítica, redacción y razonamiento oficial.",
-    trackColor: "#0a1931",
-    gridColor: "#3b82f6",
-    skyColor: "#030b17",
-    sceneryItem: "pillar",
+    groundColor: "#0f172a",
+    roadColor: "#1e293b",
+    roadLineColor: "#3b82f6",
+    skyTopColor: "#030712",
+    skyBottomColor: "#1e3a8a",
     monsterName: "Cronos PAA",
     monsterEmoji: "⚡",
     monsterColor: "#3b82f6",
+    monsterSecondary: "#1d4ed8",
   },
   exani: {
     id: "exani",
@@ -183,13 +197,15 @@ const WORLDS: Record<WorldId, WorldTheme> = {
     icon: "🎓",
     badge: "Admisión Ceneval 2025",
     desc: "Comprensión lectora, redacción indirecta y pensamiento matemático.",
-    trackColor: "#1d0c33",
-    gridColor: "#c084fc",
-    skyColor: "#0b0314",
-    sceneryItem: "pillar",
+    groundColor: "#180828",
+    roadColor: "#1e1b4b",
+    roadLineColor: "#c084fc",
+    skyTopColor: "#090214",
+    skyBottomColor: "#4a044e",
     monsterName: "Cénit Ceneval",
     monsterEmoji: "🔮",
     monsterColor: "#c084fc",
+    monsterSecondary: "#9333ea",
   },
   custom: {
     id: "custom",
@@ -197,21 +213,23 @@ const WORLDS: Record<WorldId, WorldTheme> = {
     icon: "✨",
     badge: "Material Subido",
     desc: "Preguntas generadas 100% sobre tu propio texto o PDF.",
-    trackColor: "#170a31",
-    gridColor: "#818cf8",
-    skyColor: "#070211",
-    sceneryItem: "pillar",
+    groundColor: "#1e1b4b",
+    roadColor: "#0f172a",
+    roadLineColor: "#818cf8",
+    skyTopColor: "#020617",
+    skyBottomColor: "#312e81",
     monsterName: "Sombra del Examen",
     monsterEmoji: "😈",
     monsterColor: "#818cf8",
+    monsterSecondary: "#4f46e5",
   },
 };
 
 const LEVELS_CONFIG = [
-  { level: 1, name: "Principiante", reqQuestions: 5, targetDistance: 450, timePerQ: 10, creatureBaseSpeed: 0.85, bonusCoins: 5, bonusXp: 50 },
-  { level: 2, name: "Explorador", reqQuestions: 8, targetDistance: 650, timePerQ: 8, creatureBaseSpeed: 1.0, bonusCoins: 10, bonusXp: 100 },
-  { level: 3, name: "Experto", reqQuestions: 10, targetDistance: 850, timePerQ: 7, creatureBaseSpeed: 1.15, bonusCoins: 15, bonusXp: 175 },
-  { level: 4, name: "Maestro", reqQuestions: 12, targetDistance: 1000, timePerQ: 5, creatureBaseSpeed: 1.35, bonusCoins: 25, bonusXp: 250 },
+  { level: 1, name: "Principiante", reqQuestions: 5, targetDistance: 500, timePerQ: 10, bonusCoins: 5, bonusXp: 50 },
+  { level: 2, name: "Explorador", reqQuestions: 8, targetDistance: 750, timePerQ: 8, bonusCoins: 10, bonusXp: 100 },
+  { level: 3, name: "Experto", reqQuestions: 10, targetDistance: 1000, timePerQ: 7, bonusCoins: 15, bonusXp: 175 },
+  { level: 4, name: "Maestro", reqQuestions: 12, targetDistance: 1250, timePerQ: 5, bonusCoins: 25, bonusXp: 250 },
 ];
 
 function SmartEscapeGame() {
@@ -281,16 +299,12 @@ function SmartEscapeGame() {
   const [qTimer, setQTimer] = useState(10);
   const [qTimerMax, setQTimerMax] = useState(10);
   const [selectedOption, setSelectedOption] = useState<number | null>(null);
-  const [answerFeedback, setAnswerFeedback] = useState<"correct" | "wrong" | null>(null);
 
-  // Runner In-Game Metrics & Smooth Physics
+  // Runner Gameplay Metrics
   const [lives, setLives] = useState(3);
-  const [playerLane, setPlayerLane] = useState<number>(1); // 0 = Left, 1 = Center, 2 = Right
   const [playerDistanceMeters, setPlayerDistanceMeters] = useState(0);
-  const [creatureDistanceMeters, setCreatureDistanceMeters] = useState(48); // Distancia 0 a 70m
   const [gameXp, setGameXp] = useState(0);
   const [collectedCoins, setCollectedCoins] = useState(0);
-  const [collectedStars, setCollectedStars] = useState(0);
   const [correctAnswersCount, setCorrectAnswersCount] = useState(0);
   const [wrongAnswersCount, setWrongAnswersCount] = useState(0);
   const [streak, setStreak] = useState(0);
@@ -298,37 +312,29 @@ function SmartEscapeGame() {
   const [timeElapsed, setTimeElapsed] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
 
-  // Power-ups
+  // Powerups
   const [activeTurboTime, setActiveTurboTime] = useState(0);
   const [hasShield, setHasShield] = useState(false);
-  const [activeMagnetTime, setActiveMagnetTime] = useState(0);
-  const [activeFreezeTime, setActiveFreezeTime] = useState(0);
 
-  // Smooth Movement Refs (Mutable for 60fps rendering without react state lag)
-  const playerLaneRef = useRef<number>(1);
-  const playerXRef = useRef<number>(0);
-  const jumpYRef = useRef<number>(0);
-  const jumpVelRef = useRef<number>(0);
+  // Smooth Physics & Game Loop State (Mutable Refs for 60 FPS)
+  const playerYOffsetRef = useRef<number>(0);
+  const playerYVelRef = useRef<number>(0);
   const isJumpingRef = useRef<boolean>(false);
-  const currentSpeedRef = useRef<number>(1.0);
+  const playerDistanceRef = useRef<number>(0);
+  const relativeMonsterDistanceRef = useRef<number>(140); // Distancia visual en píxeles (0 = atrapado, 220 = lejos)
   const targetSpeedRef = useRef<number>(1.0);
-  const creatureDistRef = useRef<number>(48);
-  const distanceRef = useRef<number>(0);
+  const currentSpeedRef = useRef<number>(1.0);
   const screenShakeRef = useRef<number>(0);
+  const answerBannerRef = useRef<{ text: string; color: string; timer: number } | null>(null);
 
-  // Canvas
+  // Canvas Ref
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const animFrameIdRef = useRef<number | null>(null);
   const lastTimeRef = useRef<number>(0);
   const timerIntervalRef = useRef<any>(null);
 
-  // Sincronizar lane
-  useEffect(() => {
-    playerLaneRef.current = playerLane;
-  }, [playerLane]);
-
   // Web Audio Synth
-  const playSfx = (type: "jump" | "coin" | "star" | "correct" | "wrong" | "turbo" | "freeze" | "gameover" | "victory") => {
+  const playSfx = (type: "jump" | "coin" | "correct" | "wrong" | "turbo" | "gameover" | "victory") => {
     if (!soundEnabled) return;
     try {
       const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
@@ -376,13 +382,6 @@ function SmartEscapeGame() {
         gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3);
         osc.start();
         osc.stop(ctx.currentTime + 0.3);
-      } else if (type === "freeze") {
-        osc.frequency.setValueAtTime(800, ctx.currentTime);
-        osc.frequency.linearRampToValueAtTime(300, ctx.currentTime + 0.3);
-        gain.gain.setValueAtTime(0.12, ctx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3);
-        osc.start();
-        osc.stop(ctx.currentTime + 0.3);
       } else if (type === "victory") {
         osc.frequency.setValueAtTime(523.25, ctx.currentTime);
         osc.frequency.setValueAtTime(659.25, ctx.currentTime + 0.1);
@@ -401,16 +400,14 @@ function SmartEscapeGame() {
         osc.start();
         osc.stop(ctx.currentTime + 0.5);
       }
-    } catch {
-      // Audio not supported
-    }
+    } catch {}
   };
 
-  // Jump con física de arco suave
+  // Jump Action
   const triggerJump = useCallback(() => {
     if (isJumpingRef.current) return;
     isJumpingRef.current = true;
-    jumpVelRef.current = 420; // velocidad de impulso vertical
+    playerYVelRef.current = 420; // impulso de salto
     playSfx("jump");
   }, [soundEnabled]);
 
@@ -419,13 +416,7 @@ function SmartEscapeGame() {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (screen !== "playing" || isPaused) return;
 
-      if (e.key === "ArrowLeft" || e.key === "a" || e.key === "A") {
-        e.preventDefault();
-        setPlayerLane((prev) => Math.max(0, prev - 1));
-      } else if (e.key === "ArrowRight" || e.key === "d" || e.key === "D") {
-        e.preventDefault();
-        setPlayerLane((prev) => Math.min(2, prev + 1));
-      } else if (e.key === "ArrowUp" || e.key === "w" || e.key === "W" || e.key === " ") {
+      if (e.key === "ArrowUp" || e.key === "w" || e.key === "W" || e.key === " ") {
         e.preventDefault();
         triggerJump();
       } else if (e.key === "1" || e.key === "2" || e.key === "3" || e.key === "4") {
@@ -450,7 +441,7 @@ function SmartEscapeGame() {
     return [];
   };
 
-  // Generar preguntas estrictas
+  // Generar preguntas estrictas a partir del material
   const buildQuestionsFromMaterial = (
     worldId: WorldId,
     topicId: string,
@@ -594,26 +585,21 @@ function SmartEscapeGame() {
     setQTimer(lvlConfig.timePerQ);
     setQTimerMax(lvlConfig.timePerQ);
     setSelectedOption(null);
-    setAnswerFeedback(null);
 
     setLives(3);
-    setPlayerLane(1);
-    playerLaneRef.current = 1;
-    playerXRef.current = 0;
-    jumpYRef.current = 0;
-    jumpVelRef.current = 0;
+    playerYOffsetRef.current = 0;
+    playerYVelRef.current = 0;
     isJumpingRef.current = false;
-    currentSpeedRef.current = 1.0;
+    playerDistanceRef.current = 0;
+    relativeMonsterDistanceRef.current = 140; // distancia inicial segura
     targetSpeedRef.current = 1.0;
-    creatureDistRef.current = 48;
-    distanceRef.current = 0;
+    currentSpeedRef.current = 1.0;
     screenShakeRef.current = 0;
+    answerBannerRef.current = null;
 
     setPlayerDistanceMeters(0);
-    setCreatureDistanceMeters(48);
     setGameXp(0);
     setCollectedCoins(0);
-    setCollectedStars(0);
     setCorrectAnswersCount(0);
     setWrongAnswersCount(0);
     setStreak(0);
@@ -622,8 +608,6 @@ function SmartEscapeGame() {
     setIsPaused(false);
     setActiveTurboTime(0);
     setHasShield(false);
-    setActiveMagnetTime(0);
-    setActiveFreezeTime(0);
 
     setScreen("playing");
   };
@@ -651,7 +635,7 @@ function SmartEscapeGame() {
     handleAnswerOption(-1);
   };
 
-  // Respuesta & Efectos en Gameplay Suaves
+  // Manejar respuesta
   const handleAnswerOption = (optionIndex: number) => {
     if (selectedOption !== null || !currentQuestion) return;
     setSelectedOption(optionIndex);
@@ -661,7 +645,6 @@ function SmartEscapeGame() {
 
     if (isCorrect) {
       playSfx("correct");
-      setAnswerFeedback("correct");
       setCorrectAnswersCount((c) => c + 1);
       setStreak((s) => {
         const next = s + 1;
@@ -671,45 +654,41 @@ function SmartEscapeGame() {
       setGameXp((xp) => xp + 50 + streak * 10);
       setCollectedCoins((c) => c + 2);
 
-      // Aumento gradual de velocidad (+15% temporal) y la criatura se retrasa suavemente
-      targetSpeedRef.current = 1.18;
-      creatureDistRef.current = Math.min(65, creatureDistRef.current + 12);
-      setCreatureDistanceMeters(Math.round(creatureDistRef.current));
+      // Efecto en Gameplay: El jugador acelera y aleja al perseguidor
+      targetSpeedRef.current = 1.25;
+      relativeMonsterDistanceRef.current = Math.min(220, relativeMonsterDistanceRef.current + 45);
+      answerBannerRef.current = { text: "¡CORRECTO! ⚡ +15% VELOCIDAD", color: "#10b981", timer: 1.8 };
 
-      // Volver a velocidad normal tras 2.8s
       setTimeout(() => {
         targetSpeedRef.current = 1.0;
-      }, 2800);
-
-      toast.success("¡CORRECTO! ⚡ +15% Velocidad y alejaste al perseguidor", { duration: 1200 });
+      }, 2500);
     } else {
       if (hasShield) {
         setHasShield(false);
-        setAnswerFeedback("correct");
         toast.info("🛡️ ¡El Escudo absorbió el fallo!");
+        answerBannerRef.current = { text: "🛡️ ¡ESCUDO TE PROTEGIÓ!", color: "#38bdf8", timer: 1.8 };
       } else {
         playSfx("wrong");
-        setAnswerFeedback("wrong");
         setWrongAnswersCount((w) => w + 1);
         setStreak(0);
         setLives((l) => Math.max(0, l - 1));
 
-        // Reducción gradual de velocidad (-15% temporal) y la criatura se acerca
-        targetSpeedRef.current = 0.85;
-        creatureDistRef.current = creatureDistRef.current - 12;
-        setCreatureDistanceMeters(Math.max(0, Math.round(creatureDistRef.current)));
-        screenShakeRef.current = 6;
+        // Efecto en Gameplay: El jugador frena y el monstruo se acerca peligrosamente
+        targetSpeedRef.current = 0.75;
+        relativeMonsterDistanceRef.current = relativeMonsterDistanceRef.current - 45;
+        screenShakeRef.current = 8;
+        answerBannerRef.current = { text: "¡INCORRECTO! 👾 EL ENEMIGO SE ACERCA", color: "#ef4444", timer: 1.8 };
 
-        if (creatureDistRef.current <= 0) {
-          triggerGameOver();
+        if (relativeMonsterDistanceRef.current <= 15) {
+          setTimeout(() => {
+            triggerGameOver();
+          }, 600);
           return;
         }
 
         setTimeout(() => {
           targetSpeedRef.current = 1.0;
-        }, 2800);
-
-        toast.error("❌ ¡Incorrecto! La criatura se acerca...", { duration: 1200 });
+        }, 2200);
       }
     }
 
@@ -722,7 +701,7 @@ function SmartEscapeGame() {
 
     setTimeout(() => {
       const nextIdx = currentQIndex + 1;
-      if (nextIdx >= questionsPool.length) {
+      if (nextIdx >= questionsPool.length || playerDistanceRef.current >= lvlConfig.targetDistance) {
         triggerVictory();
       } else {
         setCurrentQIndex(nextIdx);
@@ -730,9 +709,8 @@ function SmartEscapeGame() {
         setQTimer(lvlConfig.timePerQ);
         setQTimerMax(lvlConfig.timePerQ);
         setSelectedOption(null);
-        setAnswerFeedback(null);
       }
-    }, 1000);
+    }, 1100);
   };
 
   const triggerGameOver = () => {
@@ -768,13 +746,11 @@ function SmartEscapeGame() {
       await rewardXpFn({ data: { xp: earnedXp } });
       await rewardCoinsFn({ data: { coins: Math.max(1, Math.floor(earnedCoins / 5)) } });
       await qc.invalidateQueries({ queryKey: ["dashboard"] });
-    } catch {
-      // ignore
-    }
+    } catch {}
   };
 
   // ========================================================
-  // MOTOR CANVAS RUNNER 3D CON PERSPECTIVA Y MOVIMIENTO FLUIDO
+  // MOTOR DEL VIDEOJUEGO (ANIMACIÓN, PERSONAJES Y PERSECUCIÓN REAL)
   // ========================================================
   useEffect(() => {
     if (screen !== "playing") return;
@@ -784,41 +760,38 @@ function SmartEscapeGame() {
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    let roadOffset = 0;
     const theme = WORLDS[selectedWorld] || WORLDS.quimica;
     const lvlConfig = LEVELS_CONFIG[selectedLevel - 1] || LEVELS_CONFIG[0];
 
-    interface TrackItem {
-      id: number;
-      lane: number;
-      z: number;
-      type: "coin" | "star" | "obstacle" | "turbo" | "shield";
+    let groundOffset = 0;
+    let bgHillsOffset = 0;
+    let cloudOffset = 0;
+
+    interface SceneryObject {
+      x: number;
+      type: "tree" | "rock" | "sign";
+      size: number;
     }
 
-    interface SceneryPillar {
-      side: "left" | "right";
-      z: number;
+    interface TrackItem {
+      x: number;
+      type: "coin" | "obstacle";
     }
+
+    let sceneryObjects: SceneryObject[] = [
+      { x: 100, type: "tree", size: 30 },
+      { x: 280, type: "rock", size: 18 },
+      { x: 450, type: "tree", size: 36 },
+      { x: 620, type: "sign", size: 24 },
+      { x: 800, type: "tree", size: 32 },
+    ];
 
     let trackItems: TrackItem[] = [
-      { id: 1, lane: 0, z: 0.25, type: "coin" },
-      { id: 2, lane: 1, z: 0.5, type: "obstacle" },
-      { id: 3, lane: 2, z: 0.75, type: "star" },
-      { id: 4, lane: 0, z: 0.95, type: "coin" },
+      { x: 350, type: "coin" },
+      { x: 500, type: "obstacle" },
+      { x: 680, type: "coin" },
+      { x: 880, type: "obstacle" },
     ];
-
-    let sceneryPillars: SceneryPillar[] = [
-      { side: "left", z: 0.1 },
-      { side: "right", z: 0.1 },
-      { side: "left", z: 0.35 },
-      { side: "right", z: 0.35 },
-      { side: "left", z: 0.6 },
-      { side: "right", z: 0.6 },
-      { side: "left", z: 0.85 },
-      { side: "right", z: 0.85 },
-    ];
-
-    let nextItemId = 10;
 
     const resizeCanvas = () => {
       if (!canvas) return;
@@ -838,447 +811,395 @@ function SmartEscapeGame() {
       lastTimeRef.current = timestamp;
 
       if (!isPaused) {
-        // 1. Suave interpolación de velocidad
-        currentSpeedRef.current += (targetSpeedRef.current - currentSpeedRef.current) * Math.min(1, dt * 3.5);
+        // 1. Interpolación de velocidad
+        currentSpeedRef.current += (targetSpeedRef.current - currentSpeedRef.current) * Math.min(1, dt * 3);
         const speed = currentSpeedRef.current;
+        const scrollSpeedPx = speed * 180 * dt;
 
         // 2. Distancia recorrida
-        const metersAdvanced = speed * 16 * dt;
-        distanceRef.current += metersAdvanced;
-        setPlayerDistanceMeters(Math.round(distanceRef.current));
+        playerDistanceRef.current += speed * 16 * dt;
+        setPlayerDistanceMeters(Math.round(playerDistanceRef.current));
         setTimeElapsed((t) => t + dt);
 
-        // 3. Física de Salto del Jugador (Gravedad suave)
+        // 3. Física de Salto del Jugador
         if (isJumpingRef.current) {
-          jumpYRef.current += jumpVelRef.current * dt;
-          jumpVelRef.current -= 980 * dt; // gravedad
-          if (jumpYRef.current <= 0) {
-            jumpYRef.current = 0;
-            jumpVelRef.current = 0;
+          playerYOffsetRef.current += playerYVelRef.current * dt;
+          playerYVelRef.current -= 950 * dt; // gravedad
+          if (playerYOffsetRef.current <= 0) {
+            playerYOffsetRef.current = 0;
+            playerYVelRef.current = 0;
             isJumpingRef.current = false;
           }
         }
 
-        // 4. Perseguidor dinámico físico
+        // 4. Persecución gradual del monstruo
         if (activeFreezeTime <= 0) {
-          const creatureApproach = (lvlConfig.creatureBaseSpeed * 1.5 - (speed - 1.0) * 2.0) * dt;
-          creatureDistRef.current -= creatureApproach;
-          setCreatureDistanceMeters(Math.max(0, Math.round(creatureDistRef.current)));
-
-          if (creatureDistRef.current <= 0) {
+          // El monstruo se acerca lentamente si la velocidad es baja
+          const approachRate = (1.05 - speed) * 22 * dt;
+          relativeMonsterDistanceRef.current -= approachRate;
+          if (relativeMonsterDistanceRef.current <= 15) {
             triggerGameOver();
             return;
           }
         }
 
-        // 5. Pantalla temblor
+        // 5. Screen Shake y Banner timer
         if (screenShakeRef.current > 0) {
           screenShakeRef.current = Math.max(0, screenShakeRef.current - dt * 15);
         }
+        if (answerBannerRef.current) {
+          answerBannerRef.current.timer -= dt;
+          if (answerBannerRef.current.timer <= 0) answerBannerRef.current = null;
+        }
 
-        // 6. Temporizadores de powerups
-        if (activeTurboTime > 0) setActiveTurboTime((t) => Math.max(0, t - dt));
-        if (activeMagnetTime > 0) setActiveMagnetTime((t) => Math.max(0, t - dt));
-        if (activeFreezeTime > 0) setActiveFreezeTime((t) => Math.max(0, t - dt));
+        // 6. Desplazamiento del Escenario (Parallax Layers)
+        groundOffset = (groundOffset + scrollSpeedPx) % 60;
+        bgHillsOffset = (bgHillsOffset + scrollSpeedPx * 0.3) % 400;
+        cloudOffset = (cloudOffset + scrollSpeedPx * 0.1) % 600;
 
-        // 7. Desplazamiento continuo del camino y escenario
-        roadOffset = (roadOffset + speed * 300 * dt) % 1000;
-
-        // Desplazar pilares y árboles del escenario
-        sceneryPillars.forEach((p) => {
-          p.z += speed * 0.45 * dt;
-          if (p.z > 1.2) p.z = 0.05;
+        // Desplazar árboles y rocas del fondo
+        sceneryObjects.forEach((obj) => {
+          obj.x -= scrollSpeedPx;
+          if (obj.x < -60) {
+            obj.x = (canvas.width || 500) + Math.random() * 120;
+          }
         });
 
-        // 8. Desplazar objetos y chequear colisiones
+        // 7. Desplazar Monedas y Obstáculos
         trackItems.forEach((item) => {
-          item.z += speed * 0.45 * dt;
+          item.x -= scrollSpeedPx;
 
-          if (activeMagnetTime > 0 && (item.type === "coin" || item.type === "star")) {
-            item.lane += (playerLaneRef.current - item.lane) * 0.18;
-          }
-
-          // Rango de colisión con el jugador
-          if (item.z >= 0.88 && item.z <= 1.02) {
-            if (Math.round(item.lane) === playerLaneRef.current) {
-              if (item.type === "coin") {
-                playSfx("coin");
-                setCollectedCoins((c) => c + 1);
-                setGameXp((xp) => xp + 15);
-                item.z = 2.5;
-              } else if (item.type === "star") {
-                playSfx("star");
-                setCollectedStars((s) => s + 1);
-                setGameXp((xp) => xp + 40);
-                item.z = 2.5;
-              } else if (item.type === "turbo") {
-                playSfx("turbo");
-                setActiveTurboTime(4);
-                item.z = 2.5;
-              } else if (item.type === "shield") {
-                setHasShield(true);
-                item.z = 2.5;
-              } else if (item.type === "obstacle") {
-                // Si está en el aire (saltando alto), salta el obstáculo con éxito
-                if (jumpYRef.current > 18) {
-                  playSfx("star");
-                  setGameXp((xp) => xp + 20);
-                  item.z = 2.5;
-                } else {
-                  // Choque
-                  if (hasShield) {
-                    setHasShield(false);
-                    item.z = 2.5;
-                    toast.info("🛡️ ¡El Escudo absorbió el choque!");
-                  } else {
-                    playSfx("wrong");
-                    targetSpeedRef.current = 0.85;
-                    creatureDistRef.current = Math.max(1, creatureDistRef.current - 6);
-                    setCreatureDistanceMeters(Math.round(creatureDistRef.current));
-                    setLives((l) => Math.max(0, l - 1));
-                    screenShakeRef.current = 5;
-                    item.z = 2.5;
-                    setTimeout(() => {
-                      targetSpeedRef.current = 1.0;
-                    }, 2200);
-                  }
-                }
+          // Colisión con el jugador (El jugador está ubicado en playerScreenX)
+          const playerScreenX = Math.max(160, Math.min((canvas.width || 400) * 0.58, 280));
+          if (Math.abs(item.x - playerScreenX) < 22) {
+            if (item.type === "coin") {
+              playSfx("coin");
+              setCollectedCoins((c) => c + 1);
+              setGameXp((xp) => xp + 15);
+              item.x = -100;
+            } else if (item.type === "obstacle") {
+              // Si está en el aire (saltando), salta el obstáculo
+              if (playerYOffsetRef.current > 20) {
+                // Saltado con éxito
+              } else {
+                // Golpe con obstáculo
+                playSfx("wrong");
+                targetSpeedRef.current = 0.8;
+                relativeMonsterDistanceRef.current = Math.max(18, relativeMonsterDistanceRef.current - 25);
+                setLives((l) => Math.max(0, l - 1));
+                screenShakeRef.current = 6;
+                item.x = -100;
+                setTimeout(() => {
+                  targetSpeedRef.current = 1.0;
+                }, 2000);
               }
             }
           }
-        });
 
-        // Limpiar y spawnear nuevos items con espacio generoso para esquivar
-        trackItems = trackItems.filter((it) => it.z < 1.15);
-        if (trackItems.length < 4) {
-          const types: TrackItem["type"][] = ["coin", "coin", "star", "obstacle", "turbo", "shield"];
-          const spawnType = types[Math.floor(Math.random() * types.length)];
-          const spawnLane = Math.floor(Math.random() * 3);
-          trackItems.push({
-            id: ++nextItemId,
-            lane: spawnLane,
-            z: 0.05,
-            type: spawnType,
-          });
-        }
+          if (item.x < -60) {
+            item.x = (canvas.width || 500) + Math.random() * 200 + 150;
+            item.type = Math.random() > 0.5 ? "coin" : "obstacle";
+          }
+        });
       }
 
       // ==========================================
-      // RENDERIZADO VISUAL EN EL CANVAS (60 FPS)
+      // DIBUJAR VIDEOJUEGO DE CARRERA Y PERSECUCIÓN
       // ==========================================
-      const w = canvas.width || 400;
+      const w = canvas.width || 450;
       const h = canvas.height || 220;
       ctx.clearRect(0, 0, w, h);
 
       ctx.save();
-      // Screen Shake
       if (screenShakeRef.current > 0) {
         const shakeX = (Math.random() - 0.5) * screenShakeRef.current;
         const shakeY = (Math.random() - 0.5) * screenShakeRef.current;
         ctx.translate(shakeX, shakeY);
       }
 
-      // 1. Cielo y Horizonte
-      const horizonY = h * 0.34;
-      const skyGrad = ctx.createLinearGradient(0, 0, 0, horizonY);
-      skyGrad.addColorStop(0, "#020617");
-      skyGrad.addColorStop(1, theme.trackColor);
+      const roadY = h - 45; // Nivel del suelo del camino
+
+      // 1. Cielo Gradiente Parallax
+      const skyGrad = ctx.createLinearGradient(0, 0, 0, roadY);
+      skyGrad.addColorStop(0, theme.skyTopColor);
+      skyGrad.addColorStop(1, theme.skyBottomColor);
       ctx.fillStyle = skyGrad;
-      ctx.fillRect(0, 0, w, horizonY);
+      ctx.fillRect(0, 0, w, roadY);
 
-      // Cyber Grid en el horizonte
-      ctx.strokeStyle = theme.gridColor;
-      ctx.lineWidth = 0.5;
-      ctx.globalAlpha = 0.3;
-      for (let i = 0; i < w; i += 20) {
+      // Nubes flotantes
+      ctx.fillStyle = "rgba(255, 255, 255, 0.15)";
+      for (let i = 0; i < 4; i++) {
+        const cx = ((i * 220 - cloudOffset) % (w + 200)) - 100;
         ctx.beginPath();
-        ctx.moveTo(i, 0);
-        ctx.lineTo(w / 2, horizonY);
-        ctx.stroke();
+        ctx.arc(cx, 30 + (i % 2) * 15, 25, 0, Math.PI * 2);
+        ctx.arc(cx + 20, 25 + (i % 2) * 15, 30, 0, Math.PI * 2);
+        ctx.arc(cx + 45, 30 + (i % 2) * 15, 22, 0, Math.PI * 2);
+        ctx.fill();
       }
-      ctx.globalAlpha = 1.0;
 
-      // 2. Geometría de la Carretera 3D
-      const roadTopW = Math.max(70, w * 0.2);
-      const roadBottomW = Math.min(w * 0.92, 540);
-      const roadTopX = (w - roadTopW) / 2;
-      const roadBottomX = (w - roadBottomW) / 2;
-
-      // Asfalto
-      const roadGrad = ctx.createLinearGradient(0, horizonY, 0, h);
-      roadGrad.addColorStop(0, "#090d16");
-      roadGrad.addColorStop(1, "#030712");
-      ctx.fillStyle = roadGrad;
+      // Montañas / Colinas en el fondo (Parallax)
+      ctx.fillStyle = theme.groundColor;
       ctx.beginPath();
-      ctx.moveTo(roadTopX, horizonY);
-      ctx.lineTo(roadTopX + roadTopW, horizonY);
-      ctx.lineTo(roadBottomX + roadBottomW, h);
-      ctx.lineTo(roadBottomX, h);
+      ctx.moveTo(0, roadY);
+      for (let i = -100; i < w + 200; i += 80) {
+        const hillX = i - bgHillsOffset;
+        ctx.lineTo(hillX, roadY - 45 - Math.sin(i * 0.03) * 20);
+      }
+      ctx.lineTo(w, roadY);
       ctx.closePath();
       ctx.fill();
 
-      // Bordes Neón
-      ctx.strokeStyle = theme.gridColor;
-      ctx.lineWidth = 3;
-      ctx.shadowColor = theme.gridColor;
-      ctx.shadowBlur = 10;
-      ctx.beginPath();
-      ctx.moveTo(roadTopX, horizonY);
-      ctx.lineTo(roadBottomX, h);
-      ctx.moveTo(roadTopX + roadTopW, horizonY);
-      ctx.lineTo(roadBottomX + roadBottomW, h);
-      ctx.stroke();
-
-      // Líneas divisorias de los 3 carriles con desplazamiento continuo
-      const lane1Top = roadTopX + roadTopW * 0.33;
-      const lane1Bot = roadBottomX + roadBottomW * 0.33;
-      const lane2Top = roadTopX + roadTopW * 0.66;
-      const lane2Bot = roadBottomX + roadBottomW * 0.66;
-
-      ctx.lineWidth = 2;
-      ctx.setLineDash([12, 12]);
-      ctx.lineDashOffset = -roadOffset;
-      ctx.beginPath();
-      ctx.moveTo(lane1Top, horizonY);
-      ctx.lineTo(lane1Bot, h);
-      ctx.moveTo(lane2Top, horizonY);
-      ctx.lineTo(lane2Bot, h);
-      ctx.stroke();
-      ctx.setLineDash([]);
-      ctx.shadowBlur = 0;
-
-      // 3. Elementos del Escenario Lateral (Pilares / Árboles Neón en movimiento)
-      sceneryPillars.forEach((p) => {
-        const itemY = horizonY + (h - horizonY) * p.z;
-        const currentRoadW = roadTopW + (roadBottomW - roadTopW) * p.z;
-        const currentRoadX = (w - currentRoadW) / 2;
-        const itemX = p.side === "left" ? currentRoadX - 18 * (1 + p.z) : currentRoadX + currentRoadW + 18 * (1 + p.z);
-        const scale = 0.3 + p.z * 0.8;
-
-        ctx.save();
-        ctx.translate(itemX, itemY);
-        ctx.scale(scale, scale);
-        ctx.fillStyle = theme.gridColor;
-        ctx.globalAlpha = 0.45;
-        // Dibujar poste neón / árbol
-        ctx.fillRect(-3, -24, 6, 24);
-        ctx.fillStyle = "#ffffff";
-        ctx.beginPath();
-        ctx.arc(0, -24, 5, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.restore();
+      // 2. Elementos Decorativos del Escenario (Árboles, Rocas, Señales)
+      sceneryObjects.forEach((obj) => {
+        if (obj.type === "tree") {
+          // Tronco
+          ctx.fillStyle = "#3f2715";
+          ctx.fillRect(obj.x - 3, roadY - obj.size, 6, obj.size);
+          // Copa del Árbol
+          ctx.fillStyle = theme.monsterColor;
+          ctx.beginPath();
+          ctx.arc(obj.x, roadY - obj.size - 10, obj.size * 0.45, 0, Math.PI * 2);
+          ctx.fill();
+        } else if (obj.type === "rock") {
+          ctx.fillStyle = "#64748b";
+          ctx.beginPath();
+          ctx.ellipse(obj.x, roadY - 6, obj.size * 0.6, obj.size * 0.4, 0, 0, Math.PI * 2);
+          ctx.fill();
+        } else if (obj.type === "sign") {
+          ctx.fillStyle = "#475569";
+          ctx.fillRect(obj.x - 2, roadY - 26, 4, 26);
+          ctx.fillStyle = "#f59e0b";
+          ctx.fillRect(obj.x - 12, roadY - 26, 24, 14);
+          ctx.fillStyle = "#0f172a";
+          ctx.font = "bold 8px sans-serif";
+          ctx.textAlign = "center";
+          ctx.fillText("⚡", obj.x, roadY - 16);
+        }
       });
 
-      // 4. Meta al final de la carrera (0m -> targetDistance)
-      const progressToGoal = Math.min(1, distanceRef.current / (lvlConfig.targetDistance || 500));
-      if (progressToGoal > 0.85) {
-        ctx.fillStyle = "#ffffff";
-        ctx.fillRect(roadTopX - 12, horizonY - 14, roadTopW + 24, 8);
-        ctx.fillStyle = "#10b981";
-        ctx.font = "bold 9px sans-serif";
-        ctx.textAlign = "center";
-        ctx.fillText("🏁 META", w / 2, horizonY - 7);
-      }
+      // 3. El Camino Principal (Road)
+      ctx.fillStyle = theme.roadColor;
+      ctx.fillRect(0, roadY, w, h - roadY);
 
-      // 5. Dibujar Items en Pista (Monedas, Estrellas, Obstáculos)
-      const sortedItems = [...trackItems].sort((a, b) => a.z - b.z);
-      sortedItems.forEach((item) => {
-        const itemY = horizonY + (h - horizonY) * item.z;
-        const currentRoadW = roadTopW + (roadBottomW - roadTopW) * item.z;
-        const currentRoadX = (w - currentRoadW) / 2;
-        const laneWidth = currentRoadW / 3;
-        const itemX = currentRoadX + laneWidth * item.lane + laneWidth / 2;
-        const scale = 0.35 + item.z * 0.75;
+      // Borde Superior del Camino (Línea de césped/neón)
+      ctx.strokeStyle = theme.roadLineColor;
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(0, roadY);
+      ctx.lineTo(w, roadY);
+      ctx.stroke();
 
-        ctx.save();
-        ctx.translate(itemX, itemY);
-        ctx.scale(scale, scale);
+      // Líneas punteadas del camino que se desplazan
+      ctx.strokeStyle = "rgba(255, 255, 255, 0.4)";
+      ctx.lineWidth = 2;
+      ctx.setLineDash([20, 15]);
+      ctx.lineDashOffset = groundOffset;
+      ctx.beginPath();
+      ctx.moveTo(0, roadY + 18);
+      ctx.lineTo(w, roadY + 18);
+      ctx.stroke();
+      ctx.setLineDash([]);
 
+      // 4. Dibujar Monedas y Obstáculos en el Camino
+      trackItems.forEach((item) => {
         if (item.type === "coin") {
           ctx.fillStyle = "#facc15";
           ctx.beginPath();
-          ctx.arc(0, -10, 10, 0, Math.PI * 2);
+          ctx.arc(item.x, roadY - 14, 10, 0, Math.PI * 2);
           ctx.fill();
           ctx.fillStyle = "#ca8a04";
           ctx.font = "bold 11px sans-serif";
           ctx.textAlign = "center";
-          ctx.fillText("🪙", 0, -6);
-        } else if (item.type === "star") {
-          ctx.font = "20px sans-serif";
-          ctx.textAlign = "center";
-          ctx.fillText("⭐", 0, -6);
-        } else if (item.type === "turbo") {
-          ctx.font = "22px sans-serif";
-          ctx.textAlign = "center";
-          ctx.fillText("🚀", 0, -8);
-        } else if (item.type === "shield") {
-          ctx.font = "22px sans-serif";
-          ctx.textAlign = "center";
-          ctx.fillText("🛡️", 0, -8);
+          ctx.fillText("🪙", item.x, roadY - 10);
         } else if (item.type === "obstacle") {
-          // Obstáculo Cyber Valla
+          // Obstáculo Valla / Roca de videojuego
           ctx.fillStyle = "#ef4444";
-          ctx.fillRect(-18, -16, 36, 12);
+          ctx.fillRect(item.x - 12, roadY - 18, 24, 18);
           ctx.fillStyle = "#fca5a5";
-          ctx.fillRect(-14, -14, 28, 8);
+          ctx.fillRect(item.x - 9, roadY - 15, 18, 12);
           ctx.fillStyle = "#991b1b";
-          ctx.fillRect(-16, -4, 6, 6);
-          ctx.fillRect(10, -4, 6, 6);
+          ctx.font = "bold 9px sans-serif";
+          ctx.textAlign = "center";
+          ctx.fillText("⚠️", item.x, roadY - 6);
         }
-        ctx.restore();
       });
 
-      // 6. Posición Suave del Jugador (Suave Lerp en X)
-      const playerZ = 0.94;
-      const playerRoadW = roadTopW + (roadBottomW - roadTopW) * playerZ;
-      const playerRoadX = (w - playerRoadW) / 2;
-      const pLaneW = playerRoadW / 3;
-      const targetPlayerX = playerRoadX + pLaneW * playerLaneRef.current + pLaneW / 2;
+      // 5. POSICIONES DE LOS PERSONAJES EN PANTALLA
+      const playerScreenX = Math.max(160, Math.min(w * 0.58, 280));
+      const monsterScreenX = playerScreenX - relativeMonsterDistanceRef.current;
+      const playerY = roadY - playerYOffsetRef.current;
 
-      // Interpolación fluida hacia el carril destino
-      if (playerXRef.current === 0) playerXRef.current = targetPlayerX;
-      playerXRef.current += (targetPlayerX - playerXRef.current) * 0.22;
+      // ==========================================
+      // 👾 DIBUJAR AL PERSEGUIDOR (ENEMIGO VISIBLE DETRÁS)
+      // ==========================================
+      const monsterStride = Math.sin(timestamp * 0.018 * currentSpeedRef.current) * 8;
+      const monsterBob = Math.abs(Math.sin(timestamp * 0.018)) * 4;
 
-      const playerBaseY = h - 38 - jumpYRef.current;
+      ctx.save();
+      ctx.translate(monsterScreenX, roadY - monsterBob);
 
-      // Sombra en el suelo (se encoge al saltar)
-      const shadowScale = Math.max(0.3, 1 - jumpYRef.current / 80);
-      ctx.fillStyle = "rgba(0,0,0,0.55)";
+      // Sombra del Monstruo
+      ctx.fillStyle = "rgba(0,0,0,0.5)";
       ctx.beginPath();
-      ctx.ellipse(playerXRef.current, h - 30, 20 * shadowScale, 6 * shadowScale, 0, 0, Math.PI * 2);
+      ctx.ellipse(0, 0, 22, 6, 0, 0, Math.PI * 2);
       ctx.fill();
 
-      // Aura Turbo / Escudo
-      if (activeTurboTime > 0) {
-        ctx.strokeStyle = "#38bdf8";
-        ctx.lineWidth = 3;
-        ctx.shadowColor = "#38bdf8";
-        ctx.shadowBlur = 12;
-        ctx.beginPath();
-        ctx.ellipse(playerXRef.current, playerBaseY + 6, 22, 26, 0, 0, Math.PI * 2);
-        ctx.stroke();
-        ctx.shadowBlur = 0;
-      }
-      if (hasShield) {
-        ctx.strokeStyle = "#10b981";
-        ctx.lineWidth = 3;
-        ctx.beginPath();
-        ctx.ellipse(playerXRef.current, playerBaseY + 6, 24, 28, 0, 0, Math.PI * 2);
-        ctx.stroke();
-      }
+      // Piernas del Monstruo
+      ctx.fillStyle = theme.monsterSecondary;
+      ctx.fillRect(-12, -18 + monsterStride, 8, 18);
+      ctx.fillRect(4, -18 - monsterStride, 8, 18);
 
-      // Animación fluida de correr (Ciclos de piernas y brazos)
-      const runCycle = timestamp * 0.016 * currentSpeedRef.current;
-      const legOffset = Math.sin(runCycle) * 6;
-      const bodyBob = Math.abs(Math.sin(runCycle)) * 2;
+      // Garras de los pies
+      ctx.fillStyle = "#1e293b";
+      ctx.fillRect(-14, -2 + monsterStride, 12, 4);
+      ctx.fillRect(2, -2 - monsterStride, 12, 4);
+
+      // Cuerpo del Monstruo
+      ctx.fillStyle = theme.monsterColor;
+      ctx.shadowColor = theme.monsterColor;
+      ctx.shadowBlur = 15;
+      ctx.beginPath();
+      ctx.roundRect(-20, -50, 40, 36, 10);
+      ctx.fill();
+      ctx.shadowBlur = 0;
+
+      // Cuernos / Espinas
+      ctx.fillStyle = "#f59e0b";
+      ctx.beginPath();
+      ctx.moveTo(-16, -50);
+      ctx.lineTo(-24, -64);
+      ctx.lineTo(-10, -50);
+      ctx.moveTo(16, -50);
+      ctx.lineTo(24, -64);
+      ctx.lineTo(10, -50);
+      ctx.fill();
+
+      // Brazos y Garras persiguiendo hacia adelante
+      ctx.fillStyle = theme.monsterSecondary;
+      ctx.fillRect(8, -40, 18, 8);
+      ctx.fillStyle = "#ffffff";
+      ctx.beginPath();
+      ctx.moveTo(26, -42);
+      ctx.lineTo(34, -36);
+      ctx.lineTo(26, -30);
+      ctx.fill();
+
+      // Ojos Rojos Amenazantes
+      ctx.fillStyle = "#ffffff";
+      ctx.beginPath();
+      ctx.arc(-4, -40, 6, 0, Math.PI * 2);
+      ctx.arc(8, -40, 6, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "#ef4444";
+      ctx.beginPath();
+      ctx.arc(-3, -40, 3.5, 0, Math.PI * 2);
+      ctx.arc(9, -40, 3.5, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Boca con Colmillos Afilados
+      ctx.fillStyle = "#0f172a";
+      ctx.beginPath();
+      ctx.roundRect(-12, -28, 26, 10, 4);
+      ctx.fill();
+      ctx.fillStyle = "#ffffff";
+      ctx.beginPath();
+      ctx.moveTo(-10, -28);
+      ctx.lineTo(-7, -22);
+      ctx.lineTo(-4, -28);
+      ctx.lineTo(-1, -22);
+      ctx.lineTo(2, -28);
+      ctx.lineTo(5, -22);
+      ctx.lineTo(8, -28);
+      ctx.fill();
+
+      ctx.restore();
+
+      // ==========================================
+      // 🏃 DIBUJAR AL PERSONAJE JUGADOR (CORREDOR VISIBLE)
+      // ==========================================
+      const runCycle = timestamp * 0.02 * currentSpeedRef.current;
+      const legOffset = Math.sin(runCycle) * 10;
+      const armOffset = Math.sin(runCycle + Math.PI) * 8;
+      const playerBob = Math.abs(Math.sin(runCycle)) * 3;
 
       const equippedOutfit = CLOSET_ITEMS.find((c) => c.id === equippedItems.outfit) || CLOSET_ITEMS[4];
       const equippedHair = CLOSET_ITEMS.find((c) => c.id === equippedItems.hair) || CLOSET_ITEMS[0];
 
       ctx.save();
-      ctx.translate(playerXRef.current, playerBaseY - bodyBob);
+      ctx.translate(playerScreenX, playerY - playerBob);
 
-      // Piernas y Tenis
+      // Sombra en el camino
+      const shadowScale = Math.max(0.3, 1 - playerYOffsetRef.current / 80);
+      ctx.fillStyle = "rgba(0,0,0,0.5)";
+      ctx.beginPath();
+      ctx.ellipse(0, playerYOffsetRef.current, 16 * shadowScale, 5 * shadowScale, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Estela de velocidad (Speed Lines)
+      if (currentSpeedRef.current > 1.05) {
+        ctx.strokeStyle = "rgba(56, 189, 248, 0.6)";
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(-20, -25);
+        ctx.lineTo(-45, -25);
+        ctx.moveTo(-18, -15);
+        ctx.lineTo(-38, -15);
+        ctx.stroke();
+      }
+
+      // Piernas y Tenis del Jugador
       ctx.fillStyle = "#1e293b";
-      ctx.fillRect(-6, 12 + legOffset, 4, 9);
-      ctx.fillRect(2, 12 - legOffset, 4, 9);
+      ctx.fillRect(-6, -14 + legOffset, 5, 14);
+      ctx.fillRect(2, -14 - legOffset, 5, 14);
+      // Tenis de color
       ctx.fillStyle = "#38bdf8";
-      ctx.fillRect(-7, 19 + legOffset, 6, 4);
-      ctx.fillRect(1, 19 - legOffset, 6, 4);
+      ctx.fillRect(-7, -2 + legOffset, 8, 4);
+      ctx.fillRect(1, -2 - legOffset, 8, 4);
 
-      // Torso / Traje
+      // Torso / Atuendo
       ctx.fillStyle = equippedOutfit.color;
       ctx.beginPath();
-      ctx.roundRect(-8, 0, 16, 14, 3);
+      ctx.roundRect(-8, -32, 16, 20, 4);
       ctx.fill();
 
       // Mochila
       ctx.fillStyle = "#475569";
-      ctx.fillRect(-10, 2, 3, 10);
+      ctx.fillRect(-12, -30, 4, 14);
+
+      // Brazo balanceándose hacia adelante y atrás
+      ctx.fillStyle = equippedOutfit.color;
+      ctx.fillRect(-4 + armOffset, -28, 5, 12);
 
       // Cabeza y Rostro
       ctx.fillStyle = "#fcd34d";
       ctx.beginPath();
-      ctx.arc(0, -6, 7, 0, Math.PI * 2);
+      ctx.arc(0, -38, 9, 0, Math.PI * 2);
       ctx.fill();
 
-      // Pelo
+      // Cabello
       ctx.fillStyle = equippedHair.color;
       ctx.beginPath();
-      ctx.arc(0, -8, 8, Math.PI, Math.PI * 2);
+      ctx.arc(0, -41, 10, Math.PI * 0.9, Math.PI * 2.1);
       ctx.fill();
 
-      // Ojos
+      // Ojos y Sonrisa enfocada
       ctx.fillStyle = "#0f172a";
-      ctx.fillRect(-3, -6, 1.5, 1.5);
-      ctx.fillRect(1.5, -6, 1.5, 1.5);
+      ctx.fillRect(2, -39, 2, 3);
+      ctx.fillRect(5, -39, 2, 3);
 
       ctx.restore();
 
-      // 7. PERSEGUIDOR FÍSICO DENTRO DEL ESCENARIO (VISIBLE DETRÁS DEL JUGADOR)
-      // La posición Z depende directamente de creatureDistRef (0 a 60m)
-      const creatureNormalizedZ = Math.max(0.12, 0.98 - (creatureDistRef.current / 55) * 0.85);
-      const cRoadW = roadTopW + (roadBottomW - roadTopW) * creatureNormalizedZ;
-      const cRoadX = (w - cRoadW) / 2;
-      const cX = cRoadX + cRoadW / 2;
-      const cY = horizonY + (h - horizonY) * creatureNormalizedZ;
-      const cScale = 0.35 + creatureNormalizedZ * 0.85;
-
-      const monsterCycle = timestamp * 0.014;
-      const monsterBob = Math.sin(monsterCycle) * 3;
-
-      ctx.save();
-      ctx.translate(cX, cY - 14 - monsterBob);
-      ctx.scale(cScale, cScale);
-
-      // Efecto congelado
-      if (activeFreezeTime > 0) {
-        ctx.fillStyle = "rgba(56, 189, 248, 0.4)";
-        ctx.strokeStyle = "#38bdf8";
-        ctx.lineWidth = 2;
-        ctx.strokeRect(-22, -22, 44, 44);
-        ctx.fillRect(-22, -22, 44, 44);
+      // 6. Banner de Animación ("¡CORRECTO!" / "¡INCORRECTO!")
+      if (answerBannerRef.current) {
+        ctx.save();
+        ctx.fillStyle = answerBannerRef.current.color;
+        ctx.font = "bold 14px sans-serif";
+        ctx.textAlign = "center";
+        ctx.shadowColor = answerBannerRef.current.color;
+        ctx.shadowBlur = 10;
+        ctx.fillText(answerBannerRef.current.text, w / 2, 35);
+        ctx.restore();
       }
-
-      // Sombra del monstruo
-      ctx.fillStyle = "rgba(0,0,0,0.6)";
-      ctx.beginPath();
-      ctx.ellipse(0, 16, 18, 6, 0, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Cuerpo del monstruo
-      ctx.fillStyle = theme.monsterColor;
-      ctx.shadowColor = theme.monsterColor;
-      ctx.shadowBlur = 14;
-      ctx.beginPath();
-      ctx.arc(0, 0, 19, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.shadowBlur = 0;
-
-      // Ojos brillantes
-      ctx.fillStyle = "#ffffff";
-      ctx.beginPath();
-      ctx.arc(-7, -4, 5, 0, Math.PI * 2);
-      ctx.arc(7, -4, 5, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.fillStyle = "#ef4444";
-      ctx.beginPath();
-      ctx.arc(-7, -4, 2.5, 0, Math.PI * 2);
-      ctx.arc(7, -4, 2.5, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Dientes
-      ctx.fillStyle = "#ffffff";
-      ctx.beginPath();
-      ctx.moveTo(-7, 6);
-      ctx.lineTo(-4, 11);
-      ctx.lineTo(0, 6);
-      ctx.lineTo(4, 11);
-      ctx.lineTo(7, 6);
-      ctx.closePath();
-      ctx.fill();
-
-      ctx.restore();
 
       ctx.restore();
 
@@ -1291,7 +1212,7 @@ function SmartEscapeGame() {
       window.removeEventListener("resize", resizeCanvas);
       if (animFrameIdRef.current) cancelAnimationFrame(animFrameIdRef.current);
     };
-  }, [screen, isPaused, selectedWorld, selectedLevel, activeTurboTime, hasShield, activeMagnetTime, activeFreezeTime]);
+  }, [screen, isPaused, selectedWorld, selectedLevel, activeFreezeTime]);
 
   const handleBuyItem = (item: CustomizationItem) => {
     if (coinsBalance < item.cost) {
@@ -1358,7 +1279,7 @@ function SmartEscapeGame() {
                 SMART ESCAPE
               </h1>
               <p className="text-xs text-slate-400 max-w-xs mx-auto leading-relaxed">
-                ¡Corre, esquiva a la criatura y responde preguntas basadas en tu material guardado!
+                ¡Corre por el camino, esquiva obstáculos y responde antes de que el enemigo te alcance!
               </p>
             </div>
 
@@ -1620,7 +1541,7 @@ function SmartEscapeGame() {
                       </span>
                       <div className="flex items-center gap-2 text-[10px] text-slate-400 mt-0.5">
                         <span>🏁 Meta: {lvl.targetDistance}m</span>
-                        <span>📚 {lvl.reqQuestions} preguntas</span>
+                        <span>📚 {lvl.reqQuestions} preguntas del material</span>
                       </div>
                     </div>
 
@@ -1740,11 +1661,11 @@ function SmartEscapeGame() {
       )}
 
       {/* ======================================================== */}
-      {/* 5. PANTALLA COMPLETA DE PARTIDA (RUNNER + PERSPECTIVA 3D) */}
+      {/* 5. PANTALLA COMPLETA DE PARTIDA (VIDEOJUEGO DE PERSECUCIÓN) */}
       {/* ======================================================== */}
       {screen === "playing" && (
         <div className="fixed inset-0 z-50 w-full h-full max-h-screen flex flex-col justify-between overflow-hidden bg-slate-950 text-white select-none">
-          {/* Header Superior con Meta y Radar */}
+          {/* Header Superior con Barra de Distancia y Stats */}
           <header className="h-12 w-full shrink-0 border-b border-slate-800 bg-slate-900/95 backdrop-blur px-3 flex items-center justify-between gap-2 z-30">
             {/* Vidas & XP */}
             <div className="flex items-center gap-2.5">
@@ -1770,19 +1691,10 @@ function SmartEscapeGame() {
               </span>
             </div>
 
-            {/* Radar: Distancia a la Meta + Distancia al Monstruo */}
-            <div className="flex items-center gap-2 bg-slate-950 border border-slate-800 px-3 py-1 rounded-full text-[11px] font-bold">
-              <span className="text-cyan-300 font-mono">
-                🏃 {Math.round(playerDistanceMeters)}m / {currentLvlConfig.targetDistance || 500}m 🏁
-              </span>
-              <span className="text-slate-600">|</span>
-              <span
-                className={`flex items-center gap-1 ${
-                  creatureDistanceMeters < 15 ? "text-rose-400 font-black animate-pulse" : "text-amber-400"
-                }`}
-              >
-                <span>{currentTheme.monsterEmoji}</span>
-                <span>{Math.round(creatureDistanceMeters)}m</span>
+            {/* Barra de Progreso de la Carrera: 🏃 250 m / 1000 m 🏁 */}
+            <div className="flex items-center gap-1.5 bg-slate-950 border border-slate-800 px-3 py-1 rounded-full text-[11px] font-bold">
+              <span className="text-cyan-300 font-mono font-black">
+                🏃 {Math.round(playerDistanceMeters)} m / {currentLvlConfig.targetDistance || 500} m 🏁
               </span>
             </div>
 
@@ -1800,23 +1712,13 @@ function SmartEscapeGame() {
             </div>
           </header>
 
-          {/* Centro: Escenario 3D Runner Canvas (Fluidos 60 FPS) */}
+          {/* Centro: Escenario Completo de Persecución (60 FPS) */}
           <div className="flex-1 w-full min-h-[140px] max-h-[40vh] md:max-h-[46vh] relative overflow-hidden bg-slate-950">
             <canvas ref={canvasRef} className="w-full h-full block" />
-
-            {/* Alerta de Perseguidor cuando está muy cerca */}
-            {creatureDistanceMeters < 15 && (
-              <div className="absolute top-2 inset-x-3 pointer-events-none z-20">
-                <div className="bg-rose-600/90 border border-rose-400 text-white text-[11px] font-black px-3 py-1 rounded-full flex items-center justify-center gap-1.5 animate-pulse shadow-lg backdrop-blur">
-                  <AlertTriangle className="size-3.5" />
-                  <span>¡{currentTheme.monsterName.toUpperCase()} ESTÁ A {Math.round(creatureDistanceMeters)} METROS!</span>
-                </div>
-              </div>
-            )}
           </div>
 
           {/* ======================================================== */}
-          {/* PARTE INFERIOR: PREGUNTA & OPCIONES (ALTO CONTRASTE) */}
+          {/* PARTE INFERIOR: TARJETA DE PREGUNTA & 4 OPCIONES */}
           {/* ======================================================== */}
           <div className="w-full shrink-0 border-t-2 border-purple-500/40 bg-slate-900 p-3 sm:p-4 space-y-2.5 z-30 max-w-2xl mx-auto shadow-2xl">
             {/* Header de la Pregunta + Temporizador */}
@@ -1829,12 +1731,12 @@ function SmartEscapeGame() {
               <div className="flex items-center gap-1.5 font-black bg-slate-950 px-2.5 py-1 rounded-full border border-slate-800">
                 <Clock className="size-3.5 text-amber-400" />
                 <span className={`text-xs font-mono ${qTimer <= 3 ? "text-rose-400 font-black animate-pulse" : "text-amber-300"}`}>
-                  {qTimer}s
+                  ⏱️ {qTimer}s
                 </span>
               </div>
             </div>
 
-            {/* Barra de tiempo */}
+            {/* Barra de tiempo de la pregunta */}
             <div className="h-2 w-full bg-slate-950 rounded-full overflow-hidden border border-slate-800">
               <div
                 className={`h-full transition-all duration-300 ${
@@ -1855,24 +1757,21 @@ function SmartEscapeGame() {
               </div>
             )}
 
-            {/* 4 Opciones de Respuesta */}
+            {/* 4 Opciones de Respuesta con letras grandes 🅰️ 🅱️ 🅲️ 🅳️ */}
             {currentQuestion && (
               <div className="grid grid-cols-2 gap-2">
                 {currentQuestion.options.map((opt, idx) => {
-                  const letters = ["A", "B", "C", "D"];
+                  const letters = ["🅰️", "🅱️", "🅲️", "🅳️"];
                   const isSelected = selectedOption === idx;
                   const isCorrect = idx === currentQuestion.correctIndex;
 
                   let optClass = "border-2 border-slate-700 bg-slate-800 hover:bg-slate-700 hover:border-purple-400 text-white";
-                  let badgeClass = "bg-slate-700 text-cyan-300 border border-slate-600";
 
                   if (selectedOption !== null) {
                     if (isCorrect) {
                       optClass = "border-2 border-emerald-400 bg-emerald-600 text-white font-black shadow-lg shadow-emerald-500/20";
-                      badgeClass = "bg-emerald-800 text-white border-emerald-300";
                     } else if (isSelected) {
                       optClass = "border-2 border-rose-400 bg-rose-600 text-white font-black shadow-lg shadow-rose-500/20";
-                      badgeClass = "bg-rose-800 text-white border-rose-300";
                     }
                   }
 
@@ -1881,9 +1780,9 @@ function SmartEscapeGame() {
                       key={idx}
                       disabled={selectedOption !== null}
                       onClick={() => handleAnswerOption(idx)}
-                      className={`p-2.5 sm:p-3 rounded-xl text-left text-xs sm:text-sm font-bold leading-tight transition active:scale-95 cursor-pointer flex items-center gap-2.5 shadow-md ${optClass}`}
+                      className={`p-2.5 sm:p-3 rounded-xl text-left text-xs sm:text-sm font-bold leading-tight transition active:scale-95 cursor-pointer flex items-center gap-2 shadow-md ${optClass}`}
                     >
-                      <span className={`size-6 rounded-lg font-black text-xs grid place-items-center shrink-0 ${badgeClass}`}>
+                      <span className="text-base shrink-0">
                         {letters[idx]}
                       </span>
                       <span className="line-clamp-2 flex-1 text-white font-bold">{opt}</span>
@@ -1896,32 +1795,15 @@ function SmartEscapeGame() {
               </div>
             )}
 
-            {/* Controles de Movimiento y Salto */}
-            <div className="flex items-center justify-between gap-2 pt-1">
-              <div className="flex gap-2">
-                <button
-                  onClick={() => setPlayerLane((p) => Math.max(0, p - 1))}
-                  className="size-11 rounded-xl bg-slate-800 hover:bg-slate-700 border-2 border-slate-600 active:bg-purple-600 text-white font-black text-base flex items-center justify-center transition active:scale-90 cursor-pointer shadow-md"
-                  title="Mover Izquierda (A)"
-                >
-                  ◀
-                </button>
-                <button
-                  onClick={() => setPlayerLane((p) => Math.min(2, p + 1))}
-                  className="size-11 rounded-xl bg-slate-800 hover:bg-slate-700 border-2 border-slate-600 active:bg-purple-600 text-white font-black text-base flex items-center justify-center transition active:scale-90 cursor-pointer shadow-md"
-                  title="Mover Derecha (D)"
-                >
-                  ▶
-                </button>
-              </div>
-
+            {/* Botón de Salto táctil */}
+            <div className="pt-1">
               <button
                 onClick={triggerJump}
-                className="flex-1 h-11 rounded-xl bg-gradient-to-r from-purple-600 via-indigo-600 to-cyan-600 active:brightness-125 text-white font-display text-xs sm:text-sm font-black flex items-center justify-center gap-1.5 shadow-lg transition active:scale-95 cursor-pointer"
-                title="Saltar (Espacio / W)"
+                className="w-full h-11 rounded-xl bg-gradient-to-r from-purple-600 via-indigo-600 to-cyan-600 active:brightness-125 text-white font-display text-xs sm:text-sm font-black flex items-center justify-center gap-2 shadow-lg transition active:scale-95 cursor-pointer"
+                title="Saltar Obstáculo (Espacio / W)"
               >
                 <ArrowUp className="size-4" />
-                <span>SALTAR (ESPACIO)</span>
+                <span>SALTAR OBSTÁCULO (ESPACIO)</span>
               </button>
             </div>
           </div>
@@ -1934,10 +1816,10 @@ function SmartEscapeGame() {
       {screen === "gameover" && (
         <div className="flex-1 w-full h-full overflow-y-auto p-4 md:p-6 max-w-md mx-auto flex flex-col justify-center text-center space-y-5 animate-fade-in">
           <div className="space-y-1">
-            <span className="text-5xl animate-bounce block">💀</span>
-            <h2 className="font-display text-2xl font-black text-rose-500">¡Te alcanzaron!</h2>
+            <span className="text-5xl animate-bounce block">👾</span>
+            <h2 className="font-display text-2xl font-black text-rose-500">¡TE ATRAPÓ!</h2>
             <p className="text-xs text-slate-400">
-              {currentTheme.monsterName} corrió más rápido esta vez. ¡Repasa tus conceptos y vuelve a escapar!
+              {currentTheme.monsterName} te alcanzó en el camino. ¡Repasa tus apuntes y vuelve a intentar!
             </p>
           </div>
 
@@ -1995,10 +1877,10 @@ function SmartEscapeGame() {
               <Star className="size-7 fill-amber-400" />
             </div>
             <h2 className="font-display text-2xl font-black bg-gradient-to-r from-emerald-400 via-cyan-400 to-indigo-400 bg-clip-text text-transparent">
-              ¡MISIÓN COMPLETADA! 🏆
+              ¡NIVEL COMPLETADO! 🏆
             </h2>
             <p className="text-xs text-slate-400">
-              ¡Llegaste a la meta, escapaste de {currentTheme.monsterName} y completaste el Nivel {selectedLevel}!
+              ¡Has escapado con éxito de {currentTheme.monsterName} y cruzado la meta!
             </p>
           </div>
 
