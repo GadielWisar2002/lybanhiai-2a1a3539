@@ -86,6 +86,7 @@ interface WorldTheme {
   trackColor: string;
   gridColor: string;
   skyColor: string;
+  sceneryItem: string; // 'tree' | 'pillar' | 'lab' | 'crystal'
   monsterName: string;
   monsterEmoji: string;
   monsterColor: string;
@@ -101,6 +102,7 @@ const WORLDS: Record<WorldId, WorldTheme> = {
     trackColor: "#062817",
     gridColor: "#10b981",
     skyColor: "#021209",
+    sceneryItem: "lab",
     monsterName: "Nebulón Químico",
     monsterEmoji: "🧪",
     monsterColor: "#10b981",
@@ -114,6 +116,7 @@ const WORLDS: Record<WorldId, WorldTheme> = {
     trackColor: "#0f172a",
     gridColor: "#38bdf8",
     skyColor: "#030712",
+    sceneryItem: "pillar",
     monsterName: "Gorgon Glitch",
     monsterEmoji: "👾",
     monsterColor: "#06b6d4",
@@ -127,6 +130,7 @@ const WORLDS: Record<WorldId, WorldTheme> = {
     trackColor: "#290c29",
     gridColor: "#ec4899",
     skyColor: "#110211",
+    sceneryItem: "tree",
     monsterName: "Virus Voraz",
     monsterEmoji: "🦠",
     monsterColor: "#ec4899",
@@ -140,6 +144,7 @@ const WORLDS: Record<WorldId, WorldTheme> = {
     trackColor: "#271705",
     gridColor: "#f59e0b",
     skyColor: "#0f0701",
+    sceneryItem: "pillar",
     monsterName: "Coloso del Tiempo",
     monsterEmoji: "🗿",
     monsterColor: "#f59e0b",
@@ -153,6 +158,7 @@ const WORLDS: Record<WorldId, WorldTheme> = {
     trackColor: "#150d33",
     gridColor: "#a855f7",
     skyColor: "#080417",
+    sceneryItem: "pillar",
     monsterName: "Grammar Phantom",
     monsterEmoji: "👻",
     monsterColor: "#a855f7",
@@ -166,6 +172,7 @@ const WORLDS: Record<WorldId, WorldTheme> = {
     trackColor: "#0a1931",
     gridColor: "#3b82f6",
     skyColor: "#030b17",
+    sceneryItem: "pillar",
     monsterName: "Cronos PAA",
     monsterEmoji: "⚡",
     monsterColor: "#3b82f6",
@@ -179,6 +186,7 @@ const WORLDS: Record<WorldId, WorldTheme> = {
     trackColor: "#1d0c33",
     gridColor: "#c084fc",
     skyColor: "#0b0314",
+    sceneryItem: "pillar",
     monsterName: "Cénit Ceneval",
     monsterEmoji: "🔮",
     monsterColor: "#c084fc",
@@ -192,6 +200,7 @@ const WORLDS: Record<WorldId, WorldTheme> = {
     trackColor: "#170a31",
     gridColor: "#818cf8",
     skyColor: "#070211",
+    sceneryItem: "pillar",
     monsterName: "Sombra del Examen",
     monsterEmoji: "😈",
     monsterColor: "#818cf8",
@@ -199,10 +208,10 @@ const WORLDS: Record<WorldId, WorldTheme> = {
 };
 
 const LEVELS_CONFIG = [
-  { level: 1, name: "Principiante", reqQuestions: 5, timePerQ: 10, creatureSpeed: 0.8, bonusCoins: 5, bonusXp: 50 },
-  { level: 2, name: "Explorador", reqQuestions: 8, timePerQ: 8, creatureSpeed: 1.0, bonusCoins: 10, bonusXp: 100 },
-  { level: 3, name: "Experto", reqQuestions: 10, timePerQ: 7, creatureSpeed: 1.2, bonusCoins: 15, bonusXp: 175 },
-  { level: 4, name: "Maestro", reqQuestions: 12, timePerQ: 5, creatureSpeed: 1.5, bonusCoins: 25, bonusXp: 250 },
+  { level: 1, name: "Principiante", reqQuestions: 5, targetDistance: 450, timePerQ: 10, creatureBaseSpeed: 0.85, bonusCoins: 5, bonusXp: 50 },
+  { level: 2, name: "Explorador", reqQuestions: 8, targetDistance: 650, timePerQ: 8, creatureBaseSpeed: 1.0, bonusCoins: 10, bonusXp: 100 },
+  { level: 3, name: "Experto", reqQuestions: 10, targetDistance: 850, timePerQ: 7, creatureBaseSpeed: 1.15, bonusCoins: 15, bonusXp: 175 },
+  { level: 4, name: "Maestro", reqQuestions: 12, targetDistance: 1000, timePerQ: 5, creatureBaseSpeed: 1.35, bonusCoins: 25, bonusXp: 250 },
 ];
 
 function SmartEscapeGame() {
@@ -274,13 +283,11 @@ function SmartEscapeGame() {
   const [selectedOption, setSelectedOption] = useState<number | null>(null);
   const [answerFeedback, setAnswerFeedback] = useState<"correct" | "wrong" | null>(null);
 
-  // Runner In-Game Metrics
+  // Runner In-Game Metrics & Smooth Physics
   const [lives, setLives] = useState(3);
   const [playerLane, setPlayerLane] = useState<number>(1); // 0 = Left, 1 = Center, 2 = Right
-  const [isJumping, setIsJumping] = useState(false);
   const [playerDistanceMeters, setPlayerDistanceMeters] = useState(0);
-  const [creatureDistanceMeters, setCreatureDistanceMeters] = useState(50); // 0 to 80m
-  const [playerSpeed, setPlayerSpeed] = useState(1.0);
+  const [creatureDistanceMeters, setCreatureDistanceMeters] = useState(48); // Distancia 0 a 70m
   const [gameXp, setGameXp] = useState(0);
   const [collectedCoins, setCollectedCoins] = useState(0);
   const [collectedStars, setCollectedStars] = useState(0);
@@ -297,11 +304,28 @@ function SmartEscapeGame() {
   const [activeMagnetTime, setActiveMagnetTime] = useState(0);
   const [activeFreezeTime, setActiveFreezeTime] = useState(0);
 
+  // Smooth Movement Refs (Mutable for 60fps rendering without react state lag)
+  const playerLaneRef = useRef<number>(1);
+  const playerXRef = useRef<number>(0);
+  const jumpYRef = useRef<number>(0);
+  const jumpVelRef = useRef<number>(0);
+  const isJumpingRef = useRef<boolean>(false);
+  const currentSpeedRef = useRef<number>(1.0);
+  const targetSpeedRef = useRef<number>(1.0);
+  const creatureDistRef = useRef<number>(48);
+  const distanceRef = useRef<number>(0);
+  const screenShakeRef = useRef<number>(0);
+
   // Canvas
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const animFrameIdRef = useRef<number | null>(null);
   const lastTimeRef = useRef<number>(0);
   const timerIntervalRef = useRef<any>(null);
+
+  // Sincronizar lane
+  useEffect(() => {
+    playerLaneRef.current = playerLane;
+  }, [playerLane]);
 
   // Web Audio Synth
   const playSfx = (type: "jump" | "coin" | "star" | "correct" | "wrong" | "turbo" | "freeze" | "gameover" | "victory") => {
@@ -314,12 +338,12 @@ function SmartEscapeGame() {
       gain.connect(ctx.destination);
 
       if (type === "jump") {
-        osc.frequency.setValueAtTime(250, ctx.currentTime);
-        osc.frequency.exponentialRampToValueAtTime(650, ctx.currentTime + 0.15);
-        gain.gain.setValueAtTime(0.1, ctx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.15);
+        osc.frequency.setValueAtTime(260, ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(700, ctx.currentTime + 0.16);
+        gain.gain.setValueAtTime(0.12, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.16);
         osc.start();
-        osc.stop(ctx.currentTime + 0.15);
+        osc.stop(ctx.currentTime + 0.16);
       } else if (type === "coin") {
         osc.frequency.setValueAtTime(987.77, ctx.currentTime);
         osc.frequency.setValueAtTime(1318.51, ctx.currentTime + 0.08);
@@ -328,10 +352,10 @@ function SmartEscapeGame() {
         osc.start();
         osc.stop(ctx.currentTime + 0.16);
       } else if (type === "correct") {
-        osc.frequency.setValueAtTime(523.25, ctx.currentTime); // C5
-        osc.frequency.setValueAtTime(659.25, ctx.currentTime + 0.08); // E5
-        osc.frequency.setValueAtTime(783.99, ctx.currentTime + 0.16); // G5
-        osc.frequency.setValueAtTime(1046.5, ctx.currentTime + 0.24); // C6
+        osc.frequency.setValueAtTime(523.25, ctx.currentTime);
+        osc.frequency.setValueAtTime(659.25, ctx.currentTime + 0.08);
+        osc.frequency.setValueAtTime(783.99, ctx.currentTime + 0.16);
+        osc.frequency.setValueAtTime(1046.5, ctx.currentTime + 0.24);
         gain.gain.setValueAtTime(0.15, ctx.currentTime);
         gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.35);
         osc.start();
@@ -382,17 +406,15 @@ function SmartEscapeGame() {
     }
   };
 
-  // Jump
+  // Jump con física de arco suave
   const triggerJump = useCallback(() => {
-    if (isJumping) return;
-    setIsJumping(true);
+    if (isJumpingRef.current) return;
+    isJumpingRef.current = true;
+    jumpVelRef.current = 420; // velocidad de impulso vertical
     playSfx("jump");
-    setTimeout(() => {
-      setIsJumping(false);
-    }, 550);
-  }, [isJumping, soundEnabled]);
+  }, [soundEnabled]);
 
-  // Keyboard controls
+  // Teclado
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (screen !== "playing" || isPaused) return;
@@ -568,7 +590,7 @@ function SmartEscapeGame() {
 
     setQuestionsPool(questions);
     setCurrentQIndex(0);
-    setCurrentQuestion(questions[0]); // Pregunta 1 lista inmediatamente al segundo 0
+    setCurrentQuestion(questions[0]);
     setQTimer(lvlConfig.timePerQ);
     setQTimerMax(lvlConfig.timePerQ);
     setSelectedOption(null);
@@ -576,10 +598,19 @@ function SmartEscapeGame() {
 
     setLives(3);
     setPlayerLane(1);
-    setIsJumping(false);
+    playerLaneRef.current = 1;
+    playerXRef.current = 0;
+    jumpYRef.current = 0;
+    jumpVelRef.current = 0;
+    isJumpingRef.current = false;
+    currentSpeedRef.current = 1.0;
+    targetSpeedRef.current = 1.0;
+    creatureDistRef.current = 48;
+    distanceRef.current = 0;
+    screenShakeRef.current = 0;
+
     setPlayerDistanceMeters(0);
-    setCreatureDistanceMeters(50); // Inicia a 50 metros de distancia
-    setPlayerSpeed(1.0);
+    setCreatureDistanceMeters(48);
     setGameXp(0);
     setCollectedCoins(0);
     setCollectedStars(0);
@@ -620,7 +651,7 @@ function SmartEscapeGame() {
     handleAnswerOption(-1);
   };
 
-  // Respuesta
+  // Respuesta & Efectos en Gameplay Suaves
   const handleAnswerOption = (optionIndex: number) => {
     if (selectedOption !== null || !currentQuestion) return;
     setSelectedOption(optionIndex);
@@ -640,9 +671,17 @@ function SmartEscapeGame() {
       setGameXp((xp) => xp + 50 + streak * 10);
       setCollectedCoins((c) => c + 2);
 
-      setPlayerSpeed((sp) => Math.min(2.5, sp + 0.4));
-      setCreatureDistanceMeters((dist) => Math.min(75, dist + 18));
-      toast.success("¡CORRECTO! ⚡ +50 XP y velocidad aumentada", { duration: 1200 });
+      // Aumento gradual de velocidad (+15% temporal) y la criatura se retrasa suavemente
+      targetSpeedRef.current = 1.18;
+      creatureDistRef.current = Math.min(65, creatureDistRef.current + 12);
+      setCreatureDistanceMeters(Math.round(creatureDistRef.current));
+
+      // Volver a velocidad normal tras 2.8s
+      setTimeout(() => {
+        targetSpeedRef.current = 1.0;
+      }, 2800);
+
+      toast.success("¡CORRECTO! ⚡ +15% Velocidad y alejaste al perseguidor", { duration: 1200 });
     } else {
       if (hasShield) {
         setHasShield(false);
@@ -655,15 +694,20 @@ function SmartEscapeGame() {
         setStreak(0);
         setLives((l) => Math.max(0, l - 1));
 
-        setPlayerSpeed(0.7);
-        setCreatureDistanceMeters((dist) => {
-          const next = dist - 15;
-          if (next <= 0) {
-            triggerGameOver();
-            return 0;
-          }
-          return next;
-        });
+        // Reducción gradual de velocidad (-15% temporal) y la criatura se acerca
+        targetSpeedRef.current = 0.85;
+        creatureDistRef.current = creatureDistRef.current - 12;
+        setCreatureDistanceMeters(Math.max(0, Math.round(creatureDistRef.current)));
+        screenShakeRef.current = 6;
+
+        if (creatureDistRef.current <= 0) {
+          triggerGameOver();
+          return;
+        }
+
+        setTimeout(() => {
+          targetSpeedRef.current = 1.0;
+        }, 2800);
 
         toast.error("❌ ¡Incorrecto! La criatura se acerca...", { duration: 1200 });
       }
@@ -729,7 +773,9 @@ function SmartEscapeGame() {
     }
   };
 
-  // Motor Canvas 3D Runner (Ajuste dinámico de resolución sin zoom)
+  // ========================================================
+  // MOTOR CANVAS RUNNER 3D CON PERSPECTIVA Y MOVIMIENTO FLUIDO
+  // ========================================================
   useEffect(() => {
     if (screen !== "playing") return;
 
@@ -743,17 +789,36 @@ function SmartEscapeGame() {
     const lvlConfig = LEVELS_CONFIG[selectedLevel - 1] || LEVELS_CONFIG[0];
 
     interface TrackItem {
+      id: number;
       lane: number;
       z: number;
-      type: "coin" | "star" | "obstacle" | "turbo" | "shield" | "freeze";
+      type: "coin" | "star" | "obstacle" | "turbo" | "shield";
+    }
+
+    interface SceneryPillar {
+      side: "left" | "right";
+      z: number;
     }
 
     let trackItems: TrackItem[] = [
-      { lane: 0, z: 0.2, type: "coin" },
-      { lane: 1, z: 0.45, type: "obstacle" },
-      { lane: 2, z: 0.7, type: "star" },
-      { lane: 1, z: 0.9, type: "turbo" },
+      { id: 1, lane: 0, z: 0.25, type: "coin" },
+      { id: 2, lane: 1, z: 0.5, type: "obstacle" },
+      { id: 3, lane: 2, z: 0.75, type: "star" },
+      { id: 4, lane: 0, z: 0.95, type: "coin" },
     ];
+
+    let sceneryPillars: SceneryPillar[] = [
+      { side: "left", z: 0.1 },
+      { side: "right", z: 0.1 },
+      { side: "left", z: 0.35 },
+      { side: "right", z: 0.35 },
+      { side: "left", z: 0.6 },
+      { side: "right", z: 0.6 },
+      { side: "left", z: 0.85 },
+      { side: "right", z: 0.85 },
+    ];
+
+    let nextItemId = 10;
 
     const resizeCanvas = () => {
       if (!canvas) return;
@@ -773,71 +838,109 @@ function SmartEscapeGame() {
       lastTimeRef.current = timestamp;
 
       if (!isPaused) {
-        const effectiveSpeed = activeTurboTime > 0 ? playerSpeed * 1.5 : playerSpeed;
-        setPlayerDistanceMeters((d) => d + effectiveSpeed * 14 * dt);
+        // 1. Suave interpolación de velocidad
+        currentSpeedRef.current += (targetSpeedRef.current - currentSpeedRef.current) * Math.min(1, dt * 3.5);
+        const speed = currentSpeedRef.current;
+
+        // 2. Distancia recorrida
+        const metersAdvanced = speed * 16 * dt;
+        distanceRef.current += metersAdvanced;
+        setPlayerDistanceMeters(Math.round(distanceRef.current));
         setTimeElapsed((t) => t + dt);
 
-        if (activeFreezeTime <= 0) {
-          const creatureApproach = lvlConfig.creatureSpeed * (effectiveSpeed < 1 ? 3.0 : 1.2) * dt;
-          setCreatureDistanceMeters((dist) => {
-            const next = dist - creatureApproach;
-            if (next <= 0) {
-              triggerGameOver();
-              return 0;
-            }
-            return next;
-          });
+        // 3. Física de Salto del Jugador (Gravedad suave)
+        if (isJumpingRef.current) {
+          jumpYRef.current += jumpVelRef.current * dt;
+          jumpVelRef.current -= 980 * dt; // gravedad
+          if (jumpYRef.current <= 0) {
+            jumpYRef.current = 0;
+            jumpVelRef.current = 0;
+            isJumpingRef.current = false;
+          }
         }
 
+        // 4. Perseguidor dinámico físico
+        if (activeFreezeTime <= 0) {
+          const creatureApproach = (lvlConfig.creatureBaseSpeed * 1.5 - (speed - 1.0) * 2.0) * dt;
+          creatureDistRef.current -= creatureApproach;
+          setCreatureDistanceMeters(Math.max(0, Math.round(creatureDistRef.current)));
+
+          if (creatureDistRef.current <= 0) {
+            triggerGameOver();
+            return;
+          }
+        }
+
+        // 5. Pantalla temblor
+        if (screenShakeRef.current > 0) {
+          screenShakeRef.current = Math.max(0, screenShakeRef.current - dt * 15);
+        }
+
+        // 6. Temporizadores de powerups
         if (activeTurboTime > 0) setActiveTurboTime((t) => Math.max(0, t - dt));
         if (activeMagnetTime > 0) setActiveMagnetTime((t) => Math.max(0, t - dt));
         if (activeFreezeTime > 0) setActiveFreezeTime((t) => Math.max(0, t - dt));
 
-        roadOffset += effectiveSpeed * 350 * dt;
-        if (roadOffset > 1000) roadOffset = 0;
+        // 7. Desplazamiento continuo del camino y escenario
+        roadOffset = (roadOffset + speed * 300 * dt) % 1000;
 
+        // Desplazar pilares y árboles del escenario
+        sceneryPillars.forEach((p) => {
+          p.z += speed * 0.45 * dt;
+          if (p.z > 1.2) p.z = 0.05;
+        });
+
+        // 8. Desplazar objetos y chequear colisiones
         trackItems.forEach((item) => {
-          item.z += effectiveSpeed * 0.42 * dt;
+          item.z += speed * 0.45 * dt;
 
           if (activeMagnetTime > 0 && (item.type === "coin" || item.type === "star")) {
-            item.lane += (playerLane - item.lane) * 0.15;
+            item.lane += (playerLaneRef.current - item.lane) * 0.18;
           }
 
-          if (item.z >= 0.92 && item.z <= 1.06) {
-            if (Math.round(item.lane) === playerLane) {
+          // Rango de colisión con el jugador
+          if (item.z >= 0.88 && item.z <= 1.02) {
+            if (Math.round(item.lane) === playerLaneRef.current) {
               if (item.type === "coin") {
                 playSfx("coin");
                 setCollectedCoins((c) => c + 1);
                 setGameXp((xp) => xp + 15);
-                item.z = 2;
+                item.z = 2.5;
               } else if (item.type === "star") {
                 playSfx("star");
                 setCollectedStars((s) => s + 1);
                 setGameXp((xp) => xp + 40);
-                item.z = 2;
+                item.z = 2.5;
               } else if (item.type === "turbo") {
                 playSfx("turbo");
                 setActiveTurboTime(4);
-                item.z = 2;
+                item.z = 2.5;
               } else if (item.type === "shield") {
                 setHasShield(true);
-                item.z = 2;
-              } else if (item.type === "freeze") {
-                playSfx("freeze");
-                setActiveFreezeTime(4);
-                item.z = 2;
+                item.z = 2.5;
               } else if (item.type === "obstacle") {
-                if (!isJumping) {
+                // Si está en el aire (saltando alto), salta el obstáculo con éxito
+                if (jumpYRef.current > 18) {
+                  playSfx("star");
+                  setGameXp((xp) => xp + 20);
+                  item.z = 2.5;
+                } else {
+                  // Choque
                   if (hasShield) {
                     setHasShield(false);
-                    item.z = 2;
-                    toast.info("🛡️ ¡Escudo absorbió el choque!");
+                    item.z = 2.5;
+                    toast.info("🛡️ ¡El Escudo absorbió el choque!");
                   } else {
                     playSfx("wrong");
-                    setPlayerSpeed(0.7);
-                    setCreatureDistanceMeters((d) => Math.max(1, d - 6));
+                    targetSpeedRef.current = 0.85;
+                    creatureDistRef.current = Math.max(1, creatureDistRef.current - 6);
+                    setCreatureDistanceMeters(Math.round(creatureDistRef.current));
                     setLives((l) => Math.max(0, l - 1));
-                    item.z = 2;
+                    screenShakeRef.current = 5;
+                    item.z = 2.5;
+                    setTimeout(() => {
+                      targetSpeedRef.current = 1.0;
+                    }, 2200);
                   }
                 }
               }
@@ -845,12 +948,14 @@ function SmartEscapeGame() {
           }
         });
 
+        // Limpiar y spawnear nuevos items con espacio generoso para esquivar
         trackItems = trackItems.filter((it) => it.z < 1.15);
         if (trackItems.length < 4) {
-          const types: TrackItem["type"][] = ["coin", "coin", "star", "obstacle", "turbo", "shield", "freeze"];
+          const types: TrackItem["type"][] = ["coin", "coin", "star", "obstacle", "turbo", "shield"];
           const spawnType = types[Math.floor(Math.random() * types.length)];
           const spawnLane = Math.floor(Math.random() * 3);
           trackItems.push({
+            id: ++nextItemId,
             lane: spawnLane,
             z: 0.05,
             type: spawnType,
@@ -858,24 +963,34 @@ function SmartEscapeGame() {
         }
       }
 
-      // Render
+      // ==========================================
+      // RENDERIZADO VISUAL EN EL CANVAS (60 FPS)
+      // ==========================================
       const w = canvas.width || 400;
       const h = canvas.height || 220;
       ctx.clearRect(0, 0, w, h);
 
-      // Sky
-      const horizonY = h * 0.35;
+      ctx.save();
+      // Screen Shake
+      if (screenShakeRef.current > 0) {
+        const shakeX = (Math.random() - 0.5) * screenShakeRef.current;
+        const shakeY = (Math.random() - 0.5) * screenShakeRef.current;
+        ctx.translate(shakeX, shakeY);
+      }
+
+      // 1. Cielo y Horizonte
+      const horizonY = h * 0.34;
       const skyGrad = ctx.createLinearGradient(0, 0, 0, horizonY);
       skyGrad.addColorStop(0, "#020617");
       skyGrad.addColorStop(1, theme.trackColor);
       ctx.fillStyle = skyGrad;
       ctx.fillRect(0, 0, w, horizonY);
 
-      // Cyber Grid
+      // Cyber Grid en el horizonte
       ctx.strokeStyle = theme.gridColor;
       ctx.lineWidth = 0.5;
       ctx.globalAlpha = 0.3;
-      for (let i = 0; i < w; i += 24) {
+      for (let i = 0; i < w; i += 20) {
         ctx.beginPath();
         ctx.moveTo(i, 0);
         ctx.lineTo(w / 2, horizonY);
@@ -883,12 +998,13 @@ function SmartEscapeGame() {
       }
       ctx.globalAlpha = 1.0;
 
-      // Road
-      const roadTopW = Math.max(80, w * 0.22);
-      const roadBottomW = Math.min(w * 0.94, 600);
+      // 2. Geometría de la Carretera 3D
+      const roadTopW = Math.max(70, w * 0.2);
+      const roadBottomW = Math.min(w * 0.92, 540);
       const roadTopX = (w - roadTopW) / 2;
       const roadBottomX = (w - roadBottomW) / 2;
 
+      // Asfalto
       const roadGrad = ctx.createLinearGradient(0, horizonY, 0, h);
       roadGrad.addColorStop(0, "#090d16");
       roadGrad.addColorStop(1, "#030712");
@@ -901,11 +1017,11 @@ function SmartEscapeGame() {
       ctx.closePath();
       ctx.fill();
 
-      // Neon Borders
+      // Bordes Neón
       ctx.strokeStyle = theme.gridColor;
       ctx.lineWidth = 3;
       ctx.shadowColor = theme.gridColor;
-      ctx.shadowBlur = 12;
+      ctx.shadowBlur = 10;
       ctx.beginPath();
       ctx.moveTo(roadTopX, horizonY);
       ctx.lineTo(roadBottomX, h);
@@ -913,14 +1029,14 @@ function SmartEscapeGame() {
       ctx.lineTo(roadBottomX + roadBottomW, h);
       ctx.stroke();
 
-      // Lanes
+      // Líneas divisorias de los 3 carriles con desplazamiento continuo
       const lane1Top = roadTopX + roadTopW * 0.33;
       const lane1Bot = roadBottomX + roadBottomW * 0.33;
       const lane2Top = roadTopX + roadTopW * 0.66;
       const lane2Bot = roadBottomX + roadBottomW * 0.66;
 
-      ctx.lineWidth = 1.5;
-      ctx.setLineDash([10, 10]);
+      ctx.lineWidth = 2;
+      ctx.setLineDash([12, 12]);
       ctx.lineDashOffset = -roadOffset;
       ctx.beginPath();
       ctx.moveTo(lane1Top, horizonY);
@@ -931,18 +1047,40 @@ function SmartEscapeGame() {
       ctx.setLineDash([]);
       ctx.shadowBlur = 0;
 
-      // Meta
-      const progressToGoal = Math.min(1, (currentQIndex + 1) / Math.max(1, questionsPool.length));
-      if (progressToGoal > 0.8) {
+      // 3. Elementos del Escenario Lateral (Pilares / Árboles Neón en movimiento)
+      sceneryPillars.forEach((p) => {
+        const itemY = horizonY + (h - horizonY) * p.z;
+        const currentRoadW = roadTopW + (roadBottomW - roadTopW) * p.z;
+        const currentRoadX = (w - currentRoadW) / 2;
+        const itemX = p.side === "left" ? currentRoadX - 18 * (1 + p.z) : currentRoadX + currentRoadW + 18 * (1 + p.z);
+        const scale = 0.3 + p.z * 0.8;
+
+        ctx.save();
+        ctx.translate(itemX, itemY);
+        ctx.scale(scale, scale);
+        ctx.fillStyle = theme.gridColor;
+        ctx.globalAlpha = 0.45;
+        // Dibujar poste neón / árbol
+        ctx.fillRect(-3, -24, 6, 24);
         ctx.fillStyle = "#ffffff";
-        ctx.fillRect(roadTopX - 10, horizonY - 14, roadTopW + 20, 8);
+        ctx.beginPath();
+        ctx.arc(0, -24, 5, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      });
+
+      // 4. Meta al final de la carrera (0m -> targetDistance)
+      const progressToGoal = Math.min(1, distanceRef.current / (lvlConfig.targetDistance || 500));
+      if (progressToGoal > 0.85) {
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(roadTopX - 12, horizonY - 14, roadTopW + 24, 8);
         ctx.fillStyle = "#10b981";
-        ctx.font = "bold 8px sans-serif";
+        ctx.font = "bold 9px sans-serif";
         ctx.textAlign = "center";
         ctx.fillText("🏁 META", w / 2, horizonY - 7);
       }
 
-      // Track Items
+      // 5. Dibujar Items en Pista (Monedas, Estrellas, Obstáculos)
       const sortedItems = [...trackItems].sort((a, b) => a.z - b.z);
       sortedItems.forEach((item) => {
         const itemY = horizonY + (h - horizonY) * item.z;
@@ -977,34 +1115,37 @@ function SmartEscapeGame() {
           ctx.font = "22px sans-serif";
           ctx.textAlign = "center";
           ctx.fillText("🛡️", 0, -8);
-        } else if (item.type === "freeze") {
-          ctx.font = "22px sans-serif";
-          ctx.textAlign = "center";
-          ctx.fillText("❄️", 0, -8);
         } else if (item.type === "obstacle") {
+          // Obstáculo Cyber Valla
           ctx.fillStyle = "#ef4444";
-          ctx.fillRect(-18, -18, 36, 12);
+          ctx.fillRect(-18, -16, 36, 12);
           ctx.fillStyle = "#fca5a5";
-          ctx.fillRect(-14, -16, 28, 8);
+          ctx.fillRect(-14, -14, 28, 8);
           ctx.fillStyle = "#991b1b";
-          ctx.fillRect(-16, -6, 6, 6);
-          ctx.fillRect(10, -6, 6, 6);
+          ctx.fillRect(-16, -4, 6, 6);
+          ctx.fillRect(10, -4, 6, 6);
         }
         ctx.restore();
       });
 
-      // Player
-      const playerZ = 0.95;
+      // 6. Posición Suave del Jugador (Suave Lerp en X)
+      const playerZ = 0.94;
       const playerRoadW = roadTopW + (roadBottomW - roadTopW) * playerZ;
       const playerRoadX = (w - playerRoadW) / 2;
       const pLaneW = playerRoadW / 3;
-      const targetPlayerX = playerRoadX + pLaneW * playerLane + pLaneW / 2;
-      const playerBaseY = h - 35 - (isJumping ? 45 : 0);
+      const targetPlayerX = playerRoadX + pLaneW * playerLaneRef.current + pLaneW / 2;
 
-      // Sombra
-      ctx.fillStyle = "rgba(0,0,0,0.5)";
+      // Interpolación fluida hacia el carril destino
+      if (playerXRef.current === 0) playerXRef.current = targetPlayerX;
+      playerXRef.current += (targetPlayerX - playerXRef.current) * 0.22;
+
+      const playerBaseY = h - 38 - jumpYRef.current;
+
+      // Sombra en el suelo (se encoge al saltar)
+      const shadowScale = Math.max(0.3, 1 - jumpYRef.current / 80);
+      ctx.fillStyle = "rgba(0,0,0,0.55)";
       ctx.beginPath();
-      ctx.ellipse(targetPlayerX, h - 28, 18, 5, 0, 0, Math.PI * 2);
+      ctx.ellipse(playerXRef.current, h - 30, 20 * shadowScale, 6 * shadowScale, 0, 0, Math.PI * 2);
       ctx.fill();
 
       // Aura Turbo / Escudo
@@ -1014,7 +1155,7 @@ function SmartEscapeGame() {
         ctx.shadowColor = "#38bdf8";
         ctx.shadowBlur = 12;
         ctx.beginPath();
-        ctx.ellipse(targetPlayerX, playerBaseY + 6, 22, 26, 0, 0, Math.PI * 2);
+        ctx.ellipse(playerXRef.current, playerBaseY + 6, 22, 26, 0, 0, Math.PI * 2);
         ctx.stroke();
         ctx.shadowBlur = 0;
       }
@@ -1022,94 +1163,122 @@ function SmartEscapeGame() {
         ctx.strokeStyle = "#10b981";
         ctx.lineWidth = 3;
         ctx.beginPath();
-        ctx.ellipse(targetPlayerX, playerBaseY + 6, 24, 28, 0, 0, Math.PI * 2);
+        ctx.ellipse(playerXRef.current, playerBaseY + 6, 24, 28, 0, 0, Math.PI * 2);
         ctx.stroke();
       }
+
+      // Animación fluida de correr (Ciclos de piernas y brazos)
+      const runCycle = timestamp * 0.016 * currentSpeedRef.current;
+      const legOffset = Math.sin(runCycle) * 6;
+      const bodyBob = Math.abs(Math.sin(runCycle)) * 2;
 
       const equippedOutfit = CLOSET_ITEMS.find((c) => c.id === equippedItems.outfit) || CLOSET_ITEMS[4];
       const equippedHair = CLOSET_ITEMS.find((c) => c.id === equippedItems.hair) || CLOSET_ITEMS[0];
 
       ctx.save();
-      ctx.translate(targetPlayerX, playerBaseY);
+      ctx.translate(playerXRef.current, playerBaseY - bodyBob);
 
-      const legOffset = Math.sin(timestamp * 0.015) * 4;
-
+      // Piernas y Tenis
       ctx.fillStyle = "#1e293b";
-      ctx.fillRect(-6, 12 + legOffset, 4, 8);
-      ctx.fillRect(2, 12 - legOffset, 4, 8);
+      ctx.fillRect(-6, 12 + legOffset, 4, 9);
+      ctx.fillRect(2, 12 - legOffset, 4, 9);
       ctx.fillStyle = "#38bdf8";
-      ctx.fillRect(-7, 18 + legOffset, 6, 4);
-      ctx.fillRect(1, 18 - legOffset, 6, 4);
+      ctx.fillRect(-7, 19 + legOffset, 6, 4);
+      ctx.fillRect(1, 19 - legOffset, 6, 4);
 
+      // Torso / Traje
       ctx.fillStyle = equippedOutfit.color;
       ctx.beginPath();
       ctx.roundRect(-8, 0, 16, 14, 3);
       ctx.fill();
 
+      // Mochila
+      ctx.fillStyle = "#475569";
+      ctx.fillRect(-10, 2, 3, 10);
+
+      // Cabeza y Rostro
       ctx.fillStyle = "#fcd34d";
       ctx.beginPath();
       ctx.arc(0, -6, 7, 0, Math.PI * 2);
       ctx.fill();
 
+      // Pelo
       ctx.fillStyle = equippedHair.color;
       ctx.beginPath();
       ctx.arc(0, -8, 8, Math.PI, Math.PI * 2);
       ctx.fill();
 
+      // Ojos
       ctx.fillStyle = "#0f172a";
       ctx.fillRect(-3, -6, 1.5, 1.5);
       ctx.fillRect(1.5, -6, 1.5, 1.5);
 
       ctx.restore();
 
-      // Criatura Perseguidora
-      const creatureZ = Math.max(0.08, 1 - creatureDistanceMeters / 60);
-      const cRoadW = roadTopW + (roadBottomW - roadTopW) * creatureZ;
+      // 7. PERSEGUIDOR FÍSICO DENTRO DEL ESCENARIO (VISIBLE DETRÁS DEL JUGADOR)
+      // La posición Z depende directamente de creatureDistRef (0 a 60m)
+      const creatureNormalizedZ = Math.max(0.12, 0.98 - (creatureDistRef.current / 55) * 0.85);
+      const cRoadW = roadTopW + (roadBottomW - roadTopW) * creatureNormalizedZ;
       const cRoadX = (w - cRoadW) / 2;
       const cX = cRoadX + cRoadW / 2;
-      const cY = horizonY + (h - horizonY) * creatureZ;
-      const cScale = 0.35 + creatureZ * 0.8;
+      const cY = horizonY + (h - horizonY) * creatureNormalizedZ;
+      const cScale = 0.35 + creatureNormalizedZ * 0.85;
+
+      const monsterCycle = timestamp * 0.014;
+      const monsterBob = Math.sin(monsterCycle) * 3;
 
       ctx.save();
-      ctx.translate(cX, cY - 14);
+      ctx.translate(cX, cY - 14 - monsterBob);
       ctx.scale(cScale, cScale);
 
+      // Efecto congelado
       if (activeFreezeTime > 0) {
         ctx.fillStyle = "rgba(56, 189, 248, 0.4)";
         ctx.strokeStyle = "#38bdf8";
         ctx.lineWidth = 2;
-        ctx.strokeRect(-20, -20, 40, 40);
-        ctx.fillRect(-20, -20, 40, 40);
+        ctx.strokeRect(-22, -22, 44, 44);
+        ctx.fillRect(-22, -22, 44, 44);
       }
 
+      // Sombra del monstruo
+      ctx.fillStyle = "rgba(0,0,0,0.6)";
+      ctx.beginPath();
+      ctx.ellipse(0, 16, 18, 6, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Cuerpo del monstruo
       ctx.fillStyle = theme.monsterColor;
       ctx.shadowColor = theme.monsterColor;
-      ctx.shadowBlur = 12;
+      ctx.shadowBlur = 14;
       ctx.beginPath();
-      ctx.arc(0, 0, 18, 0, Math.PI * 2);
+      ctx.arc(0, 0, 19, 0, Math.PI * 2);
       ctx.fill();
       ctx.shadowBlur = 0;
 
+      // Ojos brillantes
       ctx.fillStyle = "#ffffff";
       ctx.beginPath();
-      ctx.arc(-6, -3, 4, 0, Math.PI * 2);
-      ctx.arc(6, -3, 4, 0, Math.PI * 2);
+      ctx.arc(-7, -4, 5, 0, Math.PI * 2);
+      ctx.arc(7, -4, 5, 0, Math.PI * 2);
       ctx.fill();
       ctx.fillStyle = "#ef4444";
       ctx.beginPath();
-      ctx.arc(-6, -3, 2, 0, Math.PI * 2);
-      ctx.arc(6, -3, 2, 0, Math.PI * 2);
+      ctx.arc(-7, -4, 2.5, 0, Math.PI * 2);
+      ctx.arc(7, -4, 2.5, 0, Math.PI * 2);
       ctx.fill();
 
+      // Dientes
       ctx.fillStyle = "#ffffff";
       ctx.beginPath();
-      ctx.moveTo(-6, 5);
-      ctx.lineTo(-3, 10);
-      ctx.lineTo(0, 5);
-      ctx.lineTo(3, 10);
-      ctx.lineTo(6, 5);
+      ctx.moveTo(-7, 6);
+      ctx.lineTo(-4, 11);
+      ctx.lineTo(0, 6);
+      ctx.lineTo(4, 11);
+      ctx.lineTo(7, 6);
       ctx.closePath();
       ctx.fill();
+
+      ctx.restore();
 
       ctx.restore();
 
@@ -1122,7 +1291,7 @@ function SmartEscapeGame() {
       window.removeEventListener("resize", resizeCanvas);
       if (animFrameIdRef.current) cancelAnimationFrame(animFrameIdRef.current);
     };
-  }, [screen, isPaused, selectedWorld, selectedLevel, playerLane, isJumping, playerSpeed, activeTurboTime, hasShield, activeMagnetTime, activeFreezeTime, creatureDistanceMeters, currentQIndex, questionsPool.length]);
+  }, [screen, isPaused, selectedWorld, selectedLevel, activeTurboTime, hasShield, activeMagnetTime, activeFreezeTime]);
 
   const handleBuyItem = (item: CustomizationItem) => {
     if (coinsBalance < item.cost) {
@@ -1450,8 +1619,8 @@ function SmartEscapeGame() {
                         Nivel {lvl.level} — {lvl.name}
                       </span>
                       <div className="flex items-center gap-2 text-[10px] text-slate-400 mt-0.5">
-                        <span>📚 {lvl.reqQuestions} preguntas del material</span>
-                        <span>⏱️ {lvl.timePerQ}s por pregunta</span>
+                        <span>🏁 Meta: {lvl.targetDistance}m</span>
+                        <span>📚 {lvl.reqQuestions} preguntas</span>
                       </div>
                     </div>
 
@@ -1571,13 +1740,13 @@ function SmartEscapeGame() {
       )}
 
       {/* ======================================================== */}
-      {/* 5. PANTALLA COMPLETA DE PARTIDA (100% VISIBLE Y CRISTALINA) */}
+      {/* 5. PANTALLA COMPLETA DE PARTIDA (RUNNER + PERSPECTIVA 3D) */}
       {/* ======================================================== */}
       {screen === "playing" && (
         <div className="fixed inset-0 z-50 w-full h-full max-h-screen flex flex-col justify-between overflow-hidden bg-slate-950 text-white select-none">
-          {/* Header Superior */}
+          {/* Header Superior con Meta y Radar */}
           <header className="h-12 w-full shrink-0 border-b border-slate-800 bg-slate-900/95 backdrop-blur px-3 flex items-center justify-between gap-2 z-30">
-            {/* Vidas, XP & Monedas */}
+            {/* Vidas & XP */}
             <div className="flex items-center gap-2.5">
               <div className="flex items-center gap-0.5" title="Vidas">
                 {[1, 2, 3].map((hIdx) => (
@@ -1601,9 +1770,11 @@ function SmartEscapeGame() {
               </span>
             </div>
 
-            {/* Radar: Distancia Jugador <-> Monstruo */}
-            <div className="flex items-center gap-1.5 bg-slate-950 border border-slate-800 px-3 py-1 rounded-full text-[11px] font-bold">
-              <span className="text-cyan-400">🏃 {Math.round(playerDistanceMeters)}m</span>
+            {/* Radar: Distancia a la Meta + Distancia al Monstruo */}
+            <div className="flex items-center gap-2 bg-slate-950 border border-slate-800 px-3 py-1 rounded-full text-[11px] font-bold">
+              <span className="text-cyan-300 font-mono">
+                🏃 {Math.round(playerDistanceMeters)}m / {currentLvlConfig.targetDistance || 500}m 🏁
+              </span>
               <span className="text-slate-600">|</span>
               <span
                 className={`flex items-center gap-1 ${
@@ -1615,7 +1786,7 @@ function SmartEscapeGame() {
               </span>
             </div>
 
-            {/* Tiempo & Salir/Pausa */}
+            {/* Tiempo & Pausa */}
             <div className="flex items-center gap-2">
               <span className="text-[11px] font-bold text-slate-400 font-mono">
                 ⏱️ {Math.floor(timeElapsed / 60)}:{(Math.floor(timeElapsed) % 60).toString().padStart(2, "0")}
@@ -1629,11 +1800,11 @@ function SmartEscapeGame() {
             </div>
           </header>
 
-          {/* Centro: Escenario 3D Runner Canvas */}
+          {/* Centro: Escenario 3D Runner Canvas (Fluidos 60 FPS) */}
           <div className="flex-1 w-full min-h-[140px] max-h-[40vh] md:max-h-[46vh] relative overflow-hidden bg-slate-950">
             <canvas ref={canvasRef} className="w-full h-full block" />
 
-            {/* Alerta de Perseguidor solo cuando está a menos de 15 metros */}
+            {/* Alerta de Perseguidor cuando está muy cerca */}
             {creatureDistanceMeters < 15 && (
               <div className="absolute top-2 inset-x-3 pointer-events-none z-20">
                 <div className="bg-rose-600/90 border border-rose-400 text-white text-[11px] font-black px-3 py-1 rounded-full flex items-center justify-center gap-1.5 animate-pulse shadow-lg backdrop-blur">
@@ -1645,7 +1816,7 @@ function SmartEscapeGame() {
           </div>
 
           {/* ======================================================== */}
-          {/* PARTE INFERIOR: TARJETA DE PREGUNTA & OPCIONES (ALTO CONTRASTE) */}
+          {/* PARTE INFERIOR: PREGUNTA & OPCIONES (ALTO CONTRASTE) */}
           {/* ======================================================== */}
           <div className="w-full shrink-0 border-t-2 border-purple-500/40 bg-slate-900 p-3 sm:p-4 space-y-2.5 z-30 max-w-2xl mx-auto shadow-2xl">
             {/* Header de la Pregunta + Temporizador */}
@@ -1673,7 +1844,7 @@ function SmartEscapeGame() {
               />
             </div>
 
-            {/* Texto de la Pregunta (BLANCO BRILLANTE Y LEGIBLE) */}
+            {/* Texto de la Pregunta */}
             {currentQuestion ? (
               <h3 className="text-sm sm:text-base font-extrabold text-white leading-snug px-1 line-clamp-2 min-h-[36px] flex items-center drop-shadow-sm">
                 {currentQuestion.question}
@@ -1684,7 +1855,7 @@ function SmartEscapeGame() {
               </div>
             )}
 
-            {/* 4 Opciones de Respuesta (Botones grandes y textos blancos) */}
+            {/* 4 Opciones de Respuesta */}
             {currentQuestion && (
               <div className="grid grid-cols-2 gap-2">
                 {currentQuestion.options.map((opt, idx) => {
@@ -1824,10 +1995,10 @@ function SmartEscapeGame() {
               <Star className="size-7 fill-amber-400" />
             </div>
             <h2 className="font-display text-2xl font-black bg-gradient-to-r from-emerald-400 via-cyan-400 to-indigo-400 bg-clip-text text-transparent">
-              ¡ESCAPE EXITOSO! 🏆
+              ¡MISIÓN COMPLETADA! 🏆
             </h2>
             <p className="text-xs text-slate-400">
-              ¡Has escapado de {currentTheme.monsterName} y completado el Nivel {selectedLevel}!
+              ¡Llegaste a la meta, escapaste de {currentTheme.monsterName} y completaste el Nivel {selectedLevel}!
             </p>
           </div>
 
