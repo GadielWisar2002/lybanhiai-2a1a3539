@@ -5,7 +5,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { rewardGameCoins, rewardGameXp } from "@/lib/games.functions";
 import { extractTextFromMedia } from "@/lib/quiz.functions";
 import { analyzeStudyMaterial, generateStudyGameQuestions } from "@/lib/study-game.functions";
-import { SCHOOL_SUBJECTS, type SchoolSubject } from "@/lib/school-subjects-data";
+import { SCHOOL_SUBJECTS, type SchoolSubject, type SubjectTopic } from "@/lib/school-subjects-data";
 import { PAA_OFFICIAL_QUESTIONS } from "@/lib/paa-official-bank";
 import { EXANI_OFFICIAL_QUESTIONS } from "@/lib/exani-official-bank";
 import {
@@ -13,7 +13,7 @@ import {
   Play, Pause, Zap, Shield, Clock, Magnet, Snowflake, CheckCircle2,
   XCircle, Award, GraduationCap, ChevronRight, Upload, Shirt,
   Lock, Check, Star, RefreshCw, BookOpen, AlertTriangle, ArrowUp,
-  Heart, AlertCircle
+  Heart, AlertCircle, FileText, PlusCircle
 } from "lucide-react";
 import { toast } from "sonner";
 import streakCap from "@/assets/streak-cap.png";
@@ -26,7 +26,7 @@ export const Route = createFileRoute("/_authenticated/games/smart-escape")({
 // ========================================================
 // TIPOS Y MODELOS
 // ========================================================
-export type WorldId = "math" | "chem" | "history" | "bio" | "english" | "paa" | "exani" | "custom";
+export type WorldId = "quimica" | "matematicas" | "biologia" | "historia" | "ingles" | "paa" | "exani" | "custom";
 
 export interface GameQuestion {
   id: string;
@@ -35,6 +35,7 @@ export interface GameQuestion {
   correctIndex: number;
   explanation: string;
   topic: string;
+  sourceExcerpt?: string;
 }
 
 export interface CustomizationItem {
@@ -91,25 +92,12 @@ interface WorldTheme {
 }
 
 const WORLDS: Record<WorldId, WorldTheme> = {
-  math: {
-    id: "math",
-    name: "Cyber Matrix",
-    icon: "🔢",
-    badge: "Matemáticas",
-    desc: "Carretera digital futurista con hologramas numéricos.",
-    trackColor: "#0f172a",
-    gridColor: "#38bdf8",
-    skyColor: "#030712",
-    monsterName: "Gorgon Glitch",
-    monsterEmoji: "👾",
-    monsterColor: "#06b6d4",
-  },
-  chem: {
-    id: "chem",
+  quimica: {
+    id: "quimica",
     name: "Laboratorio Neón",
     icon: "🧪",
     badge: "Química",
-    desc: "Plataformas químicas flotantes con matraces y sustancias.",
+    desc: "Materia, estados de agregación, mezclas y reacciones.",
     trackColor: "#062817",
     gridColor: "#10b981",
     skyColor: "#021209",
@@ -117,25 +105,25 @@ const WORLDS: Record<WorldId, WorldTheme> = {
     monsterEmoji: "🧪",
     monsterColor: "#10b981",
   },
-  history: {
-    id: "history",
-    name: "Ruinas Ancestrales",
-    icon: "🏛️",
-    badge: "Historia",
-    desc: "Caminos de piedra entre templos y pirámides históricas.",
-    trackColor: "#271705",
-    gridColor: "#f59e0b",
-    skyColor: "#0f0701",
-    monsterName: "Coloso del Tiempo",
-    monsterEmoji: "🗿",
-    monsterColor: "#f59e0b",
+  matematicas: {
+    id: "matematicas",
+    name: "Cyber Matrix",
+    icon: "🔢",
+    badge: "Matemáticas",
+    desc: "Operaciones básicas, jerarquía PEMDAS, fracciones y álgebra.",
+    trackColor: "#0f172a",
+    gridColor: "#38bdf8",
+    skyColor: "#030712",
+    monsterName: "Gorgon Glitch",
+    monsterEmoji: "👾",
+    monsterColor: "#06b6d4",
   },
-  bio: {
-    id: "bio",
+  biologia: {
+    id: "biologia",
     name: "Microcosmos Celular",
     icon: "🧬",
     badge: "Biología",
-    desc: "Circuito dentro de una arteria celular microscópica.",
+    desc: "La célula, fotosíntesis, ADN y biodiversidad.",
     trackColor: "#290c29",
     gridColor: "#ec4899",
     skyColor: "#110211",
@@ -143,12 +131,25 @@ const WORLDS: Record<WorldId, WorldTheme> = {
     monsterEmoji: "🦠",
     monsterColor: "#ec4899",
   },
-  english: {
-    id: "english",
+  historia: {
+    id: "historia",
+    name: "Ruinas Ancestrales",
+    icon: "🏛️",
+    badge: "Historia",
+    desc: "Culturas prehispánicas, Independencia y Revolución.",
+    trackColor: "#271705",
+    gridColor: "#f59e0b",
+    skyColor: "#0f0701",
+    monsterName: "Coloso del Tiempo",
+    monsterEmoji: "🗿",
+    monsterColor: "#f59e0b",
+  },
+  ingles: {
+    id: "ingles",
     name: "Metrópolis Neón",
     icon: "🇬🇧",
     badge: "Inglés",
-    desc: "Autopista nocturna en rascacielos iluminados.",
+    desc: "Gramática, tiempos verbales y vocabulario clave.",
     trackColor: "#150d33",
     gridColor: "#a855f7",
     skyColor: "#080417",
@@ -161,7 +162,7 @@ const WORLDS: Record<WorldId, WorldTheme> = {
     name: "Simulador PAA College Board",
     icon: "🏆",
     badge: "Admisión Universitaria",
-    desc: "Desafío oficial de razonamiento y lectura crítica.",
+    desc: "Lectura crítica, redacción y razonamiento oficial.",
     trackColor: "#0a1931",
     gridColor: "#3b82f6",
     skyColor: "#030b17",
@@ -174,7 +175,7 @@ const WORLDS: Record<WorldId, WorldTheme> = {
     name: "Simulador EXANI-II Ceneval",
     icon: "🎓",
     badge: "Admisión Ceneval 2025",
-    desc: "Reactivos de comprensión, redacción y módulos disciplinares.",
+    desc: "Comprensión lectora, redacción indirecta y pensamiento matemático.",
     trackColor: "#1d0c33",
     gridColor: "#c084fc",
     skyColor: "#0b0314",
@@ -184,10 +185,10 @@ const WORLDS: Record<WorldId, WorldTheme> = {
   },
   custom: {
     id: "custom",
-    name: "Mis Apuntes (con IA)",
+    name: "Mis Apuntes y Documentos",
     icon: "✨",
-    badge: "Material Personal",
-    desc: "Preguntas generadas 100% sobre tu propio documento.",
+    badge: "Material Subido",
+    desc: "Preguntas generadas 100% sobre tu propio texto o PDF.",
     trackColor: "#170a31",
     gridColor: "#818cf8",
     skyColor: "#070211",
@@ -216,11 +217,12 @@ function SmartEscapeGame() {
 
   // Vistas de la aplicación
   const [screen, setScreen] = useState<
-    "home" | "world_select" | "level_map" | "upload" | "playing" | "gameover" | "victory" | "closet"
+    "home" | "world_select" | "material_select" | "level_map" | "upload" | "playing" | "gameover" | "victory" | "closet"
   >("home");
 
   // Configuración de partida
-  const [selectedWorld, setSelectedWorld] = useState<WorldId>("math");
+  const [selectedWorld, setSelectedWorld] = useState<WorldId>("quimica");
+  const [selectedTopicId, setSelectedTopicId] = useState<string>("materia-mezclas");
   const [selectedLevel, setSelectedLevel] = useState<number>(1);
   const [soundEnabled, setSoundEnabled] = useState(true);
 
@@ -258,7 +260,7 @@ function SmartEscapeGame() {
   const [levelStars, setLevelStars] = useState<Record<string, number>>(() => {
     if (typeof window !== "undefined") {
       const saved = localStorage.getItem("smart_escape_level_stars");
-      return saved ? JSON.parse(saved) : { "math-1": 3, "math-2": 2 };
+      return saved ? JSON.parse(saved) : { "quimica-1": 3, "matematicas-1": 2 };
     }
     return {};
   });
@@ -418,188 +420,167 @@ function SmartEscapeGame() {
   }, [screen, isPaused, selectedOption, currentQuestion, triggerJump]);
 
   // ========================================================
-  // GENERADOR ESTRICTO DE PREGUNTAS SEGÚN MATERIAL
+  // RECONOCER MATERIAL DE ESTUDIO GUARDADO PARA LA MATERIA
   // ========================================================
-  const buildQuestionsForWorld = (worldId: WorldId, count: number): GameQuestion[] => {
-    let pool: GameQuestion[] = [];
+  const getSubjectMaterials = (worldId: WorldId): SubjectTopic[] => {
+    const subject = SCHOOL_SUBJECTS.find((s) => s.id === worldId);
+    if (subject && subject.topics.length > 0) {
+      return subject.topics;
+    }
+    return [];
+  };
+
+  // ========================================================
+  // GENERAR PREGUNTAS 100% FIEL AL MATERIAL PROVISTO
+  // ========================================================
+  const buildQuestionsFromMaterial = (
+    worldId: WorldId,
+    topicId: string,
+    count: number
+  ): GameQuestion[] => {
+    let rawQuestions: GameQuestion[] = [];
 
     if (worldId === "paa") {
-      pool = PAA_OFFICIAL_QUESTIONS.map((q, idx) => {
-        let opts: [string, string, string, string] = ["A", "B", "C", "D"];
-        if (q.options.length >= 4) {
-          opts = [q.options[0], q.options[1], q.options[2], q.options[3]];
-        } else if (q.options.length === 3) {
-          opts = [q.options[0], q.options[1], q.options[2], "Ninguna de las anteriores"];
-        }
+      rawQuestions = PAA_OFFICIAL_QUESTIONS.map((q, idx) => {
+        let opts: [string, string, string, string] = [
+          q.options[0] || "Opción A",
+          q.options[1] || "Opción B",
+          q.options[2] || "Opción C",
+          q.options[3] || "Opción D",
+        ];
         return {
           id: `paa-${idx}`,
           question: q.q,
           options: opts,
           correctIndex: q.correctIndex,
           explanation: q.explanation,
-          topic: q.subtopic,
+          topic: "PAA College Board",
+          sourceExcerpt: "Guía Oficial PAA College Board",
         };
       });
     } else if (worldId === "exani") {
-      pool = EXANI_OFFICIAL_QUESTIONS.map((q, idx) => {
-        let opts: [string, string, string, string] = ["A", "B", "C", "D"];
-        if (q.options.length >= 4) {
-          opts = [q.options[0], q.options[1], q.options[2], q.options[3]];
-        } else if (q.options.length === 3) {
-          opts = [q.options[0], q.options[1], q.options[2], "No aplica para este caso"];
-        }
+      rawQuestions = EXANI_OFFICIAL_QUESTIONS.map((q, idx) => {
+        let opts: [string, string, string, string] = [
+          q.options[0] || "Opción A",
+          q.options[1] || "Opción B",
+          q.options[2] || "Opción C",
+          q.options[3] || "Opción D",
+        ];
         return {
           id: `exani-${idx}`,
           question: q.q,
           options: opts,
           correctIndex: q.correctIndex,
           explanation: q.explanation,
-          topic: q.subtopic,
+          topic: "EXANI-II Ceneval",
+          sourceExcerpt: "Temario Oficial EXANI-II 2025",
         };
       });
-    } else if (worldId === "math" || worldId === "chem" || worldId === "history" || worldId === "bio" || worldId === "english") {
-      const subjectMapping: Record<string, string> = {
-        math: "matematicas",
-        chem: "quimica",
-        history: "historia",
-        bio: "biologia",
-        english: "ingles",
-      };
-      const sub = SCHOOL_SUBJECTS.find((s) => s.id === subjectMapping[worldId]);
-      if (sub) {
-        sub.topics.forEach((tp) => {
-          tp.presetQuestions.forEach((pq, idx) => {
-            let opts: [string, string, string, string] = ["A", "B", "C", "D"];
-            if (pq.options.length >= 4) {
-              opts = [pq.options[0], pq.options[1], pq.options[2], pq.options[3]];
-            } else if (pq.options.length === 3) {
-              opts = [pq.options[0], pq.options[1], pq.options[2], "Opción adicional"];
-            }
-            pool.push({
-              id: `${tp.id}-${idx}`,
+    } else {
+      const subject = SCHOOL_SUBJECTS.find((s) => s.id === worldId);
+      if (subject) {
+        const topic = subject.topics.find((t) => t.id === topicId) || subject.topics[0];
+        if (topic && topic.presetQuestions && topic.presetQuestions.length > 0) {
+          rawQuestions = topic.presetQuestions.map((pq, idx) => {
+            // Asegurar exactamente 4 opciones
+            let opts: [string, string, string, string] = [
+              pq.options[0] || "A",
+              pq.options[1] || "B",
+              pq.options[2] || "C",
+              pq.options[3] || "D",
+            ];
+            return {
+              id: `${topic.id}-${idx}`,
               question: pq.question,
               options: opts,
-              correctIndex: pq.correctIndex,
-              explanation: pq.explanation || tp.explanation,
-              topic: tp.name,
-            });
+              correctIndex: pq.correctIndex !== undefined ? pq.correctIndex : 0,
+              explanation: pq.explanation || `Basado en: "${topic.explanation.slice(0, 100)}..."`,
+              topic: `${subject.name}: ${topic.name}`,
+              sourceExcerpt: topic.explanation,
+            };
           });
-        });
+        }
       }
     }
 
-    if (pool.length === 0) {
-      // Robust fallback preguntas
-      pool = [
-        {
-          id: "fb-1",
-          question: "¿Cuál es el resultado de la operación 8 × 7?",
-          options: ["54", "56", "58", "62"],
-          correctIndex: 1,
-          explanation: "8 × 7 = 56",
-          topic: "Multiplicación",
-        },
-        {
-          id: "fb-2",
-          question: "¿Qué operación se resuelve PRIMERO según la jerarquía PEMDAS?",
-          options: ["Sumas y restas", "Paréntesis", "Multiplicaciones", "Divisiones externas"],
-          correctIndex: 1,
-          explanation: "Primero se resuelven los paréntesis.",
-          topic: "Jerarquía de Operaciones",
-        },
-        {
-          id: "fb-3",
-          question: "¿Cuál es el resultado de (-6) × (-4)?",
-          options: ["-24", "-10", "24", "10"],
-          correctIndex: 2,
-          explanation: "Signos iguales multiplicados dan positivo (- × - = +).",
-          topic: "Leyes de Signos",
-        },
-        {
-          id: "fb-4",
-          question: "Cualquier número multiplicado por cero es igual a:",
-          options: ["1", "Infinito", "0", "El mismo número"],
-          correctIndex: 2,
-          explanation: "a × 0 = 0.",
-          topic: "Propiedad del Cero",
-        },
-        {
-          id: "fb-5",
-          question: "¿Cuál es el valor de x en: 2x = 10?",
-          options: ["2", "5", "8", "20"],
-          correctIndex: 1,
-          explanation: "x = 10 / 2 = 5.",
-          topic: "Ecuaciones Lineales",
-        },
-      ];
+    if (rawQuestions.length === 0) {
+      return [];
     }
 
-    const shuffled = [...pool].sort(() => 0.5 - Math.random());
+    // Mezclar y tomar la cantidad solicitada
+    const shuffled = [...rawQuestions].sort(() => 0.5 - Math.random());
     return shuffled.slice(0, count);
   };
 
   // ========================================================
-  // INICIAR PARTIDA
+  // INICIAR PARTIDA DIRECTAMENTE CON EL MATERIAL
   // ========================================================
-  const startGame = async (worldId: WorldId, levelNum: number) => {
-    setSelectedWorld(worldId);
-    setSelectedLevel(levelNum);
-
+  const startGameWithMaterial = async (worldId: WorldId, topicId: string, levelNum: number) => {
     const lvlConfig = LEVELS_CONFIG[levelNum - 1] || LEVELS_CONFIG[0];
     let questions: GameQuestion[] = [];
 
     if (worldId === "custom") {
       if (!customText.trim()) {
+        toast.error("Primero agrega material de estudio para poder generar las preguntas de este juego.");
         setScreen("upload");
         return;
       }
+
       setIsGeneratingAi(true);
-      const toastId = toast.loading("Analizando tus apuntes y creando Smart Escape con IA...");
+      const toastId = toast.loading("Analizando tu documento y creando preguntas exclusivas...");
       try {
-        const analysis = await analyzeMaterialFn({ data: { text: customText } });
-        const aiQuestions = await generateQuestionsFn({
+        const aiResponse = await generateQuestionsFn({
           data: {
             materialText: customText,
-            selectedTopics: analysis.detectedTopics.length > 0 ? analysis.detectedTopics : ["Conceptos del documento"],
-            questionCount: lvlConfig.reqQuestions,
-            gameType: "trivia",
+            count: lvlConfig.reqQuestions,
+            difficulty: "easy",
           },
         });
-        questions = aiQuestions.map((q, idx) => {
-          let opts: [string, string, string, string] = ["A", "B", "C", "D"];
-          if (q.options.length >= 4) {
-            opts = [q.options[0], q.options[1], q.options[2], q.options[3]];
-          } else if (q.options.length === 3) {
-            opts = [q.options[0], q.options[1], q.options[2], "Opción D"];
-          }
-          return {
-            id: `ai-${idx}`,
-            question: q.question,
-            options: opts,
-            correctIndex: q.correctIndex,
-            explanation: q.explanation,
-            topic: analysis.title || "Apuntes",
-          };
-        });
-        toast.success("¡Preguntas listas!", { id: toastId });
-      } catch {
-        toast.error("Error al generar con IA. Usando temas del material.");
-        questions = buildQuestionsForWorld("math", lvlConfig.reqQuestions);
+
+        if (aiResponse?.questions && aiResponse.questions.length > 0) {
+          questions = aiResponse.questions.map((q, idx) => {
+            const opts: [string, string, string, string] = [
+              q.options[0] || "A",
+              q.options[1] || "B",
+              q.options[2] || "C",
+              q.options[3] || "D",
+            ];
+            return {
+              id: `custom-q-${idx}`,
+              question: q.question,
+              options: opts,
+              correctIndex: q.correctIndex !== undefined ? q.correctIndex : 0,
+              explanation: q.explanation || "Respuesta extraída de tus apuntes.",
+              topic: "Mis Apuntes",
+              sourceExcerpt: customText.slice(0, 120) + "...",
+            };
+          });
+        }
+        toast.success("¡Preguntas generadas desde tu material!", { id: toastId });
+      } catch (err) {
+        toast.error("Error al procesar con IA.", { id: toastId });
+        setIsGeneratingAi(false);
+        return;
       } finally {
         setIsGeneratingAi(false);
       }
     } else {
-      questions = buildQuestionsForWorld(worldId, lvlConfig.reqQuestions);
+      questions = buildQuestionsFromMaterial(worldId, topicId, lvlConfig.reqQuestions);
     }
 
-    if (questions.length === 0) {
-      questions = buildQuestionsForWorld("math", lvlConfig.reqQuestions);
+    if (!questions || questions.length === 0) {
+      toast.error("Primero agrega material de estudio para poder generar las preguntas de este juego.");
+      return;
     }
 
-    // Inicializar estado del juego
+    // Inicializar estado de la partida
+    setSelectedWorld(worldId);
+    setSelectedTopicId(topicId);
+    setSelectedLevel(levelNum);
+
     setQuestionsPool(questions);
     setCurrentQIndex(0);
-    setCurrentQuestion(questions[0]);
+    setCurrentQuestion(questions[0]); // Pregunta 1 lista inmediatamente al segundo 0
     setQTimer(lvlConfig.timePerQ);
     setQTimerMax(lvlConfig.timePerQ);
     setSelectedOption(null);
@@ -650,7 +631,7 @@ function SmartEscapeGame() {
 
   const handleTimeOut = () => {
     if (selectedOption !== null || !currentQuestion) return;
-    handleAnswerOption(-1); // Timeout
+    handleAnswerOption(-1);
   };
 
   // ========================================================
@@ -675,7 +656,7 @@ function SmartEscapeGame() {
       setGameXp((xp) => xp + 50 + streak * 10);
       setCollectedCoins((c) => c + 2);
 
-      // Boost inmediato de velocidad y la criatura retrocede
+      // Boost inmediato de velocidad y alejamiento del perseguidor
       setPlayerSpeed((sp) => Math.min(2.5, sp + 0.4));
       setCreatureDistanceMeters((dist) => Math.min(75, dist + 18));
       toast.success("¡CORRECTO! ⚡ +50 XP y velocidad aumentada", { duration: 1200 });
@@ -706,7 +687,6 @@ function SmartEscapeGame() {
       }
     }
 
-    // Verificar si se acabaron las vidas
     if (!isCorrect && !hasShield && lives <= 1) {
       setTimeout(() => {
         triggerGameOver();
@@ -718,7 +698,6 @@ function SmartEscapeGame() {
     setTimeout(() => {
       const nextIdx = currentQIndex + 1;
       if (nextIdx >= questionsPool.length) {
-        // Meta alcanzada
         triggerVictory();
       } else {
         setCurrentQIndex(nextIdx);
@@ -781,12 +760,12 @@ function SmartEscapeGame() {
     if (!ctx) return;
 
     let roadOffset = 0;
-    const theme = WORLDS[selectedWorld] || WORLDS.math;
+    const theme = WORLDS[selectedWorld] || WORLDS.quimica;
     const lvlConfig = LEVELS_CONFIG[selectedLevel - 1] || LEVELS_CONFIG[0];
 
     interface TrackItem {
       lane: number;
-      z: number; // 0 (horizon) to 1 (near)
+      z: number;
       type: "coin" | "star" | "obstacle" | "turbo" | "shield" | "freeze";
     }
 
@@ -807,7 +786,6 @@ function SmartEscapeGame() {
         setPlayerDistanceMeters((d) => d + effectiveSpeed * 14 * dt);
         setTimeElapsed((t) => t + dt);
 
-        // Criatura aproximándose si no está congelada
         if (activeFreezeTime <= 0) {
           const creatureApproach = lvlConfig.creatureSpeed * (effectiveSpeed < 1 ? 4.5 : 1.8) * dt;
           setCreatureDistanceMeters((dist) => {
@@ -820,25 +798,20 @@ function SmartEscapeGame() {
           });
         }
 
-        // Power-ups temporizadores
         if (activeTurboTime > 0) setActiveTurboTime((t) => Math.max(0, t - dt));
         if (activeMagnetTime > 0) setActiveMagnetTime((t) => Math.max(0, t - dt));
         if (activeFreezeTime > 0) setActiveFreezeTime((t) => Math.max(0, t - dt));
 
-        // Desplazamiento de carretera
         roadOffset += effectiveSpeed * 400 * dt;
         if (roadOffset > 1000) roadOffset = 0;
 
-        // Desplazar objetos en la pista
         trackItems.forEach((item) => {
           item.z += effectiveSpeed * 0.48 * dt;
 
-          // Magnet
           if (activeMagnetTime > 0 && (item.type === "coin" || item.type === "star")) {
             item.lane += (playerLane - item.lane) * 0.15;
           }
 
-          // Colisión con el jugador
           if (item.z >= 0.92 && item.z <= 1.06) {
             if (Math.round(item.lane) === playerLane) {
               if (item.type === "coin") {
@@ -881,7 +854,6 @@ function SmartEscapeGame() {
           }
         });
 
-        // Filtrar y reaparecer
         trackItems = trackItems.filter((it) => it.z < 1.15);
         if (trackItems.length < 4) {
           const types: TrackItem["type"][] = ["coin", "coin", "star", "obstacle", "turbo", "shield", "freeze"];
@@ -895,14 +867,11 @@ function SmartEscapeGame() {
         }
       }
 
-      // ==========================================
-      // RENDERIZADO VISUAL DEL CANVAS
-      // ==========================================
+      // Render
       const w = canvas.width;
       const h = canvas.height;
       ctx.clearRect(0, 0, w, h);
 
-      // Horizonte y cielo
       const horizonY = h * 0.38;
       const skyGrad = ctx.createLinearGradient(0, 0, 0, horizonY);
       skyGrad.addColorStop(0, "#020617");
@@ -910,7 +879,6 @@ function SmartEscapeGame() {
       ctx.fillStyle = skyGrad;
       ctx.fillRect(0, 0, w, horizonY);
 
-      // Cuadrícula Neón en el fondo
       ctx.strokeStyle = theme.gridColor;
       ctx.lineWidth = 0.5;
       ctx.globalAlpha = 0.25;
@@ -922,7 +890,6 @@ function SmartEscapeGame() {
       }
       ctx.globalAlpha = 1.0;
 
-      // Carretera 3D
       const roadTopW = w * 0.25;
       const roadBottomW = w * 0.92;
       const roadTopX = (w - roadTopW) / 2;
@@ -940,7 +907,6 @@ function SmartEscapeGame() {
       ctx.closePath();
       ctx.fill();
 
-      // Bordes exteriores Neón
       ctx.strokeStyle = theme.gridColor;
       ctx.lineWidth = 2.5;
       ctx.shadowColor = theme.gridColor;
@@ -952,7 +918,6 @@ function SmartEscapeGame() {
       ctx.lineTo(roadBottomX + roadBottomW, h);
       ctx.stroke();
 
-      // Líneas divisorias de los 3 carriles
       const lane1Top = roadTopX + roadTopW * 0.33;
       const lane1Bot = roadBottomX + roadBottomW * 0.33;
       const lane2Top = roadTopX + roadTopW * 0.66;
@@ -970,7 +935,7 @@ function SmartEscapeGame() {
       ctx.setLineDash([]);
       ctx.shadowBlur = 0;
 
-      // Meta a lo lejos (Finish Line Banner)
+      // Meta a lo lejos
       const progressToGoal = Math.min(1, (currentQIndex + 1) / Math.max(1, questionsPool.length));
       if (progressToGoal > 0.8) {
         ctx.fillStyle = "#ffffff";
@@ -981,7 +946,7 @@ function SmartEscapeGame() {
         ctx.fillText("🏁 META", w / 2, horizonY - 7);
       }
 
-      // Dibujar Objetos en pista (ordenados por profundidad Z)
+      // Dibujar objetos en pista
       const sortedItems = [...trackItems].sort((a, b) => a.z - b.z);
       sortedItems.forEach((item) => {
         const itemY = horizonY + (h - horizonY) * item.z;
@@ -1032,9 +997,7 @@ function SmartEscapeGame() {
         ctx.restore();
       });
 
-      // ==========================================
-      // DIBUJAR PERSONAJE DEL JUGADOR
-      // ==========================================
+      // Dibujar Jugador
       const playerZ = 0.95;
       const playerRoadW = roadTopW + (roadBottomW - roadTopW) * playerZ;
       const playerRoadX = (w - playerRoadW) / 2;
@@ -1042,13 +1005,11 @@ function SmartEscapeGame() {
       const targetPlayerX = playerRoadX + pLaneW * playerLane + pLaneW / 2;
       const playerBaseY = h - 45 - (isJumping ? 55 : 0);
 
-      // Sombra
       ctx.fillStyle = "rgba(0,0,0,0.5)";
       ctx.beginPath();
       ctx.ellipse(targetPlayerX, h - 38, 20, 6, 0, 0, Math.PI * 2);
       ctx.fill();
 
-      // Aura Turbo / Escudo
       if (activeTurboTime > 0) {
         ctx.strokeStyle = "#38bdf8";
         ctx.lineWidth = 3;
@@ -1067,7 +1028,6 @@ function SmartEscapeGame() {
         ctx.stroke();
       }
 
-      // Personaje Runner
       const equippedOutfit = CLOSET_ITEMS.find((c) => c.id === equippedItems.outfit) || CLOSET_ITEMS[4];
       const equippedHair = CLOSET_ITEMS.find((c) => c.id === equippedItems.hair) || CLOSET_ITEMS[0];
 
@@ -1076,7 +1036,6 @@ function SmartEscapeGame() {
 
       const legOffset = Math.sin(timestamp * 0.015) * 5;
 
-      // Piernas y tenis
       ctx.fillStyle = "#1e293b";
       ctx.fillRect(-7, 16 + legOffset, 5, 10);
       ctx.fillRect(2, 16 - legOffset, 5, 10);
@@ -1084,34 +1043,28 @@ function SmartEscapeGame() {
       ctx.fillRect(-8, 24 + legOffset, 7, 5);
       ctx.fillRect(1, 24 - legOffset, 7, 5);
 
-      // Torso y Traje
       ctx.fillStyle = equippedOutfit.color;
       ctx.beginPath();
       ctx.roundRect(-10, 0, 20, 18, 4);
       ctx.fill();
 
-      // Cabeza y Rostro
       ctx.fillStyle = "#fcd34d";
       ctx.beginPath();
       ctx.arc(0, -7, 9, 0, Math.PI * 2);
       ctx.fill();
 
-      // Pelo
       ctx.fillStyle = equippedHair.color;
       ctx.beginPath();
       ctx.arc(0, -10, 10, Math.PI, Math.PI * 2);
       ctx.fill();
 
-      // Ojos
       ctx.fillStyle = "#0f172a";
       ctx.fillRect(-3.5, -7, 2, 2);
       ctx.fillRect(1.5, -7, 2, 2);
 
       ctx.restore();
 
-      // ==========================================
-      // DIBUJAR PERSEGUIDOR (CRIATURA DETRÁS)
-      // ==========================================
+      // Dibujar Criatura Perseguidora
       const creatureZ = Math.max(0.08, 1 - creatureDistanceMeters / 55);
       const cRoadW = roadTopW + (roadBottomW - roadTopW) * creatureZ;
       const cRoadX = (w - cRoadW) / 2;
@@ -1123,7 +1076,6 @@ function SmartEscapeGame() {
       ctx.translate(cX, cY - 16);
       ctx.scale(cScale, cScale);
 
-      // Efecto congelado
       if (activeFreezeTime > 0) {
         ctx.fillStyle = "rgba(56, 189, 248, 0.4)";
         ctx.strokeStyle = "#38bdf8";
@@ -1132,7 +1084,6 @@ function SmartEscapeGame() {
         ctx.fillRect(-22, -22, 44, 44);
       }
 
-      // Cuerpo monstruoso
       ctx.fillStyle = theme.monsterColor;
       ctx.shadowColor = theme.monsterColor;
       ctx.shadowBlur = 12;
@@ -1141,7 +1092,6 @@ function SmartEscapeGame() {
       ctx.fill();
       ctx.shadowBlur = 0;
 
-      // Ojos brillantes
       ctx.fillStyle = "#ffffff";
       ctx.beginPath();
       ctx.arc(-7, -3, 5, 0, Math.PI * 2);
@@ -1153,7 +1103,6 @@ function SmartEscapeGame() {
       ctx.arc(7, -3, 2.5, 0, Math.PI * 2);
       ctx.fill();
 
-      // Dientes
       ctx.fillStyle = "#ffffff";
       ctx.beginPath();
       ctx.moveTo(-8, 6);
@@ -1195,9 +1144,10 @@ function SmartEscapeGame() {
     toast.success(`¡Desbloqueaste y equipaste ${item.name}! 🎉`);
   };
 
-  const currentTheme = WORLDS[selectedWorld] || WORLDS.math;
+  const currentTheme = WORLDS[selectedWorld] || WORLDS.quimica;
   const currentLvlConfig = LEVELS_CONFIG[selectedLevel - 1] || LEVELS_CONFIG[0];
   const timerPercentage = qTimerMax > 0 ? (qTimer / qTimerMax) * 100 : 0;
+  const availableTopics = getSubjectMaterials(selectedWorld);
 
   return (
     <div className="fixed inset-0 w-full h-full max-h-screen bg-slate-950 text-foreground flex flex-col font-sans select-none overflow-hidden">
@@ -1240,7 +1190,7 @@ function SmartEscapeGame() {
                 SMART ESCAPE
               </h1>
               <p className="text-xs text-muted-foreground max-w-xs mx-auto leading-relaxed">
-                ¡Corre, esquiva obstáculos y responde antes de que la criatura te alcance!
+                ¡Corre, esquiva a la criatura y responde preguntas basadas en tu material guardado!
               </p>
             </div>
 
@@ -1272,7 +1222,7 @@ function SmartEscapeGame() {
               className="w-full h-14 rounded-2xl bg-gradient-to-r from-purple-600 via-indigo-600 to-cyan-600 text-white font-display text-base font-black flex items-center justify-center gap-3 shadow-lg shadow-purple-500/30 hover:brightness-110 active:scale-95 transition cursor-pointer"
             >
               <Play className="size-5 fill-white" />
-              <span>JUGAR SMART ESCAPE</span>
+              <span>ELEGIR MATERIA & JUGAR</span>
             </button>
 
             <div className="grid grid-cols-2 gap-2">
@@ -1300,7 +1250,7 @@ function SmartEscapeGame() {
       )}
 
       {/* ======================================================== */}
-      {/* 2. SELECCIÓN DE MUNDO / MATERIA */}
+      {/* 2. SELECCIÓN DE MATERIA */}
       {/* ======================================================== */}
       {screen === "world_select" && (
         <div className="flex-1 w-full h-full overflow-y-auto p-4 md:p-6 max-w-lg mx-auto space-y-4 animate-fade-in">
@@ -1312,12 +1262,12 @@ function SmartEscapeGame() {
               <ArrowLeft className="size-4" />
               <span>Atrás</span>
             </button>
-            <span className="text-xs font-bold text-purple-400">Paso 1: Elige el Mundo</span>
+            <span className="text-xs font-bold text-purple-400">Paso 1: Elige Materia</span>
           </div>
 
           <div>
-            <h2 className="font-display text-xl font-bold text-foreground">Elige la Materia o Escenario</h2>
-            <p className="text-xs text-muted-foreground">Cada mundo tiene su propio entorno visual y criatura perseguidora:</p>
+            <h2 className="font-display text-xl font-bold text-foreground">Elige la Materia a Estudiar</h2>
+            <p className="text-xs text-muted-foreground">El juego cargará el material guardado de esa materia para generar las preguntas:</p>
           </div>
 
           <div className="grid grid-cols-1 gap-2.5 pb-12">
@@ -1330,8 +1280,11 @@ function SmartEscapeGame() {
                     setSelectedWorld(w.id);
                     if (w.id === "custom") {
                       setScreen("upload");
-                    } else {
+                    } else if (w.id === "paa" || w.id === "exani") {
+                      setSelectedTopicId(w.id);
                       setScreen("level_map");
+                    } else {
+                      setScreen("material_select");
                     }
                   }}
                   className="group flex items-center justify-between p-3.5 rounded-2xl border border-slate-800 bg-slate-900/70 hover:border-purple-500/50 hover:bg-purple-950/20 text-left transition active:scale-98 cursor-pointer shadow-sm"
@@ -1341,10 +1294,10 @@ function SmartEscapeGame() {
                     <div>
                       <div className="flex items-center gap-1.5">
                         <span className="text-xs font-bold text-foreground group-hover:text-purple-300 transition-colors">
-                          {w.name}
+                          {w.badge}
                         </span>
                         <span className="text-[9px] font-semibold px-2 py-0.2 rounded-full bg-slate-800 text-slate-300">
-                          {w.badge}
+                          {w.name}
                         </span>
                       </div>
                       <span className="text-[10px] text-muted-foreground block line-clamp-1">{w.desc}</span>
@@ -1364,9 +1317,9 @@ function SmartEscapeGame() {
       )}
 
       {/* ======================================================== */}
-      {/* 3. MAPA DE NIVELES */}
+      {/* 2.1 SELECCIÓN DE MATERIAL GUARDADO DENTRO DE LA MATERIA */}
       {/* ======================================================== */}
-      {screen === "level_map" && (
+      {screen === "material_select" && (
         <div className="flex-1 w-full h-full overflow-y-auto p-4 md:p-6 max-w-lg mx-auto space-y-4 animate-fade-in">
           <div className="flex items-center justify-between">
             <button
@@ -1374,15 +1327,107 @@ function SmartEscapeGame() {
               className="flex items-center gap-1.5 text-xs font-bold text-muted-foreground hover:text-foreground transition cursor-pointer"
             >
               <ArrowLeft className="size-4" />
-              <span>Cambiar Mundo</span>
+              <span>Cambiar Materia</span>
             </button>
-            <span className="text-xs font-bold text-cyan-400">{currentTheme.name}</span>
+            <span className="text-xs font-bold text-cyan-400">{currentTheme.badge}</span>
+          </div>
+
+          <div>
+            <h2 className="font-display text-xl font-bold text-foreground">Material de Estudio Guardado</h2>
+            <p className="text-xs text-muted-foreground">
+              Selecciona el tema cuyo contenido se usará para formular las preguntas del juego:
+            </p>
+          </div>
+
+          {availableTopics.length === 0 ? (
+            /* AVISO REQUERIDO CUANDO NO HAY MATERIAL GUARDADO */
+            <div className="p-6 rounded-3xl border border-amber-500/40 bg-amber-950/20 text-center space-y-4 my-4">
+              <div className="size-12 rounded-2xl bg-amber-500/20 text-amber-400 grid place-items-center mx-auto">
+                <BookOpen className="size-6" />
+              </div>
+              <div className="space-y-1">
+                <h3 className="text-sm font-bold text-foreground">
+                  📚 Primero agrega material de estudio para poder generar las preguntas de este juego.
+                </h3>
+                <p className="text-xs text-muted-foreground">
+                  Para cumplir con la regla pedagógica, las preguntas solo pueden formularse a partir de un texto real.
+                </p>
+              </div>
+
+              <button
+                onClick={() => {
+                  setSelectedWorld("custom");
+                  setScreen("upload");
+                }}
+                className="w-full h-11 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs flex items-center justify-center gap-2 transition cursor-pointer"
+              >
+                <PlusCircle className="size-4" />
+                <span>Agregar o Pegar Material de Estudio</span>
+              </button>
+            </div>
+          ) : (
+            <div className="space-y-3 pb-12">
+              {availableTopics.map((topic) => (
+                <div
+                  key={topic.id}
+                  className="p-4 rounded-2xl border border-slate-800 bg-slate-900/80 hover:border-purple-500/50 transition space-y-2.5 text-left"
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <div>
+                      <h4 className="text-xs font-bold text-foreground">{topic.name}</h4>
+                      <p className="text-[10px] text-muted-foreground line-clamp-2 mt-0.5">{topic.summary}</p>
+                    </div>
+                    <span className="text-xl shrink-0">{currentTheme.icon}</span>
+                  </div>
+
+                  {/* Extracto del material */}
+                  <div className="p-2.5 rounded-xl bg-slate-950/80 border border-slate-800/80 text-[10px] text-slate-300 font-mono line-clamp-2 leading-relaxed">
+                    📖 "{topic.explanation.slice(0, 140)}..."
+                  </div>
+
+                  <button
+                    onClick={() => {
+                      setSelectedTopicId(topic.id);
+                      setScreen("level_map");
+                    }}
+                    className="w-full h-10 rounded-xl bg-primary text-primary-foreground text-xs font-bold flex items-center justify-center gap-2 transition active:scale-95 cursor-pointer hover:brightness-110"
+                  >
+                    <span>Usar este Material en Smart Escape</span>
+                    <ChevronRight className="size-3.5" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ======================================================== */}
+      {/* 3. MAPA DE NIVELES */}
+      {/* ======================================================== */}
+      {screen === "level_map" && (
+        <div className="flex-1 w-full h-full overflow-y-auto p-4 md:p-6 max-w-lg mx-auto space-y-4 animate-fade-in">
+          <div className="flex items-center justify-between">
+            <button
+              onClick={() => (selectedWorld === "paa" || selectedWorld === "exani" ? setScreen("world_select") : setScreen("material_select"))}
+              className="flex items-center gap-1.5 text-xs font-bold text-muted-foreground hover:text-foreground transition cursor-pointer"
+            >
+              <ArrowLeft className="size-4" />
+              <span>Cambiar Material</span>
+            </button>
+            <span className="text-xs font-bold text-cyan-400">{currentTheme.badge}</span>
           </div>
 
           <div className="p-4 rounded-3xl border border-purple-500/30 bg-purple-950/30 flex items-center gap-3">
             <span className="text-3xl">{currentTheme.icon}</span>
             <div>
-              <h3 className="text-sm font-bold text-foreground">{currentTheme.name}</h3>
+              <h3 className="text-sm font-bold text-foreground">
+                {selectedWorld === "paa"
+                  ? "Simulador PAA College Board"
+                  : selectedWorld === "exani"
+                  ? "Simulador EXANI-II Ceneval"
+                  : availableTopics.find((t) => t.id === selectedTopicId)?.name || currentTheme.name}
+              </h3>
               <p className="text-[11px] text-muted-foreground">
                 Perseguidor: <strong className="text-rose-400">{currentTheme.monsterName}</strong> {currentTheme.monsterEmoji}
               </p>
@@ -1408,7 +1453,7 @@ function SmartEscapeGame() {
                         Nivel {lvl.level} — {lvl.name}
                       </span>
                       <div className="flex items-center gap-2 text-[10px] text-muted-foreground mt-0.5">
-                        <span>📚 {lvl.reqQuestions} preguntas</span>
+                        <span>📚 {lvl.reqQuestions} preguntas del material</span>
                         <span>⏱️ {lvl.timePerQ}s por pregunta</span>
                       </div>
                     </div>
@@ -1424,7 +1469,7 @@ function SmartEscapeGame() {
                   </div>
 
                   <button
-                    onClick={() => startGame(selectedWorld, lvl.level)}
+                    onClick={() => startGameWithMaterial(selectedWorld, selectedTopicId, lvl.level)}
                     className="w-full h-11 rounded-xl bg-primary text-primary-foreground text-xs font-bold flex items-center justify-center gap-2 shadow-sm transition active:scale-95 cursor-pointer hover:brightness-110"
                   >
                     <Play className="size-3.5 fill-current" />
@@ -1450,7 +1495,7 @@ function SmartEscapeGame() {
               <ArrowLeft className="size-4" />
               <span>Atrás</span>
             </button>
-            <span className="text-xs font-bold text-cyan-400">Material de Estudio</span>
+            <span className="text-xs font-bold text-cyan-400">Subir Material Propio</span>
           </div>
 
           <div className="p-4 rounded-3xl border border-slate-800 bg-slate-900 space-y-3">
@@ -1512,17 +1557,17 @@ function SmartEscapeGame() {
             <textarea
               value={customText}
               onChange={(e) => setCustomText(e.target.value)}
-              placeholder="O pega aquí el resumen, temario o capítulo que deseas estudiar..."
+              placeholder="O pega aquí el texto o resumen que deseas estudiar..."
               className="h-32 w-full rounded-xl border border-slate-800 bg-slate-950 p-3 text-xs text-foreground focus:border-primary focus:outline-none resize-none leading-relaxed"
             />
 
             <button
-              onClick={() => startGame("custom", 1)}
+              onClick={() => startGameWithMaterial("custom", "custom", 1)}
               disabled={isExtracting || isGeneratingAi || !customText.trim()}
               className="w-full h-12 rounded-xl bg-gradient-to-r from-purple-600 to-cyan-600 text-white text-xs font-bold flex items-center justify-center gap-2 shadow-lg shadow-purple-500/20 transition active:scale-95 disabled:opacity-50 cursor-pointer"
             >
               <Sparkles className="size-4" />
-              <span>Generar y Empezar Carrera</span>
+              <span>Generar Preguntas y Empezar Carrera</span>
             </button>
           </div>
         </div>
@@ -1530,17 +1575,13 @@ function SmartEscapeGame() {
 
       {/* ======================================================== */}
       {/* 5. PANTALLA COMPLETA DE PARTIDA (RUNNER + HUD + PREGUNTAS) */}
-      {/* 100% VISIBLE SIN SCROLL EN CUALQUIER DISPOSITIVO */}
       {/* ======================================================== */}
       {screen === "playing" && (
         <div className="flex-1 w-full h-full max-h-screen flex flex-col justify-between overflow-hidden bg-slate-950 relative select-none">
-          {/* ========================================== */}
-          {/* PARTE SUPERIOR: STATS, VIDAS & RADAR */}
-          {/* ========================================== */}
+          {/* Top Header */}
           <header className="h-12 w-full shrink-0 border-b border-slate-800/80 bg-slate-900/90 backdrop-blur px-3 flex items-center justify-between gap-2 z-30">
-            {/* Vidas & XP */}
+            {/* Vidas, XP & Monedas */}
             <div className="flex items-center gap-2.5">
-              {/* Hearts */}
               <div className="flex items-center gap-0.5" title="Vidas">
                 {[1, 2, 3].map((hIdx) => (
                   <Heart
@@ -1552,13 +1593,11 @@ function SmartEscapeGame() {
                 ))}
               </div>
 
-              {/* XP */}
               <span className="text-[11px] font-bold text-cyan-400 flex items-center gap-1">
                 <Star className="size-3 fill-cyan-400" />
                 <span>{gameXp} XP</span>
               </span>
 
-              {/* Coins */}
               <span className="text-[11px] font-bold text-gold-foreground flex items-center gap-1">
                 <img src={streakCap} alt="" className="size-3" />
                 <span>{collectedCoins}</span>
@@ -1593,9 +1632,7 @@ function SmartEscapeGame() {
             </div>
           </header>
 
-          {/* ========================================== */}
-          {/* CENTRO: ESCENARIO RUNNER 3D CANVAS */}
-          {/* ========================================== */}
+          {/* Centro: Escenario 3D Runner */}
           <div className="flex-1 w-full min-h-[160px] max-h-[38vh] md:max-h-[44vh] relative overflow-hidden bg-slate-950">
             <canvas ref={canvasRef} width={420} height={280} className="w-full h-full object-cover block" />
 
@@ -1610,14 +1647,12 @@ function SmartEscapeGame() {
             )}
           </div>
 
-          {/* ========================================== */}
-          {/* PARTE INFERIOR: PREGUNTA, OPCIONES & TIMER */}
-          {/* ========================================== */}
+          {/* Parte Inferior: Pregunta extraída del material, Opciones y Timer */}
           <div className="w-full shrink-0 border-t border-slate-800/80 bg-slate-900/95 backdrop-blur px-3 pt-2.5 pb-3 space-y-2 z-30 max-w-xl mx-auto">
             {/* Header de la Pregunta + Temporizador */}
             <div className="flex items-center justify-between text-xs">
-              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-300">
-                Pregunta {currentQIndex + 1} de {questionsPool.length}
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-300 line-clamp-1 max-w-[200px]">
+                {currentQuestion?.topic || `Pregunta ${currentQIndex + 1} de ${questionsPool.length}`}
               </span>
 
               {/* Countdown Timer */}
@@ -1646,7 +1681,7 @@ function SmartEscapeGame() {
               </h3>
             ) : (
               <div className="text-xs text-muted-foreground italic min-h-[32px] flex items-center">
-                Cargando siguiente pregunta...
+                Cargando pregunta...
               </div>
             )}
 
@@ -1720,7 +1755,7 @@ function SmartEscapeGame() {
       )}
 
       {/* ======================================================== */}
-      {/* 6. PANTALLA DE DERROTA (💀 TE ALCANZARON) */}
+      {/* 6. PANTALLA DE DERROTA */}
       {/* ======================================================== */}
       {screen === "gameover" && (
         <div className="flex-1 w-full h-full overflow-y-auto p-4 md:p-6 max-w-md mx-auto flex flex-col justify-center text-center space-y-5 animate-fade-in">
@@ -1749,7 +1784,7 @@ function SmartEscapeGame() {
 
           <div className="space-y-2">
             <button
-              onClick={() => startGame(selectedWorld, selectedLevel)}
+              onClick={() => startGameWithMaterial(selectedWorld, selectedTopicId, selectedLevel)}
               className="w-full h-12 rounded-2xl bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-lg transition active:scale-95 cursor-pointer"
             >
               <RotateCcw className="size-4" />
@@ -1775,7 +1810,7 @@ function SmartEscapeGame() {
       )}
 
       {/* ======================================================== */}
-      {/* 7. PANTALLA DE VICTORIA (🏁 ESCAPE EXITOSO) */}
+      {/* 7. PANTALLA DE VICTORIA */}
       {/* ======================================================== */}
       {screen === "victory" && (
         <div className="flex-1 w-full h-full overflow-y-auto p-4 md:p-6 max-w-md mx-auto flex flex-col justify-center text-center space-y-5 animate-fade-in">
@@ -1815,7 +1850,7 @@ function SmartEscapeGame() {
           <div className="space-y-2">
             {selectedLevel < 4 && (
               <button
-                onClick={() => startGame(selectedWorld, selectedLevel + 1)}
+                onClick={() => startGameWithMaterial(selectedWorld, selectedTopicId, selectedLevel + 1)}
                 className="w-full h-12 rounded-2xl bg-gradient-to-r from-emerald-500 to-cyan-500 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-lg transition active:scale-95 cursor-pointer"
               >
                 <span>Siguiente Nivel (Nivel {selectedLevel + 1})</span>
@@ -1834,7 +1869,7 @@ function SmartEscapeGame() {
       )}
 
       {/* ======================================================== */}
-      {/* 8. ARMARIO / TIENDA DE PERSONALIZACIÓN */}
+      {/* 8. ARMARIO / TIENDA */}
       {/* ======================================================== */}
       {screen === "closet" && (
         <div className="flex-1 w-full h-full overflow-y-auto p-4 md:p-6 max-w-lg mx-auto space-y-4 animate-fade-in">
