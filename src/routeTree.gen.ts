@@ -14,20 +14,19 @@ import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthenticatedStudyRouteImport } from './routes/_authenticated.study'
 import { Route as AuthenticatedRecommendationsRouteImport } from './routes/_authenticated.recommendations'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated.profile'
 import { Route as AuthenticatedPrepRouteImport } from './routes/_authenticated.prep'
-import { Route as AuthenticatedStudyRouteImport } from './routes/_authenticated.study'
 import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authenticated.onboarding'
 import { Route as AuthenticatedLibraryRouteImport } from './routes/_authenticated.library'
 import { Route as AuthenticatedGamesRouteImport } from './routes/_authenticated.games'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated.dashboard'
 import { Route as AuthenticatedAdminBooksRouteImport } from './routes/_authenticated.admin-books'
-import { Route as AuthenticatedGamesSmartEscapeRouteImport } from './routes/_authenticated.games.smart-escape'
-import { Route as AuthenticatedGamesFlashcardsRouteImport } from './routes/_authenticated.games.flashcards'
 import { Route as AuthenticatedGamesWordleRouteImport } from './routes/_authenticated.games.wordle'
 import { Route as AuthenticatedGamesTorreInfinitaRouteImport } from './routes/_authenticated.games.torre-infinita'
 import { Route as AuthenticatedGamesSpaceRushRouteImport } from './routes/_authenticated.games.space-rush'
+import { Route as AuthenticatedGamesSmartEscapeRouteImport } from './routes/_authenticated.games.smart-escape'
 import { Route as AuthenticatedGamesSimuladorExamenesRouteImport } from './routes/_authenticated.games.simulador-examenes'
 import { Route as AuthenticatedGamesRunnerConocimientoRouteImport } from './routes/_authenticated.games.runner-conocimiento'
 import { Route as AuthenticatedGamesRpgAcademicoRouteImport } from './routes/_authenticated.games.rpg-academico'
@@ -38,6 +37,7 @@ import { Route as AuthenticatedGamesLigasCampeonesRouteImport } from './routes/_
 import { Route as AuthenticatedGamesLaboratorioInventoresRouteImport } from './routes/_authenticated.games.laboratorio-inventores'
 import { Route as AuthenticatedGamesHangmanRouteImport } from './routes/_authenticated.games.hangman'
 import { Route as AuthenticatedGamesGoldQuestRouteImport } from './routes/_authenticated.games.gold-quest'
+import { Route as AuthenticatedGamesFlashcardsRouteImport } from './routes/_authenticated.games.flashcards'
 import { Route as AuthenticatedGamesEscapeRoomRouteImport } from './routes/_authenticated.games.escape-room'
 import { Route as AuthenticatedGamesDictationRouteImport } from './routes/_authenticated.games.dictation'
 import { Route as AuthenticatedGamesCriaturasConocimientoRouteImport } from './routes/_authenticated.games.criaturas-conocimiento'
@@ -72,6 +72,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedStudyRoute = AuthenticatedStudyRouteImport.update({
+  id: '/study',
+  path: '/study',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 const AuthenticatedRecommendationsRoute =
   AuthenticatedRecommendationsRouteImport.update({
     id: '/recommendations',
@@ -86,11 +91,6 @@ const AuthenticatedProfileRoute = AuthenticatedProfileRouteImport.update({
 const AuthenticatedPrepRoute = AuthenticatedPrepRouteImport.update({
   id: '/prep',
   path: '/prep',
-  getParentRoute: () => AuthenticatedRoute,
-} as any)
-const AuthenticatedStudyRoute = AuthenticatedStudyRouteImport.update({
-  id: '/study',
-  path: '/study',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
 const AuthenticatedOnboardingRoute = AuthenticatedOnboardingRouteImport.update({
@@ -118,18 +118,6 @@ const AuthenticatedAdminBooksRoute = AuthenticatedAdminBooksRouteImport.update({
   path: '/admin-books',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
-const AuthenticatedGamesSmartEscapeRoute =
-  AuthenticatedGamesSmartEscapeRouteImport.update({
-    id: '/smart-escape',
-    path: '/smart-escape',
-    getParentRoute: () => AuthenticatedGamesRoute,
-  } as any)
-const AuthenticatedGamesFlashcardsRoute =
-  AuthenticatedGamesFlashcardsRouteImport.update({
-    id: '/flashcards',
-    path: '/flashcards',
-    getParentRoute: () => AuthenticatedGamesRoute,
-  } as any)
 const AuthenticatedGamesWordleRoute =
   AuthenticatedGamesWordleRouteImport.update({
     id: '/wordle',
@@ -146,6 +134,12 @@ const AuthenticatedGamesSpaceRushRoute =
   AuthenticatedGamesSpaceRushRouteImport.update({
     id: '/space-rush',
     path: '/space-rush',
+    getParentRoute: () => AuthenticatedGamesRoute,
+  } as any)
+const AuthenticatedGamesSmartEscapeRoute =
+  AuthenticatedGamesSmartEscapeRouteImport.update({
+    id: '/smart-escape',
+    path: '/smart-escape',
     getParentRoute: () => AuthenticatedGamesRoute,
   } as any)
 const AuthenticatedGamesSimuladorExamenesRoute =
@@ -206,6 +200,12 @@ const AuthenticatedGamesGoldQuestRoute =
   AuthenticatedGamesGoldQuestRouteImport.update({
     id: '/gold-quest',
     path: '/gold-quest',
+    getParentRoute: () => AuthenticatedGamesRoute,
+  } as any)
+const AuthenticatedGamesFlashcardsRoute =
+  AuthenticatedGamesFlashcardsRouteImport.update({
+    id: '/flashcards',
+    path: '/flashcards',
     getParentRoute: () => AuthenticatedGamesRoute,
   } as any)
 const AuthenticatedGamesEscapeRoomRoute =
@@ -274,9 +274,9 @@ export interface FileRoutesByFullPath {
   '/library': typeof AuthenticatedLibraryRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/prep': typeof AuthenticatedPrepRoute
-  '/study': typeof AuthenticatedStudyRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/recommendations': typeof AuthenticatedRecommendationsRoute
+  '/study': typeof AuthenticatedStudyRoute
   '/games/battle-royale': typeof AuthenticatedGamesBattleRoyaleRoute
   '/games/centro-investigacion': typeof AuthenticatedGamesCentroInvestigacionRoute
   '/games/ciudad-conocimiento': typeof AuthenticatedGamesCiudadConocimientoRoute
@@ -313,9 +313,9 @@ export interface FileRoutesByTo {
   '/library': typeof AuthenticatedLibraryRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/prep': typeof AuthenticatedPrepRoute
-  '/study': typeof AuthenticatedStudyRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/recommendations': typeof AuthenticatedRecommendationsRoute
+  '/study': typeof AuthenticatedStudyRoute
   '/games/battle-royale': typeof AuthenticatedGamesBattleRoyaleRoute
   '/games/centro-investigacion': typeof AuthenticatedGamesCentroInvestigacionRoute
   '/games/ciudad-conocimiento': typeof AuthenticatedGamesCiudadConocimientoRoute
@@ -354,9 +354,9 @@ export interface FileRoutesById {
   '/_authenticated/library': typeof AuthenticatedLibraryRoute
   '/_authenticated/onboarding': typeof AuthenticatedOnboardingRoute
   '/_authenticated/prep': typeof AuthenticatedPrepRoute
-  '/_authenticated/study': typeof AuthenticatedStudyRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/_authenticated/recommendations': typeof AuthenticatedRecommendationsRoute
+  '/_authenticated/study': typeof AuthenticatedStudyRoute
   '/_authenticated/games/battle-royale': typeof AuthenticatedGamesBattleRoyaleRoute
   '/_authenticated/games/centro-investigacion': typeof AuthenticatedGamesCentroInvestigacionRoute
   '/_authenticated/games/ciudad-conocimiento': typeof AuthenticatedGamesCiudadConocimientoRoute
@@ -395,9 +395,9 @@ export interface FileRouteTypes {
     | '/library'
     | '/onboarding'
     | '/prep'
-    | '/study'
     | '/profile'
     | '/recommendations'
+    | '/study'
     | '/games/battle-royale'
     | '/games/centro-investigacion'
     | '/games/ciudad-conocimiento'
@@ -434,9 +434,9 @@ export interface FileRouteTypes {
     | '/library'
     | '/onboarding'
     | '/prep'
-    | '/study'
     | '/profile'
     | '/recommendations'
+    | '/study'
     | '/games/battle-royale'
     | '/games/centro-investigacion'
     | '/games/ciudad-conocimiento'
@@ -474,9 +474,9 @@ export interface FileRouteTypes {
     | '/_authenticated/library'
     | '/_authenticated/onboarding'
     | '/_authenticated/prep'
-    | '/_authenticated/study'
     | '/_authenticated/profile'
     | '/_authenticated/recommendations'
+    | '/_authenticated/study'
     | '/_authenticated/games/battle-royale'
     | '/_authenticated/games/centro-investigacion'
     | '/_authenticated/games/ciudad-conocimiento'
@@ -547,6 +547,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/study': {
+      id: '/_authenticated/study'
+      path: '/study'
+      fullPath: '/study'
+      preLoaderRoute: typeof AuthenticatedStudyRouteImport
+      parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/recommendations': {
       id: '/_authenticated/recommendations'
@@ -625,6 +632,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedGamesSpaceRushRouteImport
       parentRoute: typeof AuthenticatedGamesRoute
     }
+    '/_authenticated/games/smart-escape': {
+      id: '/_authenticated/games/smart-escape'
+      path: '/smart-escape'
+      fullPath: '/games/smart-escape'
+      preLoaderRoute: typeof AuthenticatedGamesSmartEscapeRouteImport
+      parentRoute: typeof AuthenticatedGamesRoute
+    }
     '/_authenticated/games/simulador-examenes': {
       id: '/_authenticated/games/simulador-examenes'
       path: '/simulador-examenes'
@@ -693,6 +707,13 @@ declare module '@tanstack/react-router' {
       path: '/gold-quest'
       fullPath: '/games/gold-quest'
       preLoaderRoute: typeof AuthenticatedGamesGoldQuestRouteImport
+      parentRoute: typeof AuthenticatedGamesRoute
+    }
+    '/_authenticated/games/flashcards': {
+      id: '/_authenticated/games/flashcards'
+      path: '/flashcards'
+      fullPath: '/games/flashcards'
+      preLoaderRoute: typeof AuthenticatedGamesFlashcardsRouteImport
       parentRoute: typeof AuthenticatedGamesRoute
     }
     '/_authenticated/games/escape-room': {
@@ -831,9 +852,9 @@ interface AuthenticatedRouteChildren {
   AuthenticatedLibraryRoute: typeof AuthenticatedLibraryRoute
   AuthenticatedOnboardingRoute: typeof AuthenticatedOnboardingRoute
   AuthenticatedPrepRoute: typeof AuthenticatedPrepRoute
-  AuthenticatedStudyRoute: typeof AuthenticatedStudyRoute
   AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
   AuthenticatedRecommendationsRoute: typeof AuthenticatedRecommendationsRoute
+  AuthenticatedStudyRoute: typeof AuthenticatedStudyRoute
   AuthenticatedPrepQuizQuizIdRoute: typeof AuthenticatedPrepQuizQuizIdRoute
 }
 
@@ -844,9 +865,9 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedLibraryRoute: AuthenticatedLibraryRoute,
   AuthenticatedOnboardingRoute: AuthenticatedOnboardingRoute,
   AuthenticatedPrepRoute: AuthenticatedPrepRoute,
-  AuthenticatedStudyRoute: AuthenticatedStudyRoute,
   AuthenticatedProfileRoute: AuthenticatedProfileRoute,
   AuthenticatedRecommendationsRoute: AuthenticatedRecommendationsRoute,
+  AuthenticatedStudyRoute: AuthenticatedStudyRoute,
   AuthenticatedPrepQuizQuizIdRoute: AuthenticatedPrepQuizQuizIdRoute,
 }
 

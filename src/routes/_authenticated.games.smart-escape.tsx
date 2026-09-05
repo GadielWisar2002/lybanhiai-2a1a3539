@@ -367,11 +367,11 @@ function SmartEscapeGame() {
   // Persecución Suave y con Mucho Más Tiempo
   const relativeMonsterDistanceRef = useRef<number>(240); // Inicia lejos (240px)
   const targetMonsterDistRef = useRef<number>(240);
-  const catchingSequenceRef.current = {
+  const catchingSequenceRef = useRef<{ active: boolean; timer: number; duration: number }>({
     active: false,
     timer: 0,
     duration: 1.4,
-  };
+  });
 
   const targetSpeedRef = useRef<number>(1.0);
   const currentSpeedRef = useRef<number>(1.0);
@@ -618,7 +618,7 @@ function SmartEscapeGame() {
         });
 
         if (aiResponse?.questions && aiResponse.questions.length > 0) {
-          questions = aiResponse.questions.map((q, idx) => {
+          questions = (aiResponse.questions as any[]).map((q: any, idx: number) => {
             const opts: [string, string, string, string] = [
               q.options[0] || "A",
               q.options[1] || "B",
@@ -1007,6 +1007,10 @@ function SmartEscapeGame() {
         return pups[Math.floor(Math.random() * pups.length)];
       }
     };
+
+    let groundOffset = 0;
+    let bgHillsOffset = 0;
+    let cloudOffset = 0;
 
     let sceneryObjects: SceneryObject[] = [
       { x: 100, type: "tree", size: 30 },
@@ -2357,8 +2361,8 @@ function SmartEscapeGame() {
                             fileName: file.name,
                           },
                         });
-                        if (res.extractedText) {
-                          setCustomText(res.extractedText);
+                        if (res.text) {
+                          setCustomText(res.text);
                           toast.success("¡Texto extraído!", { id: toastId });
                         }
                       } catch {
