@@ -634,7 +634,7 @@ function SmartEscapeGame() {
     setQTimerMax(firstQuestionTime);
     setSelectedOption(null);
 
-    // Inicia al 100% de energía para disfrutar la carrera libre
+    // Inicia al 100% de combustible Nitro
     energyRef.current = 100;
     setEnergyPercent(100);
 
@@ -644,10 +644,10 @@ function SmartEscapeGame() {
     isJumpingRef.current = false;
     playerDistanceRef.current = 0;
 
-    // Distancia inicial amplia (240px de ventaja para que no atrape rápido)
-    targetMonsterDistRef.current = 240;
-    relativeMonsterDistanceRef.current = 240;
-    catchingSequenceRef.current = { active: false, timer: 0, duration: 1.4 };
+    // Inicia visible en la salida (140px) y luego se aleja y desaparece fuera de pantalla
+    targetMonsterDistRef.current = 140;
+    relativeMonsterDistanceRef.current = 140;
+    catchingSequenceRef.current = { active: false, timer: 0, duration: 1.2 };
 
     targetSpeedRef.current = 1.0;
     currentSpeedRef.current = 1.0;
@@ -713,12 +713,12 @@ function SmartEscapeGame() {
       setGameXp((xp) => xp + 60 + streak * 10);
       setCollectedCoins((c) => c + 3);
 
-      // ¡Recarga 100% de Energía + Mega Nitro Boost!
+      // ¡Recarga 100% de Nitro + Turbo Speed Boost!
       energyRef.current = 100;
       setEnergyPercent(100);
       targetSpeedRef.current = 1.35;
-      targetMonsterDistRef.current = Math.min(260, targetMonsterDistRef.current + 70);
-      answerBannerRef.current = { text: "⚡ ¡CORRECTO! 🚀 NITRO BOOST ACTIVADO (+100% NITRO)", color: "#10b981", timer: 2.2 };
+      targetMonsterDistRef.current = 650; // monstruo fuera de pantalla
+      answerBannerRef.current = { text: "⚡ ¡CORRECTO! 🚀 NITRO AL 100% (TURBO BOOST)", color: "#10b981", timer: 2.2 };
 
       // Cargar la siguiente pregunta inmediatamente
       setTimeout(() => {
@@ -739,8 +739,8 @@ function SmartEscapeGame() {
       if (hasShield) {
         setHasShield(false);
         toast.info("🛡️ ¡El Escudo absorbió el fallo!");
-        energyRef.current = 50;
-        setEnergyPercent(50);
+        energyRef.current = Math.max(30, energyRef.current);
+        setEnergyPercent(Math.round(energyRef.current));
         answerBannerRef.current = { text: "🛡️ ¡ESCUDO TE PROTEGIÓ!", color: "#38bdf8", timer: 2.0 };
         setTimeout(() => {
           setSelectedOption(null);
@@ -758,15 +758,16 @@ function SmartEscapeGame() {
         setStreak(0);
         setLives((l) => Math.max(0, l - 1));
 
-        // Reducir energía y acercar al monstruo
-        energyRef.current = Math.max(15, energyRef.current - 25);
+        // Descuenta -25% de combustible Nitro
+        energyRef.current = Math.max(0, energyRef.current - 25);
         setEnergyPercent(Math.round(energyRef.current));
         targetSpeedRef.current = 0.85;
-        targetMonsterDistRef.current = Math.max(20, targetMonsterDistRef.current - 35);
         screenShakeRef.current = 7;
-        answerBannerRef.current = { text: "❌ ¡INCORRECTO! 👾 EL ENEMIGO SE ACERCA", color: "#ef4444", timer: 2.0 };
+        answerBannerRef.current = { text: "❌ ¡INCORRECTO! ⚡ -25% NITRO", color: "#ef4444", timer: 2.0 };
 
-        if (lives <= 1) {
+        if (lives <= 1 || energyRef.current <= 0) {
+          energyRef.current = 0;
+          setEnergyPercent(0);
           targetMonsterDistRef.current = 0;
           return;
         }
@@ -910,8 +911,8 @@ function SmartEscapeGame() {
             return;
           }
 
-          // 3. FÍSICA Y CONSUMO DE ENERGÍA (Ritmo suave y generoso: dura ~35s)
-          energyRef.current = Math.max(0, energyRef.current - 2.8 * dt);
+          // 3. FÍSICA Y CONSUMO DE COMBUSTIBLE NITRO (~40s para vaciarse a ritmo constante)
+          energyRef.current = Math.max(0, energyRef.current - 2.5 * dt);
           setEnergyPercent(Math.round(energyRef.current));
 
           // 4. Física de Salto del Jugador
@@ -925,22 +926,28 @@ function SmartEscapeGame() {
             }
           }
 
-          // 5. Persecución Suave y con Mucho Más Tiempo
-          if (activeFreezeTime <= 0) {
-            // El monstruo solo se acerca muy despacio si el jugador va muy lento o sin energía
-            if (speed < 1.0 || energyRef.current <= 0) {
-              targetMonsterDistRef.current = Math.max(0, targetMonsterDistRef.current - 8 * dt);
+          // 5. COMPORTAMIENTO DEL MONSTRUO 100% BASADO EN NITRO:
+          // - Con Nitro (> 0%): Al iniciar se queda atrás y desaparece por completo fuera de pantalla
+          // - Si Nitro llega a 0%: El monstruo se abalanza furioso a toda velocidad desde atrás y liquida de un ¡PUM!
+          if (energyRef.current > 0) {
+            if (playerDistanceRef.current > 20) {
+              targetMonsterDistRef.current = 650; // Se aleja fuera de la vista
             }
-
-            // Lerp de aproximación gradual
+            // Lerp de alejamiento suave
             relativeMonsterDistanceRef.current +=
-              (targetMonsterDistRef.current - relativeMonsterDistanceRef.current) * Math.min(1, dt * 2.0);
+              (targetMonsterDistRef.current - relativeMonsterDistanceRef.current) * Math.min(1, dt * 1.8);
+          } else {
+            // ¡NITRO AGOTADO (0%)! El monstruo entra a toda velocidad
+            targetSpeedRef.current = 0.5; // El jugador frena sin combustible
+            targetMonsterDistRef.current = 0;
+            relativeMonsterDistanceRef.current +=
+              (0 - relativeMonsterDistanceRef.current) * Math.min(1, dt * 4.5);
 
-            // Secuencia dramática de captura solo si entra en contacto directo (<= 16px)
-            if (relativeMonsterDistanceRef.current <= 16) {
-              catchingSequenceRef.current = { active: true, timer: 1.4, duration: 1.4 };
-              playSfx("wrong");
-              screenShakeRef.current = 12;
+            // Contacto letal: ¡PUM!
+            if (relativeMonsterDistanceRef.current <= 20) {
+              catchingSequenceRef.current = { active: true, timer: 1.2, duration: 1.2 };
+              playSfx("gameover");
+              screenShakeRef.current = 16;
             }
           }
 
@@ -976,28 +983,27 @@ function SmartEscapeGame() {
                 playSfx("coin");
                 setCollectedCoins((c) => c + 1);
                 setGameXp((xp) => xp + 15);
-                // Moneda recarga +8% de energía
-                energyRef.current = Math.min(100, energyRef.current + 8);
+                // Moneda recarga +6% de Nitro
+                energyRef.current = Math.min(100, energyRef.current + 6);
                 setEnergyPercent(Math.round(energyRef.current));
                 item.x = -100;
               } else if (item.type === "obstacle") {
                 if (playerYOffsetRef.current > 20) {
-                  // Salto exitoso sobre obstáculo -> +5% energía
-                  energyRef.current = Math.min(100, energyRef.current + 5);
+                  // Salto exitoso sobre obstáculo -> +4% Nitro
+                  energyRef.current = Math.min(100, energyRef.current + 4);
                   setEnergyPercent(Math.round(energyRef.current));
                 } else {
-                  // Golpe con obstáculo
+                  // Golpe con obstáculo -> Descuenta -15% de Nitro
                   playSfx("wrong");
                   targetSpeedRef.current = 0.85;
-                  targetMonsterDistRef.current = Math.max(25, targetMonsterDistRef.current - 25);
-                  energyRef.current = Math.max(0, energyRef.current - 10);
+                  energyRef.current = Math.max(0, energyRef.current - 15);
                   setEnergyPercent(Math.round(energyRef.current));
                   setLives((l) => Math.max(0, l - 1));
-                  screenShakeRef.current = 6;
+                  screenShakeRef.current = 8;
                   item.x = -100;
                   setTimeout(() => {
                     targetSpeedRef.current = 1.0;
-                  }, 1800);
+                  }, 1500);
                 }
               }
             }
@@ -1135,90 +1141,92 @@ function SmartEscapeGame() {
       const playerY = roadY - playerYOffsetRef.current + (isCatching ? 12 : 0);
 
       // ==========================================
-      // 👾 DIBUJAR AL PERSEGUIDOR (ENEMIGO VISIBLE DETRÁS)
+      // 👾 DIBUJAR AL PERSEGUIDOR (SOLO SI ESTÁ EN PANTALLA)
       // ==========================================
-      const monsterStride = Math.sin(timestamp * 0.018 * currentSpeedRef.current) * 8;
-      const monsterBob = Math.abs(Math.sin(timestamp * 0.018)) * 4;
+      if (monsterScreenX > -90 && monsterScreenX < w + 80) {
+        const monsterStride = Math.sin(timestamp * 0.018 * currentSpeedRef.current) * 8;
+        const monsterBob = Math.abs(Math.sin(timestamp * 0.018)) * 4;
 
-      ctx.save();
-      const catchLungeX = isCatching ? (1.4 - catchingSequenceRef.current.timer) * 20 : 0;
-      ctx.translate(monsterScreenX + catchLungeX, roadY - monsterBob - (isCatching ? 15 : 0));
+        ctx.save();
+        const catchLungeX = isCatching ? (1.2 - catchingSequenceRef.current.timer) * 25 : 0;
+        ctx.translate(monsterScreenX + catchLungeX, roadY - monsterBob - (isCatching ? 15 : 0));
 
-      // Sombra del Monstruo
-      ctx.fillStyle = "rgba(0,0,0,0.5)";
-      ctx.beginPath();
-      ctx.ellipse(0, 0, 24, 7, 0, 0, Math.PI * 2);
-      ctx.fill();
+        // Sombra del Monstruo
+        ctx.fillStyle = "rgba(0,0,0,0.5)";
+        ctx.beginPath();
+        ctx.ellipse(0, 0, 24, 7, 0, 0, Math.PI * 2);
+        ctx.fill();
 
-      // Piernas del Monstruo
-      ctx.fillStyle = theme.monsterSecondary;
-      ctx.fillRect(-12, -18 + monsterStride, 8, 18);
-      ctx.fillRect(4, -18 - monsterStride, 8, 18);
+        // Piernas del Monstruo
+        ctx.fillStyle = theme.monsterSecondary;
+        ctx.fillRect(-12, -18 + monsterStride, 8, 18);
+        ctx.fillRect(4, -18 - monsterStride, 8, 18);
 
-      // Garras de los pies
-      ctx.fillStyle = "#1e293b";
-      ctx.fillRect(-14, -2 + monsterStride, 12, 4);
-      ctx.fillRect(2, -2 - monsterStride, 12, 4);
+        // Garras de los pies
+        ctx.fillStyle = "#1e293b";
+        ctx.fillRect(-14, -2 + monsterStride, 12, 4);
+        ctx.fillRect(2, -2 - monsterStride, 12, 4);
 
-      // Cuerpo del Monstruo
-      ctx.fillStyle = theme.monsterColor;
-      ctx.shadowColor = theme.monsterColor;
-      ctx.shadowBlur = isCatching ? 25 : 15;
-      ctx.beginPath();
-      ctx.roundRect(-20, -50, 40, 36, 10);
-      ctx.fill();
-      ctx.shadowBlur = 0;
+        // Cuerpo del Monstruo
+        ctx.fillStyle = theme.monsterColor;
+        ctx.shadowColor = theme.monsterColor;
+        ctx.shadowBlur = isCatching ? 30 : 15;
+        ctx.beginPath();
+        ctx.roundRect(-20, -50, 40, 36, 10);
+        ctx.fill();
+        ctx.shadowBlur = 0;
 
-      // Cuernos / Espinas
-      ctx.fillStyle = "#f59e0b";
-      ctx.beginPath();
-      ctx.moveTo(-16, -50);
-      ctx.lineTo(-24, -64);
-      ctx.lineTo(-10, -50);
-      ctx.moveTo(16, -50);
-      ctx.lineTo(24, -64);
-      ctx.lineTo(10, -50);
-      ctx.fill();
+        // Cuernos / Espinas
+        ctx.fillStyle = "#f59e0b";
+        ctx.beginPath();
+        ctx.moveTo(-16, -50);
+        ctx.lineTo(-24, -64);
+        ctx.lineTo(-10, -50);
+        ctx.moveTo(16, -50);
+        ctx.lineTo(24, -64);
+        ctx.lineTo(10, -50);
+        ctx.fill();
 
-      // Brazos y Garras
-      ctx.fillStyle = theme.monsterSecondary;
-      ctx.fillRect(8, isCatching ? -50 : -40, isCatching ? 26 : 18, 8);
-      ctx.fillStyle = "#ffffff";
-      ctx.beginPath();
-      ctx.moveTo(isCatching ? 34 : 26, isCatching ? -52 : -42);
-      ctx.lineTo(isCatching ? 44 : 34, isCatching ? -46 : -36);
-      ctx.lineTo(isCatching ? 34 : 26, isCatching ? -40 : -30);
-      ctx.fill();
+        // Brazos y Garras
+        ctx.fillStyle = theme.monsterSecondary;
+        ctx.fillRect(8, isCatching ? -50 : -40, isCatching ? 26 : 18, 8);
+        ctx.fillStyle = "#ffffff";
+        ctx.beginPath();
+        ctx.moveTo(isCatching ? 34 : 26, isCatching ? -52 : -42);
+        ctx.lineTo(isCatching ? 44 : 34, isCatching ? -46 : -36);
+        ctx.lineTo(isCatching ? 34 : 26, isCatching ? -40 : -30);
+        ctx.fill();
 
-      // Ojos Rojos Amenazantes
-      ctx.fillStyle = "#ffffff";
-      ctx.beginPath();
-      ctx.arc(-4, -40, 6, 0, Math.PI * 2);
-      ctx.arc(8, -40, 6, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.fillStyle = "#ef4444";
-      ctx.beginPath();
-      ctx.arc(-3, -40, 3.5, 0, Math.PI * 2);
-      ctx.arc(9, -40, 3.5, 0, Math.PI * 2);
-      ctx.fill();
+        // Ojos Rojos Amenazantes
+        ctx.fillStyle = "#ffffff";
+        ctx.beginPath();
+        ctx.arc(-4, -40, 6, 0, Math.PI * 2);
+        ctx.arc(8, -40, 6, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = "#ef4444";
+        ctx.beginPath();
+        ctx.arc(-3, -40, 3.5, 0, Math.PI * 2);
+        ctx.arc(9, -40, 3.5, 0, Math.PI * 2);
+        ctx.fill();
 
-      // Boca con Colmillos Afilados
-      ctx.fillStyle = "#0f172a";
-      ctx.beginPath();
-      ctx.roundRect(-12, -28, 26, isCatching ? 16 : 10, 4);
-      ctx.fill();
-      ctx.fillStyle = "#ffffff";
-      ctx.beginPath();
-      ctx.moveTo(-10, -28);
-      ctx.lineTo(-7, -22);
-      ctx.lineTo(-4, -28);
-      ctx.lineTo(-1, -22);
-      ctx.lineTo(2, -28);
-      ctx.lineTo(5, -22);
-      ctx.lineTo(8, -28);
-      ctx.fill();
+        // Boca con Colmillos Afilados
+        ctx.fillStyle = "#0f172a";
+        ctx.beginPath();
+        ctx.roundRect(-12, -28, 26, isCatching ? 16 : 10, 4);
+        ctx.fill();
+        ctx.fillStyle = "#ffffff";
+        ctx.beginPath();
+        ctx.moveTo(-10, -28);
+        ctx.lineTo(-7, -22);
+        ctx.lineTo(-4, -28);
+        ctx.lineTo(-1, -22);
+        ctx.lineTo(2, -28);
+        ctx.lineTo(5, -22);
+        ctx.lineTo(8, -28);
+        ctx.fill();
 
-      ctx.restore();
+        ctx.restore();
+      }
 
       // ==========================================
       // 🏃 DIBUJAR AL PERSONAJE JUGADOR (CORREDOR VISIBLE)
@@ -1305,43 +1313,54 @@ function SmartEscapeGame() {
 
       ctx.restore();
 
-      // 6. Alerta Visual si el Monstruo está muy cerca (< 50px)
-      if (relativeMonsterDistanceRef.current < 55 && !isCatching) {
+      // 6. Alerta Visual de Nitro Crítico (< 25%) o Sin Nitro (0%)
+      if (energyRef.current <= 0 && !isCatching) {
         ctx.save();
-        ctx.fillStyle = "rgba(239, 68, 68, 0.25)";
+        ctx.fillStyle = "rgba(239, 68, 68, 0.3)";
         ctx.fillRect(0, 0, w, h);
         ctx.fillStyle = "#ef4444";
-        ctx.font = "bold 12px sans-serif";
+        ctx.font = "black 13px sans-serif";
         ctx.textAlign = "center";
         ctx.shadowColor = "#ef4444";
-        ctx.shadowBlur = 8;
-        ctx.fillText(`⚠️ ¡${theme.monsterName.toUpperCase()} ESTÁ A PUNTO DE ALCANZARTE!`, w / 2, 30);
+        ctx.shadowBlur = 10;
+        ctx.fillText(`🚨 ¡SIN NITRO! ¡${theme.monsterName.toUpperCase()} TE ALCANZÓ!`, w / 2, 28);
+        ctx.restore();
+      } else if (energyRef.current <= 25 && energyRef.current > 0 && !isCatching) {
+        ctx.save();
+        ctx.fillStyle = "rgba(245, 158, 11, 0.15)";
+        ctx.fillRect(0, 0, w, h);
+        ctx.fillStyle = "#f59e0b";
+        ctx.font = "bold 12px sans-serif";
+        ctx.textAlign = "center";
+        ctx.shadowColor = "#f59e0b";
+        ctx.shadowBlur = 6;
+        ctx.fillText(`⚠️ NITRO BAJO (${Math.round(energyRef.current)}%) — ¡Acierta para recargar al 100%!`, w / 2, 28);
         ctx.restore();
       }
 
-      // 7. Banner de Secuencia de Captura
+      // 7. Banner de Secuencia de Impacto ¡PUM!
       if (isCatching) {
         ctx.save();
-        ctx.fillStyle = "rgba(15, 23, 42, 0.7)";
+        ctx.fillStyle = "rgba(15, 23, 42, 0.85)";
         ctx.fillRect(0, 0, w, h);
         ctx.fillStyle = "#ef4444";
-        ctx.font = "black 16px sans-serif";
+        ctx.font = "black 18px sans-serif";
         ctx.textAlign = "center";
         ctx.shadowColor = "#ef4444";
-        ctx.shadowBlur = 12;
-        ctx.fillText("👾 ¡EL PERSEGUIDOR TE ATRAPÓ!", w / 2, h / 2 - 10);
+        ctx.shadowBlur = 16;
+        ctx.fillText("💥 ¡PUM! TE QUEDASTE SIN NITRO", w / 2, h / 2 - 10);
         ctx.restore();
       }
 
       // 8. Banner de Animación ("¡CORRECTO!" / "¡INCORRECTO!")
-      if (answerBannerRef.current && !isCatching && relativeMonsterDistanceRef.current >= 55) {
+      if (answerBannerRef.current && !isCatching && energyRef.current > 25) {
         ctx.save();
         ctx.fillStyle = answerBannerRef.current.color;
         ctx.font = "bold 13px sans-serif";
         ctx.textAlign = "center";
         ctx.shadowColor = answerBannerRef.current.color;
         ctx.shadowBlur = 10;
-        ctx.fillText(answerBannerRef.current.text, w / 2, 30);
+        ctx.fillText(answerBannerRef.current.text, w / 2, 28);
         ctx.restore();
       }
 
@@ -2009,10 +2028,10 @@ function SmartEscapeGame() {
       {screen === "gameover" && (
         <div className="flex-1 w-full h-full overflow-y-auto p-4 md:p-6 max-w-md mx-auto flex flex-col justify-center text-center space-y-5 animate-fade-in">
           <div className="space-y-1">
-            <span className="text-5xl animate-bounce block">👾</span>
-            <h2 className="font-display text-2xl font-black text-rose-500">¡TE ATRAPÓ!</h2>
+            <span className="text-5xl animate-bounce block">💥</span>
+            <h2 className="font-display text-2xl font-black text-rose-500">¡PUM! ¡SIN NITRO!</h2>
             <p className="text-xs text-slate-400">
-              {currentTheme.monsterName} te alcanzó en el camino. ¡Repasa tus apuntes y vuelve a intentar!
+              Te quedaste sin combustible Nitro y {currentTheme.monsterName} te liquidó. ¡Responde correctamente las preguntas para recargar el Nitro al 100% y mantener tu ventaja!
             </p>
           </div>
 
