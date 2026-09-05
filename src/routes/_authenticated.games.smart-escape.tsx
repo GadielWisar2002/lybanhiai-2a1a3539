@@ -367,11 +367,11 @@ function SmartEscapeGame() {
   // Persecución Suave y con Mucho Más Tiempo
   const relativeMonsterDistanceRef = useRef<number>(240); // Inicia lejos (240px)
   const targetMonsterDistRef = useRef<number>(240);
-  const catchingSequenceRef.current = {
+  const catchingSequenceRef = useRef<{ active: boolean; timer: number; duration: number }>({
     active: false,
     timer: 0,
     duration: 1.4,
-  };
+  });
 
   const targetSpeedRef = useRef<number>(1.0);
   const currentSpeedRef = useRef<number>(1.0);
