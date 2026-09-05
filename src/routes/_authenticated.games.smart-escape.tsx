@@ -31,7 +31,7 @@ export type WorldId = "quimica" | "matematicas" | "biologia" | "historia" | "ing
 export interface GameQuestion {
   id: string;
   question: string;
-  options: [string, string, string, string];
+  options: string[];
   correctIndex: number;
   explanation: string;
   topic: string;
@@ -470,10 +470,10 @@ function SmartEscapeGame() {
       if (e.key === "ArrowUp" || e.key === "w" || e.key === "W" || e.key === " ") {
         e.preventDefault();
         triggerJump();
-      } else if (energyPercent <= 35 && (e.key === "1" || e.key === "2" || e.key === "3" || e.key === "4")) {
+      } else if (e.key === "1" || e.key === "2" || e.key === "3" || e.key === "4") {
         e.preventDefault();
         const optIdx = parseInt(e.key, 10) - 1;
-        if (selectedOption === null && currentQuestion && optIdx < 4) {
+        if (selectedOption === null && currentQuestion && optIdx < currentQuestion.options.length) {
           handleAnswerOption(optIdx);
         }
       }
@@ -481,7 +481,7 @@ function SmartEscapeGame() {
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [screen, isPaused, energyPercent, selectedOption, currentQuestion, triggerJump]);
+  }, [screen, isPaused, selectedOption, currentQuestion, triggerJump]);
 
   // Identificar materiales guardados
   const getSubjectMaterials = (worldId: WorldId): SubjectTopic[] => {
@@ -501,62 +501,57 @@ function SmartEscapeGame() {
     let rawQuestions: GameQuestion[] = [];
 
     if (worldId === "paa") {
-      rawQuestions = PAA_OFFICIAL_QUESTIONS.map((q, idx) => {
-        const opts: [string, string, string, string] = [
-          q.options[0] || "Opción A",
-          q.options[1] || "Opción B",
-          q.options[2] || "Opción C",
-          q.options[3] || "Opción D",
-        ];
-        return {
-          id: `paa-${idx}`,
-          question: q.q,
-          options: opts,
-          correctIndex: q.correctIndex,
-          explanation: q.explanation,
-          topic: "PAA College Board",
-          sourceExcerpt: "Guía Oficial PAA College Board",
-        };
-      });
+      rawQuestions = PAA_OFFICIAL_QUESTIONS.map((q, idx) => ({
+        id: `paa-${idx}`,
+        question: q.q,
+        options: q.options && q.options.length > 0 ? q.options : ["A", "B", "C", "D"],
+        correctIndex: q.correctIndex,
+        explanation: q.explanation,
+        topic: "PAA College Board",
+        sourceExcerpt: "Guía Oficial PAA College Board",
+      }));
     } else if (worldId === "exani") {
-      rawQuestions = EXANI_OFFICIAL_QUESTIONS.map((q, idx) => {
-        const opts: [string, string, string, string] = [
-          q.options[0] || "Opción A",
-          q.options[1] || "Opción B",
-          q.options[2] || "Opción C",
-          q.options[3] || "Opción D",
-        ];
-        return {
-          id: `exani-${idx}`,
-          question: q.q,
-          options: opts,
-          correctIndex: q.correctIndex,
-          explanation: q.explanation,
-          topic: "EXANI-II Ceneval",
-          sourceExcerpt: "Temario Oficial EXANI-II 2025",
-        };
-      });
+      rawQuestions = EXANI_OFFICIAL_QUESTIONS.map((q, idx) => ({
+        id: `exani-${idx}`,
+        question: q.q,
+        options: q.options && q.options.length > 0 ? q.options : ["A", "B", "C", "D"],
+        correctIndex: q.correctIndex,
+        explanation: q.explanation,
+        topic: "EXANI-II Ceneval",
+        sourceExcerpt: "Temario Oficial EXANI-II 2025",
+      }));
     } else {
       const subject = SCHOOL_SUBJECTS.find((s) => s.id === worldId);
       if (subject) {
         const topic = subject.topics.find((t) => t.id === topicId) || subject.topics[0];
         if (topic && topic.presetQuestions && topic.presetQuestions.length > 0) {
-          rawQuestions = topic.presetQuestions.map((pq, idx) => {
-            const opts: [string, string, string, string] = [
-              pq.options[0] || "A",
-              pq.options[1] || "B",
-              pq.options[2] || "C",
-              pq.options[3] || "D",
-            ];
-            return {
-              id: `${topic.id}-${idx}`,
-              question: pq.question,
-              options: opts,
-              correctIndex: pq.correctIndex !== undefined ? pq.correctIndex : 0,
-              explanation: pq.explanation || `Basado en: "${topic.explanation.slice(0, 100)}..."`,
-              topic: `${subject.name}: ${topic.name}`,
-              sourceExcerpt: topic.explanation,
-            };
+          rawQuestions = topic.presetQuestions.map((pq, idx) => ({
+            id: `${topic.id}-${idx}`,
+            question: pq.question,
+            options: pq.options && pq.options.length > 0 ? pq.options : ["A", "B", "C", "D"],
+            correctIndex: pq.correctIndex !== undefined ? pq.correctIndex : 0,
+            explanation: pq.explanation || `Basado en: "${topic.explanation.slice(0, 100)}..."`,
+            topic: `${subject.name}: ${topic.name}`,
+            sourceExcerpt: topic.explanation,
+          }));
+        }
+
+        // Fallback a todos los temas de la materia si estuviera vacío
+        if (rawQuestions.length === 0) {
+          subject.topics.forEach((t) => {
+            if (t.presetQuestions) {
+              t.presetQuestions.forEach((pq, idx) => {
+                rawQuestions.push({
+                  id: `${t.id}-${idx}`,
+                  question: pq.question,
+                  options: pq.options && pq.options.length > 0 ? pq.options : ["A", "B", "C", "D"],
+                  correctIndex: pq.correctIndex !== undefined ? pq.correctIndex : 0,
+                  explanation: pq.explanation || `Basado en: "${t.explanation.slice(0, 100)}..."`,
+                  topic: `${subject.name}: ${t.name}`,
+                  sourceExcerpt: t.explanation,
+                });
+              });
+            }
           });
         }
       }
@@ -675,9 +670,9 @@ function SmartEscapeGame() {
     setScreen("playing");
   };
 
-  // Temporizador de preguntas (activo cuando la energía está baja <= 35%)
+  // Temporizador de preguntas continuo
   useEffect(() => {
-    if (screen !== "playing" || isPaused || energyPercent > 35 || selectedOption !== null || catchingSequenceRef.current.active) return;
+    if (screen !== "playing" || isPaused || selectedOption !== null || catchingSequenceRef.current.active) return;
 
     timerIntervalRef.current = setInterval(() => {
       setQTimer((prev) => {
@@ -691,7 +686,7 @@ function SmartEscapeGame() {
     }, 1000);
 
     return () => clearInterval(timerIntervalRef.current);
-  }, [screen, isPaused, energyPercent, selectedOption, currentQuestion]);
+  }, [screen, isPaused, selectedOption, currentQuestion]);
 
   const handleTimeOut = () => {
     if (selectedOption !== null || !currentQuestion || catchingSequenceRef.current.active) return;
@@ -723,18 +718,19 @@ function SmartEscapeGame() {
       setEnergyPercent(100);
       targetSpeedRef.current = 1.35;
       targetMonsterDistRef.current = Math.min(260, targetMonsterDistRef.current + 70);
-      answerBannerRef.current = { text: "⚡ ¡ENERGÍA AL 100%! 🚀 NITRO BOOST ACTIVADO", color: "#10b981", timer: 2.2 };
+      answerBannerRef.current = { text: "⚡ ¡CORRECTO! 🚀 NITRO BOOST ACTIVADO (+100% NITRO)", color: "#10b981", timer: 2.2 };
 
-      // Cargar la siguiente pregunta para cuando vuelva a bajar la energía
+      // Cargar la siguiente pregunta inmediatamente
       setTimeout(() => {
         setSelectedOption(null);
-        const nextIdx = (currentQIndex + 1) % questionsPool.length;
+        const nextIdx = (currentQIndex + 1) % (questionsPool.length || 1);
         setCurrentQIndex(nextIdx);
-        setCurrentQuestion(questionsPool[nextIdx]);
-        const nextTime = calculateQuestionTime(questionsPool[nextIdx], selectedLevel);
+        const nextQ = questionsPool[nextIdx] || currentQuestion;
+        setCurrentQuestion(nextQ);
+        const nextTime = calculateQuestionTime(nextQ, selectedLevel);
         setQTimer(nextTime);
         setQTimerMax(nextTime);
-      }, 1000);
+      }, 700);
 
       setTimeout(() => {
         targetSpeedRef.current = 1.0;
@@ -745,23 +741,30 @@ function SmartEscapeGame() {
         toast.info("🛡️ ¡El Escudo absorbió el fallo!");
         energyRef.current = 50;
         setEnergyPercent(50);
-        answerBannerRef.current = { text: "🛡️ ¡ESCUDO TE PROTEGIÓ! ENERGÍA PARCIAL", color: "#38bdf8", timer: 2.0 };
+        answerBannerRef.current = { text: "🛡️ ¡ESCUDO TE PROTEGIÓ!", color: "#38bdf8", timer: 2.0 };
         setTimeout(() => {
           setSelectedOption(null);
-        }, 1000);
+          const nextIdx = (currentQIndex + 1) % (questionsPool.length || 1);
+          setCurrentQIndex(nextIdx);
+          const nextQ = questionsPool[nextIdx] || currentQuestion;
+          setCurrentQuestion(nextQ);
+          const nextTime = calculateQuestionTime(nextQ, selectedLevel);
+          setQTimer(nextTime);
+          setQTimerMax(nextTime);
+        }, 700);
       } else {
         playSfx("wrong");
         setWrongAnswersCount((w) => w + 1);
         setStreak(0);
         setLives((l) => Math.max(0, l - 1));
 
-        // Recarga de emergencia moderada (25%) para no atraparlo de la nada
-        energyRef.current = 25;
-        setEnergyPercent(25);
+        // Reducir energía y acercar al monstruo
+        energyRef.current = Math.max(15, energyRef.current - 25);
+        setEnergyPercent(Math.round(energyRef.current));
         targetSpeedRef.current = 0.85;
         targetMonsterDistRef.current = Math.max(20, targetMonsterDistRef.current - 35);
         screenShakeRef.current = 7;
-        answerBannerRef.current = { text: "❌ ¡FALLO! 👾 EL ENEMIGO SE ACERCA", color: "#ef4444", timer: 2.0 };
+        answerBannerRef.current = { text: "❌ ¡INCORRECTO! 👾 EL ENEMIGO SE ACERCA", color: "#ef4444", timer: 2.0 };
 
         if (lives <= 1) {
           targetMonsterDistRef.current = 0;
@@ -771,7 +774,14 @@ function SmartEscapeGame() {
         setTimeout(() => {
           setSelectedOption(null);
           targetSpeedRef.current = 1.0;
-        }, 1000);
+          const nextIdx = (currentQIndex + 1) % (questionsPool.length || 1);
+          setCurrentQIndex(nextIdx);
+          const nextQ = questionsPool[nextIdx] || currentQuestion;
+          setCurrentQuestion(nextQ);
+          const nextTime = calculateQuestionTime(nextQ, selectedLevel);
+          setQTimer(nextTime);
+          setQTimerMax(nextTime);
+        }, 800);
       }
     }
   };
@@ -1413,7 +1423,7 @@ function SmartEscapeGame() {
                 SMART ESCAPE
               </h1>
               <p className="text-xs text-slate-400 max-w-xs mx-auto leading-relaxed">
-                ¡Corre libremente por el camino, esquiva obstáculos y responde cuando la energía esté baja para activar el Nitro!
+                ¡Corre por el camino, salta obstáculos y responde las preguntas de estudio para activar el Nitro y escapar del monstruo!
               </p>
             </div>
 
@@ -1847,146 +1857,149 @@ function SmartEscapeGame() {
           </header>
 
           {/* Centro: Escenario Completo de Persecución (60 FPS) */}
-          <div className="flex-1 w-full min-h-[160px] relative overflow-hidden bg-slate-950">
+          <div
+            onClick={triggerJump}
+            onTouchStart={triggerJump}
+            className="flex-1 w-full min-h-[160px] relative overflow-hidden bg-slate-950 cursor-pointer"
+            title="Toca para saltar"
+          >
             <canvas ref={canvasRef} className="w-full h-full block" />
           </div>
 
           {/* ======================================================== */}
-          {/* PARTE INFERIOR: HUD DINÁMICO */}
+          {/* PARTE INFERIOR: HUD DE PREGUNTAS Y ENERGÍA NITRO */}
           {/* ======================================================== */}
-          {/* SI LA ENERGÍA ES ALTA (> 35%): Panel de Carrera Libre */}
-          {energyPercent > 35 ? (
-            <div className="w-full shrink-0 border-t-2 border-cyan-500/40 bg-slate-900/98 p-3 sm:p-4 space-y-3 z-30 max-w-2xl mx-auto shadow-2xl animate-fade-in">
+          <div className="w-full shrink-0 border-t-2 border-purple-500/50 bg-slate-900/98 p-3 sm:p-4 space-y-2.5 z-30 max-w-2xl mx-auto shadow-2xl animate-fade-in backdrop-blur">
+            {/* Top Bar de la Tarjeta: Energía Nitro + Temporizador */}
+            <div className="flex items-center justify-between gap-2 text-xs">
               {/* Barra de Energía Nitro */}
-              <div className="space-y-1.5">
-                <div className="flex items-center justify-between text-xs">
-                  <span className="font-extrabold flex items-center gap-1.5 text-cyan-300">
-                    <Zap className="size-4 text-cyan-400" />
-                    <span>ENERGÍA NITRO: {energyPercent}%</span>
-                  </span>
-                  <span className="text-[11px] text-slate-400">
-                    🪙 Recoge monedas o salta para mantener la energía
-                  </span>
-                </div>
-
-                <div className="h-3.5 w-full bg-slate-950 rounded-full overflow-hidden border border-slate-800 p-0.5">
+              <div className="flex-1 flex items-center gap-2 bg-slate-950/80 px-2.5 py-1 rounded-xl border border-slate-800">
+                <Zap className={`size-3.5 ${energyPercent > 30 ? "text-cyan-400" : "text-amber-400 animate-pulse"}`} />
+                <span className="text-[11px] font-black text-cyan-300">
+                  NITRO {energyPercent}%
+                </span>
+                <div className="flex-1 h-2 bg-slate-900 rounded-full overflow-hidden border border-slate-800">
                   <div
-                    className="h-full rounded-full transition-all duration-200 bg-gradient-to-r from-cyan-500 via-teal-400 to-emerald-400 shadow-lg shadow-cyan-500/50"
+                    className={`h-full rounded-full transition-all duration-300 ${
+                      energyPercent > 50
+                        ? "bg-gradient-to-r from-cyan-500 to-emerald-400 shadow-sm shadow-cyan-500/50"
+                        : energyPercent > 25
+                        ? "bg-amber-400"
+                        : "bg-rose-500 animate-pulse"
+                    }`}
                     style={{ width: `${energyPercent}%` }}
                   />
                 </div>
               </div>
 
-              {/* Botón de Salto Cómodo */}
-              <div>
-                <button
-                  onClick={triggerJump}
-                  className="w-full h-14 rounded-2xl bg-gradient-to-r from-purple-600 via-indigo-600 to-cyan-600 active:brightness-125 text-white font-display text-sm sm:text-base font-black flex items-center justify-center gap-2.5 shadow-xl shadow-purple-500/30 transition active:scale-95 cursor-pointer"
-                  title="Saltar Obstáculo (Espacio / W)"
+              {/* Countdown Timer */}
+              <div className="flex items-center gap-1.5 font-black bg-slate-950/80 px-3 py-1 rounded-xl border border-slate-800 shrink-0">
+                <Clock className="size-3.5 text-amber-400" />
+                <span
+                  className={`text-xs font-mono font-bold ${
+                    qTimer <= 4
+                      ? "text-rose-400 font-black animate-pulse"
+                      : qTimer <= 8
+                      ? "text-amber-400"
+                      : "text-emerald-300"
+                  }`}
                 >
-                  <ArrowUp className="size-5" />
-                  <span>SALTAR OBSTÁCULO (ESPACIO / W)</span>
-                </button>
+                  ⏱️ {qTimer}s
+                </span>
               </div>
             </div>
-          ) : (
-            /* SI LA ENERGÍA ES BAJA (<= 35%): Tarjeta de Pregunta para Recargar */
-            <div className="w-full shrink-0 border-t-2 border-purple-500/60 bg-slate-900 p-3 sm:p-4 space-y-2.5 z-30 max-w-2xl mx-auto shadow-2xl animate-fade-in">
-              {/* Header de Recarga + Temporizador */}
-              <div className="flex items-center justify-between text-xs">
-                <span className="text-[11px] font-extrabold px-3 py-1 rounded-full bg-rose-600 text-white shadow-sm flex items-center gap-1.5 animate-pulse">
-                  <Zap className="size-3.5 fill-white text-white" />
-                  <span>⚡ ¡ENERGÍA BAJA ({energyPercent}%)! Responde para recargar:</span>
-                </span>
 
-                {/* Countdown Timer */}
-                <div className="flex items-center gap-1.5 font-black bg-slate-950 px-2.5 py-1 rounded-full border border-slate-800">
-                  <Clock className="size-3.5 text-amber-400" />
-                  <span
-                    className={`text-xs font-mono ${
-                      qTimer <= 4 ? "text-rose-400 font-black animate-pulse" : qTimer <= 8 ? "text-amber-400" : "text-emerald-300"
-                    }`}
-                  >
-                    ⏱️ {qTimer}s
+            {/* Barra de tiempo de la pregunta */}
+            <div className="h-1.5 w-full bg-slate-950 rounded-full overflow-hidden border border-slate-800">
+              <div
+                className={`h-full transition-all duration-300 ${
+                  qTimer <= 4
+                    ? "bg-rose-500"
+                    : qTimer <= 8
+                    ? "bg-amber-400"
+                    : "bg-gradient-to-r from-purple-500 via-cyan-400 to-emerald-400"
+                }`}
+                style={{ width: `${timerPercentage}%` }}
+              />
+            </div>
+
+            {/* Texto de la Pregunta */}
+            {currentQuestion ? (
+              <div className="space-y-1">
+                <div className="flex items-center justify-between text-[10px] text-slate-400 font-semibold px-0.5">
+                  <span className="truncate max-w-[280px] text-purple-300">
+                    📖 {currentQuestion.topic || currentTheme.badge}
+                  </span>
+                  <span className="text-cyan-400 font-mono">
+                    Pregunta {currentQIndex + 1} de {questionsPool.length}
                   </span>
                 </div>
-              </div>
-
-              {/* Barra de tiempo de la pregunta */}
-              <div className="h-2 w-full bg-slate-950 rounded-full overflow-hidden border border-slate-800">
-                <div
-                  className={`h-full transition-all duration-300 ${
-                    qTimer <= 4
-                      ? "bg-rose-500"
-                      : qTimer <= 8
-                      ? "bg-amber-400"
-                      : "bg-gradient-to-r from-purple-500 via-cyan-400 to-emerald-400"
-                  }`}
-                  style={{ width: `${timerPercentage}%` }}
-                />
-              </div>
-
-              {/* Texto de la Pregunta */}
-              {currentQuestion ? (
-                <h3 className="text-sm sm:text-base font-extrabold text-white leading-snug px-1 line-clamp-2 min-h-[36px] flex items-center drop-shadow-sm">
+                <h3 className="text-sm sm:text-base font-extrabold text-white leading-snug px-0.5 line-clamp-2 min-h-[38px] flex items-center drop-shadow-sm">
                   {currentQuestion.question}
                 </h3>
-              ) : (
-                <div className="text-xs text-slate-400 italic min-h-[36px] flex items-center">
-                  Cargando pregunta de recarga...
-                </div>
-              )}
-
-              {/* 4 Opciones de Respuesta con letras grandes 🅰️ 🅱️ 🅲️ 🅳️ */}
-              {currentQuestion && (
-                <div className="grid grid-cols-2 gap-2">
-                  {currentQuestion.options.map((opt, idx) => {
-                    const letters = ["🅰️", "🅱️", "🅲️", "🅳️"];
-                    const isSelected = selectedOption === idx;
-                    const isCorrect = idx === currentQuestion.correctIndex;
-
-                    let optClass = "border-2 border-slate-700 bg-slate-800 hover:bg-slate-700 hover:border-purple-400 text-white";
-
-                    if (selectedOption !== null) {
-                      if (isCorrect) {
-                        optClass = "border-2 border-emerald-400 bg-emerald-600 text-white font-black shadow-lg shadow-emerald-500/20";
-                      } else if (isSelected) {
-                        optClass = "border-2 border-rose-400 bg-rose-600 text-white font-black shadow-lg shadow-rose-500/20";
-                      }
-                    }
-
-                    return (
-                      <button
-                        key={idx}
-                        disabled={selectedOption !== null || catchingSequenceRef.current.active}
-                        onClick={() => handleAnswerOption(idx)}
-                        className={`p-2.5 sm:p-3 rounded-xl text-left text-xs sm:text-sm font-bold leading-tight transition active:scale-95 cursor-pointer flex items-center gap-2 shadow-md ${optClass}`}
-                      >
-                        <span className="text-base shrink-0">
-                          {letters[idx]}
-                        </span>
-                        <span className="line-clamp-2 flex-1 text-white font-bold">{opt}</span>
-                        {selectedOption !== null && isCorrect && (
-                          <CheckCircle2 className="size-4 text-white shrink-0" />
-                        )}
-                      </button>
-                    );
-                  })}
-                </div>
-              )}
-
-              {/* Botón de Salto por si aparece un obstáculo mientras respondes */}
-              <div className="pt-0.5">
-                <button
-                  onClick={triggerJump}
-                  className="w-full h-9 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold flex items-center justify-center gap-1.5 border border-slate-700 transition active:scale-95 cursor-pointer"
-                >
-                  <ArrowUp className="size-3.5" />
-                  <span>SALTAR OBSTÁCULO (ESPACIO)</span>
-                </button>
               </div>
+            ) : (
+              <div className="text-xs text-slate-400 italic min-h-[38px] flex items-center">
+                Cargando pregunta de estudio...
+              </div>
+            )}
+
+            {/* Opciones de Respuesta con letras grandes 🅰️ 🅱️ 🅲️ 🅳️ */}
+            {currentQuestion && (
+              <div
+                className={`grid gap-2 ${
+                  currentQuestion.options.length === 2 ? "grid-cols-2" : "grid-cols-1 sm:grid-cols-2"
+                }`}
+              >
+                {currentQuestion.options.map((opt, idx) => {
+                  const letters = ["🅰️", "🅱️", "🅲️", "🅳️"];
+                  const isSelected = selectedOption === idx;
+                  const isCorrect = idx === currentQuestion.correctIndex;
+
+                  let optClass =
+                    "border-2 border-slate-700 bg-slate-800/90 hover:bg-slate-700 hover:border-purple-400 text-white";
+
+                  if (selectedOption !== null) {
+                    if (isCorrect) {
+                      optClass =
+                        "border-2 border-emerald-400 bg-emerald-600 text-white font-black shadow-lg shadow-emerald-500/30";
+                    } else if (isSelected) {
+                      optClass =
+                        "border-2 border-rose-400 bg-rose-600 text-white font-black shadow-lg shadow-rose-500/30";
+                    }
+                  }
+
+                  return (
+                    <button
+                      key={idx}
+                      disabled={selectedOption !== null || catchingSequenceRef.current.active}
+                      onClick={() => handleAnswerOption(idx)}
+                      className={`p-2.5 sm:p-3 rounded-xl text-left text-xs sm:text-sm font-bold leading-tight transition active:scale-95 cursor-pointer flex items-center gap-2.5 shadow-md ${optClass}`}
+                    >
+                      <span className="text-base shrink-0">
+                        {letters[idx] || `${idx + 1}.`}
+                      </span>
+                      <span className="line-clamp-2 flex-1 font-bold">{opt}</span>
+                      {selectedOption !== null && isCorrect && (
+                        <CheckCircle2 className="size-4 text-white shrink-0" />
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+
+            {/* Botón de Salto Cómodo para esquivar obstáculos mientras corres */}
+            <div className="pt-0.5 flex gap-2">
+              <button
+                onClick={triggerJump}
+                className="flex-1 h-10 sm:h-11 rounded-xl bg-gradient-to-r from-purple-600 via-indigo-600 to-cyan-600 hover:brightness-110 active:scale-98 text-white text-xs font-black flex items-center justify-center gap-2 border border-purple-400/40 shadow-lg shadow-purple-500/20 transition cursor-pointer"
+              >
+                <ArrowUp className="size-4" />
+                <span>SALTAR OBSTÁCULO (ESPACIO / W)</span>
+              </button>
             </div>
-          )}
+          </div>
         </div>
       )}
 
