@@ -618,7 +618,7 @@ function SmartEscapeGame() {
         });
 
         if (aiResponse?.questions && aiResponse.questions.length > 0) {
-          questions = aiResponse.questions.map((q, idx) => {
+          questions = (aiResponse.questions as any[]).map((q: any, idx: number) => {
             const opts: [string, string, string, string] = [
               q.options[0] || "A",
               q.options[1] || "B",
@@ -1007,6 +1007,10 @@ function SmartEscapeGame() {
         return pups[Math.floor(Math.random() * pups.length)];
       }
     };
+
+    let groundOffset = 0;
+    let bgHillsOffset = 0;
+    let cloudOffset = 0;
 
     let sceneryObjects: SceneryObject[] = [
       { x: 100, type: "tree", size: 30 },
@@ -2357,8 +2361,8 @@ function SmartEscapeGame() {
                             fileName: file.name,
                           },
                         });
-                        if (res.extractedText) {
-                          setCustomText(res.extractedText);
+                        if (res.text) {
+                          setCustomText(res.text);
                           toast.success("¡Texto extraído!", { id: toastId });
                         }
                       } catch {

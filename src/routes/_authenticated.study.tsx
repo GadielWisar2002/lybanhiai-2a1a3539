@@ -667,8 +667,8 @@ function StudyHub() {
                                 fileName: file.name,
                               },
                             });
-                            if (res.extractedText) {
-                              setCustomText(res.extractedText);
+                            if (res.text) {
+                              setCustomText(res.text);
                               toast.success("¡Texto extraído con éxito!", { id: toastId });
                             }
                           } catch (err) {

@@ -119,7 +119,7 @@ function FlashcardsGame() {
     const cards: FlashcardItem[] = topic.presetQuestions.map((q, idx) => ({
       id: `${topic.id}-${idx}`,
       front: q.question,
-      back: q.correctAnswer,
+      back: String(q.correctAnswer),
       explanation: q.explanation || topic.explanation,
       category: subject.name,
       topic: topic.name,
@@ -202,7 +202,7 @@ function FlashcardsGame() {
         },
       });
 
-      const cards: FlashcardItem[] = questions.map((q, idx) => ({
+      const cards: FlashcardItem[] = (questions.questions as any[]).map((q: any, idx: number) => ({
         id: `custom-${idx}`,
         front: q.question,
         back: q.correctAnswer,
@@ -593,8 +593,8 @@ function FlashcardsGame() {
                                 fileName: file.name,
                               },
                             });
-                            if (res.extractedText) {
-                              setCustomText(res.extractedText);
+                            if (res.text) {
+                              setCustomText(res.text);
                               toast.success("¡Texto extraído con éxito!", { id: toastId });
                             }
                           } catch {
