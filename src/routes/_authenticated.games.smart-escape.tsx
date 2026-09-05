@@ -233,7 +233,7 @@ const LEVELS_CONFIG = [
 ];
 
 /**
- * Calcula el tiempo asignado a una pregunta (mínimo 15s, hasta 26s para lecturas/complejas)
+ * Calcula el tiempo asignado a una pregunta (mínimo 15s, hasta 28s para lecturas/complejas)
  */
 function calculateQuestionTime(question: GameQuestion, level: number): number {
   const baseByLevel = [18, 17, 16, 15][Math.max(0, Math.min(3, level - 1))] || 16;
@@ -276,9 +276,6 @@ function SmartEscapeGame() {
   const [screen, setScreen] = useState<
     "home" | "world_select" | "material_select" | "level_map" | "upload" | "playing" | "gameover" | "victory" | "closet"
   >("home");
-
-  // FASE DEL JUEGO: "running" (carrera libre, saltos y esquives) vs "question" (recarga de energía / responder)
-  const [gamePhase, setGamePhase] = useState<"running" | "question">("running");
 
   // Configuración de partida
   const [selectedWorld, setSelectedWorld] = useState<WorldId>("quimica");
@@ -333,7 +330,7 @@ function SmartEscapeGame() {
   const [qTimerMax, setQTimerMax] = useState(15);
   const [selectedOption, setSelectedOption] = useState<number | null>(null);
 
-  // Sistema de Energía (0% a 100%)
+  // Sistema de Energía (0% a 100%) - La pregunta aparece cuando la energía está baja (<= 35%)
   const [energyPercent, setEnergyPercent] = useState<number>(100);
   const energyRef = useRef<number>(100);
 
@@ -360,9 +357,9 @@ function SmartEscapeGame() {
   const isJumpingRef = useRef<boolean>(false);
   const playerDistanceRef = useRef<number>(0);
 
-  // Persecución Suave y Gradual
-  const relativeMonsterDistanceRef = useRef<number>(160); // Distancia visual en píxeles actual (lerp)
-  const targetMonsterDistRef = useRef<number>(160); // Distancia visual objetivo
+  // Persecución Suave y con Mucho Más Tiempo
+  const relativeMonsterDistanceRef = useRef<number>(240); // Inicia lejos (240px)
+  const targetMonsterDistRef = useRef<number>(240);
   const catchingSequenceRef = useRef<{ active: boolean; timer: number; duration: number }>({
     active: false,
     timer: 0,
@@ -406,11 +403,11 @@ function SmartEscapeGame() {
         osc.stop(ctx.currentTime + 0.16);
       } else if (type === "recharge") {
         osc.frequency.setValueAtTime(300, ctx.currentTime);
-        osc.frequency.exponentialRampToValueAtTime(880, ctx.currentTime + 0.25);
-        gain.gain.setValueAtTime(0.15, ctx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.25);
+        osc.frequency.exponentialRampToValueAtTime(920, ctx.currentTime + 0.28);
+        gain.gain.setValueAtTime(0.16, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.28);
         osc.start();
-        osc.stop(ctx.currentTime + 0.25);
+        osc.stop(ctx.currentTime + 0.28);
       } else if (type === "correct") {
         osc.frequency.setValueAtTime(523.25, ctx.currentTime);
         osc.frequency.setValueAtTime(659.25, ctx.currentTime + 0.08);
@@ -473,7 +470,7 @@ function SmartEscapeGame() {
       if (e.key === "ArrowUp" || e.key === "w" || e.key === "W" || e.key === " ") {
         e.preventDefault();
         triggerJump();
-      } else if (gamePhase === "question" && (e.key === "1" || e.key === "2" || e.key === "3" || e.key === "4")) {
+      } else if (energyPercent <= 35 && (e.key === "1" || e.key === "2" || e.key === "3" || e.key === "4")) {
         e.preventDefault();
         const optIdx = parseInt(e.key, 10) - 1;
         if (selectedOption === null && currentQuestion && optIdx < 4) {
@@ -484,7 +481,7 @@ function SmartEscapeGame() {
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [screen, isPaused, gamePhase, selectedOption, currentQuestion, triggerJump]);
+  }, [screen, isPaused, energyPercent, selectedOption, currentQuestion, triggerJump]);
 
   // Identificar materiales guardados
   const getSubjectMaterials = (worldId: WorldId): SubjectTopic[] => {
@@ -570,7 +567,7 @@ function SmartEscapeGame() {
     return shuffled.slice(0, count);
   };
 
-  // Iniciar partida con el material
+  // Iniciar partida
   const startGameWithMaterial = async (worldId: WorldId, topicId: string, levelNum: number) => {
     const lvlConfig = LEVELS_CONFIG[levelNum - 1] || LEVELS_CONFIG[0];
     let questions: GameQuestion[] = [];
@@ -642,8 +639,7 @@ function SmartEscapeGame() {
     setQTimerMax(firstQuestionTime);
     setSelectedOption(null);
 
-    // Inicia en MODO CARRERA LIBRE con 100% de energía
-    setGamePhase("running");
+    // Inicia al 100% de energía para disfrutar la carrera libre
     energyRef.current = 100;
     setEnergyPercent(100);
 
@@ -653,9 +649,9 @@ function SmartEscapeGame() {
     isJumpingRef.current = false;
     playerDistanceRef.current = 0;
 
-    // Distancia inicial amplia y segura
-    targetMonsterDistRef.current = 165;
-    relativeMonsterDistanceRef.current = 165;
+    // Distancia inicial amplia (240px de ventaja para que no atrape rápido)
+    targetMonsterDistRef.current = 240;
+    relativeMonsterDistanceRef.current = 240;
     catchingSequenceRef.current = { active: false, timer: 0, duration: 1.4 };
 
     targetSpeedRef.current = 1.0;
@@ -679,9 +675,9 @@ function SmartEscapeGame() {
     setScreen("playing");
   };
 
-  // Temporizador de preguntas (solo activo en gamePhase === "question")
+  // Temporizador de preguntas (activo cuando la energía está baja <= 35%)
   useEffect(() => {
-    if (screen !== "playing" || isPaused || gamePhase !== "question" || selectedOption !== null || catchingSequenceRef.current.active) return;
+    if (screen !== "playing" || isPaused || energyPercent > 35 || selectedOption !== null || catchingSequenceRef.current.active) return;
 
     timerIntervalRef.current = setInterval(() => {
       setQTimer((prev) => {
@@ -695,14 +691,14 @@ function SmartEscapeGame() {
     }, 1000);
 
     return () => clearInterval(timerIntervalRef.current);
-  }, [screen, isPaused, gamePhase, selectedOption, currentQuestion]);
+  }, [screen, isPaused, energyPercent, selectedOption, currentQuestion]);
 
   const handleTimeOut = () => {
     if (selectedOption !== null || !currentQuestion || catchingSequenceRef.current.active) return;
     handleAnswerOption(-1);
   };
 
-  // Manejar respuesta en fase de recarga
+  // Manejar respuesta
   const handleAnswerOption = (optionIndex: number) => {
     if (selectedOption !== null || !currentQuestion || catchingSequenceRef.current.active) return;
     setSelectedOption(optionIndex);
@@ -726,21 +722,19 @@ function SmartEscapeGame() {
       energyRef.current = 100;
       setEnergyPercent(100);
       targetSpeedRef.current = 1.35;
-      targetMonsterDistRef.current = Math.min(220, targetMonsterDistRef.current + 60);
+      targetMonsterDistRef.current = Math.min(260, targetMonsterDistRef.current + 70);
       answerBannerRef.current = { text: "⚡ ¡ENERGÍA AL 100%! 🚀 NITRO BOOST ACTIVADO", color: "#10b981", timer: 2.2 };
 
-      // Volver a Carrera Libre tras 1.2 segundos
+      // Cargar la siguiente pregunta para cuando vuelva a bajar la energía
       setTimeout(() => {
-        setGamePhase("running");
         setSelectedOption(null);
-        // Cargar siguiente pregunta para el próximo agotamiento
         const nextIdx = (currentQIndex + 1) % questionsPool.length;
         setCurrentQIndex(nextIdx);
         setCurrentQuestion(questionsPool[nextIdx]);
         const nextTime = calculateQuestionTime(questionsPool[nextIdx], selectedLevel);
         setQTimer(nextTime);
         setQTimerMax(nextTime);
-      }, 1200);
+      }, 1000);
 
       setTimeout(() => {
         targetSpeedRef.current = 1.0;
@@ -749,38 +743,35 @@ function SmartEscapeGame() {
       if (hasShield) {
         setHasShield(false);
         toast.info("🛡️ ¡El Escudo absorbió el fallo!");
-        energyRef.current = 60;
-        setEnergyPercent(60);
+        energyRef.current = 50;
+        setEnergyPercent(50);
         answerBannerRef.current = { text: "🛡️ ¡ESCUDO TE PROTEGIÓ! ENERGÍA PARCIAL", color: "#38bdf8", timer: 2.0 };
         setTimeout(() => {
-          setGamePhase("running");
           setSelectedOption(null);
-        }, 1200);
+        }, 1000);
       } else {
         playSfx("wrong");
         setWrongAnswersCount((w) => w + 1);
         setStreak(0);
         setLives((l) => Math.max(0, l - 1));
 
-        // Recarga de emergencia pequeña (40%) pero el monstruo se acerca peligrosamente
-        energyRef.current = 40;
-        setEnergyPercent(40);
-        targetSpeedRef.current = 0.8;
-        targetMonsterDistRef.current = Math.max(0, targetMonsterDistRef.current - 50);
-        screenShakeRef.current = 8;
+        // Recarga de emergencia moderada (25%) para no atraparlo de la nada
+        energyRef.current = 25;
+        setEnergyPercent(25);
+        targetSpeedRef.current = 0.85;
+        targetMonsterDistRef.current = Math.max(20, targetMonsterDistRef.current - 35);
+        screenShakeRef.current = 7;
         answerBannerRef.current = { text: "❌ ¡FALLO! 👾 EL ENEMIGO SE ACERCA", color: "#ef4444", timer: 2.0 };
 
         if (lives <= 1) {
-          // Última vida perdida
           targetMonsterDistRef.current = 0;
           return;
         }
 
         setTimeout(() => {
-          setGamePhase("running");
           setSelectedOption(null);
           targetSpeedRef.current = 1.0;
-        }, 1200);
+        }, 1000);
       }
     }
   };
@@ -822,7 +813,7 @@ function SmartEscapeGame() {
   };
 
   // ========================================================
-  // MOTOR DEL VIDEOJUEGO (60 FPS RUNNER + CONSUMO DE ENERGÍA)
+  // MOTOR DEL VIDEOJUEGO (60 FPS RUNNER + ENERGÍA Y PERSECUCIÓN)
   // ========================================================
   useEffect(() => {
     if (screen !== "playing") return;
@@ -909,18 +900,9 @@ function SmartEscapeGame() {
             return;
           }
 
-          // 3. FÍSICA Y CONSUMO DE ENERGÍA DURANTE CARRERA LIBRE
-          if (gamePhase === "running") {
-            // Se consume aprox 5.5% de energía por segundo
-            energyRef.current = Math.max(0, energyRef.current - 5.5 * dt);
-            setEnergyPercent(Math.round(energyRef.current));
-
-            // Si la energía llega a 0 -> ¡Pasa a MODO PREGUNTA DE RECARGA!
-            if (energyRef.current <= 0) {
-              setGamePhase("question");
-              toast.info("⚡ ¡ENERGÍA AGOTADA! Responde para recargar el Nitro.");
-            }
-          }
+          // 3. FÍSICA Y CONSUMO DE ENERGÍA (Ritmo suave y generoso: dura ~35s)
+          energyRef.current = Math.max(0, energyRef.current - 2.8 * dt);
+          setEnergyPercent(Math.round(energyRef.current));
 
           // 4. Física de Salto del Jugador
           if (isJumpingRef.current) {
@@ -933,16 +915,19 @@ function SmartEscapeGame() {
             }
           }
 
-          // 5. Persecución Suave del Monstruo
+          // 5. Persecución Suave y con Mucho Más Tiempo
           if (activeFreezeTime <= 0) {
-            if (speed < 1.0) {
-              targetMonsterDistRef.current = Math.max(0, targetMonsterDistRef.current - (1.0 - speed) * 20 * dt);
+            // El monstruo solo se acerca muy despacio si el jugador va muy lento o sin energía
+            if (speed < 1.0 || energyRef.current <= 0) {
+              targetMonsterDistRef.current = Math.max(0, targetMonsterDistRef.current - 8 * dt);
             }
 
+            // Lerp de aproximación gradual
             relativeMonsterDistanceRef.current +=
-              (targetMonsterDistRef.current - relativeMonsterDistanceRef.current) * Math.min(1, dt * 2.2);
+              (targetMonsterDistRef.current - relativeMonsterDistanceRef.current) * Math.min(1, dt * 2.0);
 
-            if (relativeMonsterDistanceRef.current <= 22) {
+            // Secuencia dramática de captura solo si entra en contacto directo (<= 16px)
+            if (relativeMonsterDistanceRef.current <= 16) {
               catchingSequenceRef.current = { active: true, timer: 1.4, duration: 1.4 };
               playSfx("wrong");
               screenShakeRef.current = 12;
@@ -981,28 +966,28 @@ function SmartEscapeGame() {
                 playSfx("coin");
                 setCollectedCoins((c) => c + 1);
                 setGameXp((xp) => xp + 15);
-                // Recolectar moneda recarga +5% de energía
-                energyRef.current = Math.min(100, energyRef.current + 5);
+                // Moneda recarga +8% de energía
+                energyRef.current = Math.min(100, energyRef.current + 8);
                 setEnergyPercent(Math.round(energyRef.current));
                 item.x = -100;
               } else if (item.type === "obstacle") {
                 if (playerYOffsetRef.current > 20) {
-                  // Saltado con éxito sobre obstáculo -> +3% de energía
-                  energyRef.current = Math.min(100, energyRef.current + 3);
+                  // Salto exitoso sobre obstáculo -> +5% energía
+                  energyRef.current = Math.min(100, energyRef.current + 5);
                   setEnergyPercent(Math.round(energyRef.current));
                 } else {
                   // Golpe con obstáculo
                   playSfx("wrong");
-                  targetSpeedRef.current = 0.8;
-                  targetMonsterDistRef.current = Math.max(0, targetMonsterDistRef.current - 35);
-                  energyRef.current = Math.max(0, energyRef.current - 12);
+                  targetSpeedRef.current = 0.85;
+                  targetMonsterDistRef.current = Math.max(25, targetMonsterDistRef.current - 25);
+                  energyRef.current = Math.max(0, energyRef.current - 10);
                   setEnergyPercent(Math.round(energyRef.current));
                   setLives((l) => Math.max(0, l - 1));
-                  screenShakeRef.current = 7;
+                  screenShakeRef.current = 6;
                   item.x = -100;
                   setTimeout(() => {
                     targetSpeedRef.current = 1.0;
-                  }, 2000);
+                  }, 1800);
                 }
               }
             }
@@ -1266,6 +1251,7 @@ function SmartEscapeGame() {
       ctx.fillStyle = "#1e293b";
       ctx.fillRect(-6, -14 + legOffset, 5, 14);
       ctx.fillRect(2, -14 - legOffset, 5, 14);
+      // Tenis de color
       ctx.fillStyle = "#38bdf8";
       ctx.fillRect(-7, -2 + legOffset, 8, 4);
       ctx.fillRect(1, -2 - legOffset, 8, 4);
@@ -1309,8 +1295,8 @@ function SmartEscapeGame() {
 
       ctx.restore();
 
-      // 6. Alerta Visual si el Monstruo está muy cerca (< 60px)
-      if (relativeMonsterDistanceRef.current < 65 && !isCatching) {
+      // 6. Alerta Visual si el Monstruo está muy cerca (< 50px)
+      if (relativeMonsterDistanceRef.current < 55 && !isCatching) {
         ctx.save();
         ctx.fillStyle = "rgba(239, 68, 68, 0.25)";
         ctx.fillRect(0, 0, w, h);
@@ -1338,7 +1324,7 @@ function SmartEscapeGame() {
       }
 
       // 8. Banner de Animación ("¡CORRECTO!" / "¡INCORRECTO!")
-      if (answerBannerRef.current && !isCatching && relativeMonsterDistanceRef.current >= 65) {
+      if (answerBannerRef.current && !isCatching && relativeMonsterDistanceRef.current >= 55) {
         ctx.save();
         ctx.fillStyle = answerBannerRef.current.color;
         ctx.font = "bold 13px sans-serif";
@@ -1360,7 +1346,7 @@ function SmartEscapeGame() {
       window.removeEventListener("resize", resizeCanvas);
       if (animFrameIdRef.current) cancelAnimationFrame(animFrameIdRef.current);
     };
-  }, [screen, isPaused, gamePhase, selectedWorld, selectedLevel, activeFreezeTime]);
+  }, [screen, isPaused, selectedWorld, selectedLevel, activeFreezeTime]);
 
   const handleBuyItem = (item: CustomizationItem) => {
     if (coinsBalance < item.cost) {
@@ -1427,7 +1413,7 @@ function SmartEscapeGame() {
                 SMART ESCAPE
               </h1>
               <p className="text-xs text-slate-400 max-w-xs mx-auto leading-relaxed">
-                ¡Corre libremente, salta obstáculos y responde preguntas para recargar tu energía y nitro!
+                ¡Corre libremente por el camino, esquiva obstáculos y responde cuando la energía esté baja para activar el Nitro!
               </p>
             </div>
 
@@ -1809,7 +1795,7 @@ function SmartEscapeGame() {
       )}
 
       {/* ======================================================== */}
-      {/* 5. PANTALLA COMPLETA DE PARTIDA (RUNNER + FASES DE ENERGÍA) */}
+      {/* 5. PANTALLA COMPLETA DE PARTIDA (RUNNER + ENERGÍA) */}
       {/* ======================================================== */}
       {screen === "playing" && (
         <div className="fixed inset-0 z-50 w-full h-full max-h-screen flex flex-col justify-between overflow-hidden bg-slate-950 text-white select-none">
@@ -1866,37 +1852,32 @@ function SmartEscapeGame() {
           </div>
 
           {/* ======================================================== */}
-          {/* FASE A: MODO CARRERA LIBRE (JUGAR, SALTAR Y RECOGER) */}
+          {/* PARTE INFERIOR: HUD DINÁMICO */}
           {/* ======================================================== */}
-          {gamePhase === "running" && (
+          {/* SI LA ENERGÍA ES ALTA (> 35%): Panel de Carrera Libre */}
+          {energyPercent > 35 ? (
             <div className="w-full shrink-0 border-t-2 border-cyan-500/40 bg-slate-900/98 p-3 sm:p-4 space-y-3 z-30 max-w-2xl mx-auto shadow-2xl animate-fade-in">
               {/* Barra de Energía Nitro */}
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between text-xs">
                   <span className="font-extrabold flex items-center gap-1.5 text-cyan-300">
-                    <Zap className={`size-4 ${energyPercent < 25 ? "text-rose-400 animate-bounce" : "text-cyan-400"}`} />
+                    <Zap className="size-4 text-cyan-400" />
                     <span>ENERGÍA NITRO: {energyPercent}%</span>
                   </span>
                   <span className="text-[11px] text-slate-400">
-                    {energyPercent < 25 ? "⚠️ ¡Energía baja! Prepárate para recargar" : "🪙 Junta monedas o salta para recargar"}
+                    🪙 Recoge monedas o salta para mantener la energía
                   </span>
                 </div>
 
-                <div className="h-3 w-full bg-slate-950 rounded-full overflow-hidden border border-slate-800 p-0.5">
+                <div className="h-3.5 w-full bg-slate-950 rounded-full overflow-hidden border border-slate-800 p-0.5">
                   <div
-                    className={`h-full rounded-full transition-all duration-200 ${
-                      energyPercent < 25
-                        ? "bg-rose-500 animate-pulse"
-                        : energyPercent < 50
-                        ? "bg-amber-400"
-                        : "bg-gradient-to-r from-cyan-500 via-teal-400 to-emerald-400 shadow-lg shadow-cyan-500/50"
-                    }`}
+                    className="h-full rounded-full transition-all duration-200 bg-gradient-to-r from-cyan-500 via-teal-400 to-emerald-400 shadow-lg shadow-cyan-500/50"
                     style={{ width: `${energyPercent}%` }}
                   />
                 </div>
               </div>
 
-              {/* Botón Gigante de Salto */}
+              {/* Botón de Salto Cómodo */}
               <div>
                 <button
                   onClick={triggerJump}
@@ -1908,18 +1889,14 @@ function SmartEscapeGame() {
                 </button>
               </div>
             </div>
-          )}
-
-          {/* ======================================================== */}
-          {/* FASE B: MODO RECARGA DE ENERGÍA (PREGUNTA DE ESTUDIO) */}
-          {/* ======================================================== */}
-          {gamePhase === "question" && (
+          ) : (
+            /* SI LA ENERGÍA ES BAJA (<= 35%): Tarjeta de Pregunta para Recargar */
             <div className="w-full shrink-0 border-t-2 border-purple-500/60 bg-slate-900 p-3 sm:p-4 space-y-2.5 z-30 max-w-2xl mx-auto shadow-2xl animate-fade-in">
               {/* Header de Recarga + Temporizador */}
               <div className="flex items-center justify-between text-xs">
-                <span className="text-[11px] font-extrabold px-3 py-1 rounded-full bg-purple-600 text-white shadow-sm flex items-center gap-1.5">
-                  <Zap className="size-3.5 fill-amber-300 text-amber-300" />
-                  <span>RECARGA DE NITRO: {currentQuestion?.topic || "Pregunta"}</span>
+                <span className="text-[11px] font-extrabold px-3 py-1 rounded-full bg-rose-600 text-white shadow-sm flex items-center gap-1.5 animate-pulse">
+                  <Zap className="size-3.5 fill-white text-white" />
+                  <span>⚡ ¡ENERGÍA BAJA ({energyPercent}%)! Responde para recargar:</span>
                 </span>
 
                 {/* Countdown Timer */}
@@ -1997,6 +1974,17 @@ function SmartEscapeGame() {
                   })}
                 </div>
               )}
+
+              {/* Botón de Salto por si aparece un obstáculo mientras respondes */}
+              <div className="pt-0.5">
+                <button
+                  onClick={triggerJump}
+                  className="w-full h-9 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold flex items-center justify-center gap-1.5 border border-slate-700 transition active:scale-95 cursor-pointer"
+                >
+                  <ArrowUp className="size-3.5" />
+                  <span>SALTAR OBSTÁCULO (ESPACIO)</span>
+                </button>
+              </div>
             </div>
           )}
         </div>
