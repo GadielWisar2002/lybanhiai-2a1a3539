@@ -330,9 +330,12 @@ function SmartEscapeGame() {
   const [qTimerMax, setQTimerMax] = useState(15);
   const [selectedOption, setSelectedOption] = useState<number | null>(null);
 
-  // Sistema de Energía (0% a 100%) - La pregunta aparece cuando la energía está baja (<= 35%)
+  // Sistema de Combustible Nitro (0% a 100%) - La pregunta aparece SÓLO cuando Nitro <= 20%
   const [energyPercent, setEnergyPercent] = useState<number>(100);
   const energyRef = useRef<number>(100);
+  const [showQuestionCard, setShowQuestionCard] = useState<boolean>(false);
+  const showQuestionCardRef = useRef<boolean>(false);
+  const isQuestionCooldownRef = useRef<boolean>(false);
 
   // Runner Gameplay Metrics
   const [lives, setLives] = useState(3);
@@ -470,7 +473,7 @@ function SmartEscapeGame() {
       if (e.key === "ArrowUp" || e.key === "w" || e.key === "W" || e.key === " ") {
         e.preventDefault();
         triggerJump();
-      } else if (e.key === "1" || e.key === "2" || e.key === "3" || e.key === "4") {
+      } else if (showQuestionCard && (e.key === "1" || e.key === "2" || e.key === "3" || e.key === "4")) {
         e.preventDefault();
         const optIdx = parseInt(e.key, 10) - 1;
         if (selectedOption === null && currentQuestion && optIdx < currentQuestion.options.length) {
@@ -481,7 +484,7 @@ function SmartEscapeGame() {
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [screen, isPaused, selectedOption, currentQuestion, triggerJump]);
+  }, [screen, isPaused, showQuestionCard, selectedOption, currentQuestion, triggerJump]);
 
   // Identificar materiales guardados
   const getSubjectMaterials = (worldId: WorldId): SubjectTopic[] => {
@@ -627,16 +630,12 @@ function SmartEscapeGame() {
 
     const firstQuestionTime = calculateQuestionTime(questions[0], levelNum);
 
-    setQuestionsPool(questions);
-    setCurrentQIndex(0);
-    setCurrentQuestion(questions[0]);
-    setQTimer(firstQuestionTime);
-    setQTimerMax(firstQuestionTime);
-    setSelectedOption(null);
-
-    // Inicia al 100% de combustible Nitro
+    // Inicia al 100% de combustible Nitro (carrera normal sin preguntas)
     energyRef.current = 100;
     setEnergyPercent(100);
+    showQuestionCardRef.current = false;
+    setShowQuestionCard(false);
+    isQuestionCooldownRef.current = false;
 
     setLives(3);
     playerYOffsetRef.current = 0;
@@ -644,15 +643,22 @@ function SmartEscapeGame() {
     isJumpingRef.current = false;
     playerDistanceRef.current = 0;
 
-    // Inicia visible en la salida (140px) y luego se aleja y desaparece fuera de pantalla
-    targetMonsterDistRef.current = 140;
-    relativeMonsterDistanceRef.current = 140;
+    // Distancia inicial del enemigo
+    targetMonsterDistRef.current = 220;
+    relativeMonsterDistanceRef.current = 220;
     catchingSequenceRef.current = { active: false, timer: 0, duration: 1.2 };
 
     targetSpeedRef.current = 1.0;
     currentSpeedRef.current = 1.0;
     screenShakeRef.current = 0;
     answerBannerRef.current = null;
+
+    setQuestionsPool(questions);
+    setCurrentQIndex(0);
+    setCurrentQuestion(questions[0]);
+    setQTimer(7);
+    setQTimerMax(7);
+    setSelectedOption(null);
 
     setPlayerDistanceMeters(0);
     setGameXp(0);
@@ -670,9 +676,16 @@ function SmartEscapeGame() {
     setScreen("playing");
   };
 
-  // Temporizador de preguntas continuo
+  // Temporizador de 7 segundos (activo únicamente cuando la tarjeta de pregunta se abre por Nitro <= 20%)
   useEffect(() => {
-    if (screen !== "playing" || isPaused || selectedOption !== null || catchingSequenceRef.current.active) return;
+    if (
+      screen !== "playing" ||
+      isPaused ||
+      !showQuestionCard ||
+      selectedOption !== null ||
+      catchingSequenceRef.current.active
+    )
+      return;
 
     timerIntervalRef.current = setInterval(() => {
       setQTimer((prev) => {
@@ -686,11 +699,34 @@ function SmartEscapeGame() {
     }, 1000);
 
     return () => clearInterval(timerIntervalRef.current);
-  }, [screen, isPaused, selectedOption, currentQuestion]);
+  }, [screen, isPaused, showQuestionCard, selectedOption, currentQuestion]);
 
   const handleTimeOut = () => {
     if (selectedOption !== null || !currentQuestion || catchingSequenceRef.current.active) return;
-    handleAnswerOption(-1);
+    playSfx("wrong");
+    setWrongAnswersCount((w) => w + 1);
+    setLives((l) => Math.max(0, l - 1));
+    targetMonsterDistRef.current = Math.max(20, targetMonsterDistRef.current - 40);
+    answerBannerRef.current = { text: "⏱️ ¡SE ACABÓ EL TIEMPO! 👾 EL ENEMIGO SE ACERCA", color: "#f59e0b", timer: 2.0 };
+
+    // Cooldown para no spamear otra pregunta de inmediato
+    isQuestionCooldownRef.current = true;
+    setTimeout(() => {
+      isQuestionCooldownRef.current = false;
+    }, 3500);
+
+    // Cerrar la tarjeta de pregunta y preparar la siguiente
+    setTimeout(() => {
+      setSelectedOption(null);
+      setShowQuestionCard(false);
+      showQuestionCardRef.current = false;
+      const nextIdx = (currentQIndex + 1) % (questionsPool.length || 1);
+      setCurrentQIndex(nextIdx);
+      const nextQ = questionsPool[nextIdx] || currentQuestion;
+      setCurrentQuestion(nextQ);
+      setQTimer(7);
+      setQTimerMax(7);
+    }, 500);
   };
 
   // Manejar respuesta
@@ -699,7 +735,6 @@ function SmartEscapeGame() {
     setSelectedOption(optionIndex);
 
     const isCorrect = optionIndex === currentQuestion.correctIndex;
-    const lvlConfig = LEVELS_CONFIG[selectedLevel - 1] || LEVELS_CONFIG[0];
 
     if (isCorrect) {
       playSfx("correct");
@@ -713,57 +748,69 @@ function SmartEscapeGame() {
       setGameXp((xp) => xp + 60 + streak * 10);
       setCollectedCoins((c) => c + 3);
 
-      // ¡Recarga 100% de Nitro + Turbo Speed Boost!
-      energyRef.current = 100;
-      setEnergyPercent(100);
+      // ¡Recupera +30% de Nitro!
+      energyRef.current = Math.min(100, energyRef.current + 30);
+      setEnergyPercent(Math.round(energyRef.current));
       targetSpeedRef.current = 1.35;
-      targetMonsterDistRef.current = 650; // monstruo fuera de pantalla
-      answerBannerRef.current = { text: "⚡ ¡CORRECTO! 🚀 NITRO AL 100% (TURBO BOOST)", color: "#10b981", timer: 2.2 };
+      targetMonsterDistRef.current = Math.min(260, targetMonsterDistRef.current + 80);
+      answerBannerRef.current = { text: "⚡ ¡NITRO RECARGADO! (+30% NITRO) 🚀", color: "#10b981", timer: 2.5 };
 
-      // Cargar la siguiente pregunta inmediatamente
+      isQuestionCooldownRef.current = true;
+      setTimeout(() => {
+        isQuestionCooldownRef.current = false;
+      }, 4000);
+
+      // La pregunta desaparece y la carrera continúa
       setTimeout(() => {
         setSelectedOption(null);
+        setShowQuestionCard(false);
+        showQuestionCardRef.current = false;
         const nextIdx = (currentQIndex + 1) % (questionsPool.length || 1);
         setCurrentQIndex(nextIdx);
         const nextQ = questionsPool[nextIdx] || currentQuestion;
         setCurrentQuestion(nextQ);
-        const nextTime = calculateQuestionTime(nextQ, selectedLevel);
-        setQTimer(nextTime);
-        setQTimerMax(nextTime);
-      }, 700);
+        setQTimer(7);
+        setQTimerMax(7);
+      }, 600);
 
       setTimeout(() => {
         targetSpeedRef.current = 1.0;
-      }, 3500);
+      }, 2500);
     } else {
       if (hasShield) {
         setHasShield(false);
         toast.info("🛡️ ¡El Escudo absorbió el fallo!");
-        energyRef.current = Math.max(30, energyRef.current);
-        setEnergyPercent(Math.round(energyRef.current));
         answerBannerRef.current = { text: "🛡️ ¡ESCUDO TE PROTEGIÓ!", color: "#38bdf8", timer: 2.0 };
+        isQuestionCooldownRef.current = true;
+        setTimeout(() => {
+          isQuestionCooldownRef.current = false;
+        }, 3000);
+
         setTimeout(() => {
           setSelectedOption(null);
+          setShowQuestionCard(false);
+          showQuestionCardRef.current = false;
           const nextIdx = (currentQIndex + 1) % (questionsPool.length || 1);
           setCurrentQIndex(nextIdx);
           const nextQ = questionsPool[nextIdx] || currentQuestion;
           setCurrentQuestion(nextQ);
-          const nextTime = calculateQuestionTime(nextQ, selectedLevel);
-          setQTimer(nextTime);
-          setQTimerMax(nextTime);
-        }, 700);
+          setQTimer(7);
+          setQTimerMax(7);
+        }, 600);
       } else {
         playSfx("wrong");
         setWrongAnswersCount((w) => w + 1);
         setStreak(0);
         setLives((l) => Math.max(0, l - 1));
 
-        // Descuenta -25% de combustible Nitro
-        energyRef.current = Math.max(0, energyRef.current - 25);
-        setEnergyPercent(Math.round(energyRef.current));
-        targetSpeedRef.current = 0.85;
+        targetMonsterDistRef.current = Math.max(20, targetMonsterDistRef.current - 40);
         screenShakeRef.current = 7;
-        answerBannerRef.current = { text: "❌ ¡INCORRECTO! ⚡ -25% NITRO", color: "#ef4444", timer: 2.0 };
+        answerBannerRef.current = { text: "❌ ¡INCORRECTO! 👾 EL ENEMIGO SE ACERCA", color: "#ef4444", timer: 2.0 };
+
+        isQuestionCooldownRef.current = true;
+        setTimeout(() => {
+          isQuestionCooldownRef.current = false;
+        }, 3500);
 
         if (lives <= 1 || energyRef.current <= 0) {
           energyRef.current = 0;
@@ -772,17 +819,18 @@ function SmartEscapeGame() {
           return;
         }
 
+        // La pregunta desaparece y la carrera continúa
         setTimeout(() => {
           setSelectedOption(null);
-          targetSpeedRef.current = 1.0;
+          setShowQuestionCard(false);
+          showQuestionCardRef.current = false;
           const nextIdx = (currentQIndex + 1) % (questionsPool.length || 1);
           setCurrentQIndex(nextIdx);
           const nextQ = questionsPool[nextIdx] || currentQuestion;
           setCurrentQuestion(nextQ);
-          const nextTime = calculateQuestionTime(nextQ, selectedLevel);
-          setQTimer(nextTime);
-          setQTimerMax(nextTime);
-        }, 800);
+          setQTimer(7);
+          setQTimerMax(7);
+        }, 600);
       }
     }
   };
@@ -915,6 +963,20 @@ function SmartEscapeGame() {
           energyRef.current = Math.max(0, energyRef.current - 2.5 * dt);
           setEnergyPercent(Math.round(energyRef.current));
 
+          // Activación de la tarjeta de pregunta exclusivamente cuando Nitro <= 20%
+          if (
+            energyRef.current <= 20 &&
+            energyRef.current > 0 &&
+            !showQuestionCardRef.current &&
+            !isQuestionCooldownRef.current &&
+            !catchingSequenceRef.current.active
+          ) {
+            showQuestionCardRef.current = true;
+            setShowQuestionCard(true);
+            setQTimer(7);
+            setQTimerMax(7);
+          }
+
           // 4. Física de Salto del Jugador
           if (isJumpingRef.current) {
             playerYOffsetRef.current += playerYVelRef.current * dt;
@@ -927,15 +989,20 @@ function SmartEscapeGame() {
           }
 
           // 5. COMPORTAMIENTO DEL MONSTRUO 100% BASADO EN NITRO:
-          // - Con Nitro (> 0%): Al iniciar se queda atrás y desaparece por completo fuera de pantalla
-          // - Si Nitro llega a 0%: El monstruo se abalanza furioso a toda velocidad desde atrás y liquida de un ¡PUM!
-          if (energyRef.current > 0) {
-            if (playerDistanceRef.current > 20) {
+          // - Con Nitro > 20%: Desaparece por completo fuera de pantalla (650px)
+          // - Con Nitro <= 20%: Se asoma amenazante detrás del jugador (190px)
+          // - Si Nitro llega a 0%: Se abalanza a toda velocidad (0px) y liquida con ¡PUM!
+          if (energyRef.current > 20) {
+            if (playerDistanceRef.current > 15) {
               targetMonsterDistRef.current = 650; // Se aleja fuera de la vista
             }
-            // Lerp de alejamiento suave
             relativeMonsterDistanceRef.current +=
               (targetMonsterDistRef.current - relativeMonsterDistanceRef.current) * Math.min(1, dt * 1.8);
+          } else if (energyRef.current > 0) {
+            // Nitro crítico (<= 20%): El monstruo se acerca por detrás
+            targetMonsterDistRef.current = 190;
+            relativeMonsterDistanceRef.current +=
+              (targetMonsterDistRef.current - relativeMonsterDistanceRef.current) * Math.min(1, dt * 2.2);
           } else {
             // ¡NITRO AGOTADO (0%)! El monstruo entra a toda velocidad
             targetSpeedRef.current = 0.5; // El jugador frena sin combustible
@@ -1886,24 +1953,32 @@ function SmartEscapeGame() {
           </div>
 
           {/* ======================================================== */}
-          {/* PARTE INFERIOR: HUD DE PREGUNTAS Y ENERGÍA NITRO */}
+          {/* PARTE INFERIOR: HUD SEGÚN ESTADO DE NITRO */}
           {/* ======================================================== */}
-          <div className="w-full shrink-0 border-t-2 border-purple-500/50 bg-slate-900/98 p-3 sm:p-4 space-y-2.5 z-30 max-w-2xl mx-auto shadow-2xl animate-fade-in backdrop-blur">
-            {/* Top Bar de la Tarjeta: Energía Nitro + Temporizador */}
-            <div className="flex items-center justify-between gap-2 text-xs">
-              {/* Barra de Energía Nitro */}
-              <div className="flex-1 flex items-center gap-2 bg-slate-950/80 px-2.5 py-1 rounded-xl border border-slate-800">
-                <Zap className={`size-3.5 ${energyPercent > 30 ? "text-cyan-400" : "text-amber-400 animate-pulse"}`} />
-                <span className="text-[11px] font-black text-cyan-300">
-                  NITRO {energyPercent}%
-                </span>
-                <div className="flex-1 h-2 bg-slate-900 rounded-full overflow-hidden border border-slate-800">
+          {!showQuestionCard ? (
+            /* 🟢 MODO CARRERA LIBRE (NITRO > 20%) */
+            <div className="w-full shrink-0 border-t-2 border-cyan-500/40 bg-slate-900/98 p-3 sm:p-4 space-y-3 z-30 max-w-2xl mx-auto shadow-2xl animate-fade-in backdrop-blur">
+              {/* Barra de Nitro Destacada */}
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between text-xs">
+                  <div className="flex items-center gap-2">
+                    <Zap className="size-4 text-cyan-400 fill-cyan-400" />
+                    <span className="font-black text-sm text-cyan-300">
+                      ⚡ NITRO: {energyPercent}%
+                    </span>
+                  </div>
+                  <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                    🟢 MODO CARRERA LIBRE
+                  </span>
+                </div>
+
+                <div className="h-4 w-full bg-slate-950 rounded-full overflow-hidden border border-slate-800 p-0.5 shadow-inner">
                   <div
-                    className={`h-full rounded-full transition-all duration-300 ${
+                    className={`h-full rounded-full transition-all duration-300 shadow-md ${
                       energyPercent > 50
-                        ? "bg-gradient-to-r from-cyan-500 to-emerald-400 shadow-sm shadow-cyan-500/50"
+                        ? "bg-gradient-to-r from-cyan-500 to-emerald-400"
                         : energyPercent > 25
-                        ? "bg-amber-400"
+                        ? "bg-gradient-to-r from-amber-500 to-amber-400"
                         : "bg-rose-500 animate-pulse"
                     }`}
                     style={{ width: `${energyPercent}%` }}
@@ -1911,114 +1986,148 @@ function SmartEscapeGame() {
                 </div>
               </div>
 
-              {/* Countdown Timer */}
-              <div className="flex items-center gap-1.5 font-black bg-slate-950/80 px-3 py-1 rounded-xl border border-slate-800 shrink-0">
-                <Clock className="size-3.5 text-amber-400" />
-                <span
-                  className={`text-xs font-mono font-bold ${
-                    qTimer <= 4
-                      ? "text-rose-400 font-black animate-pulse"
-                      : qTimer <= 8
-                      ? "text-amber-400"
-                      : "text-emerald-300"
-                  }`}
-                >
-                  ⏱️ {qTimer}s
+              {/* Mensaje indicador para el jugador */}
+              <div className="flex items-center justify-between text-[11px] text-slate-400 bg-slate-950/80 px-3 py-2 rounded-xl border border-slate-800/80">
+                <span className="flex items-center gap-1.5 text-slate-300 font-medium">
+                  <span>💡</span>
+                  <span>¡Corre y salta! Las preguntas de emergencia se activarán al bajar a <strong>≤ 20% de Nitro</strong>.</span>
+                </span>
+                <span className="text-purple-300 font-mono font-bold shrink-0">
+                  {currentTheme.badge}
                 </span>
               </div>
-            </div>
 
-            {/* Barra de tiempo de la pregunta */}
-            <div className="h-1.5 w-full bg-slate-950 rounded-full overflow-hidden border border-slate-800">
-              <div
-                className={`h-full transition-all duration-300 ${
-                  qTimer <= 4
-                    ? "bg-rose-500"
-                    : qTimer <= 8
-                    ? "bg-amber-400"
-                    : "bg-gradient-to-r from-purple-500 via-cyan-400 to-emerald-400"
-                }`}
-                style={{ width: `${timerPercentage}%` }}
-              />
-            </div>
-
-            {/* Texto de la Pregunta */}
-            {currentQuestion ? (
-              <div className="space-y-1">
-                <div className="flex items-center justify-between text-[10px] text-slate-400 font-semibold px-0.5">
-                  <span className="truncate max-w-[280px] text-purple-300">
-                    📖 {currentQuestion.topic || currentTheme.badge}
-                  </span>
-                  <span className="text-cyan-400 font-mono">
-                    Pregunta {currentQIndex + 1} de {questionsPool.length}
-                  </span>
-                </div>
-                <h3 className="text-sm sm:text-base font-extrabold text-white leading-snug px-0.5 line-clamp-2 min-h-[38px] flex items-center drop-shadow-sm">
-                  {currentQuestion.question}
-                </h3>
-              </div>
-            ) : (
-              <div className="text-xs text-slate-400 italic min-h-[38px] flex items-center">
-                Cargando pregunta de estudio...
-              </div>
-            )}
-
-            {/* Opciones de Respuesta con letras grandes 🅰️ 🅱️ 🅲️ 🅳️ */}
-            {currentQuestion && (
-              <div
-                className={`grid gap-2 ${
-                  currentQuestion.options.length === 2 ? "grid-cols-2" : "grid-cols-1 sm:grid-cols-2"
-                }`}
-              >
-                {currentQuestion.options.map((opt, idx) => {
-                  const letters = ["🅰️", "🅱️", "🅲️", "🅳️"];
-                  const isSelected = selectedOption === idx;
-                  const isCorrect = idx === currentQuestion.correctIndex;
-
-                  let optClass =
-                    "border-2 border-slate-700 bg-slate-800/90 hover:bg-slate-700 hover:border-purple-400 text-white";
-
-                  if (selectedOption !== null) {
-                    if (isCorrect) {
-                      optClass =
-                        "border-2 border-emerald-400 bg-emerald-600 text-white font-black shadow-lg shadow-emerald-500/30";
-                    } else if (isSelected) {
-                      optClass =
-                        "border-2 border-rose-400 bg-rose-600 text-white font-black shadow-lg shadow-rose-500/30";
-                    }
-                  }
-
-                  return (
-                    <button
-                      key={idx}
-                      disabled={selectedOption !== null || catchingSequenceRef.current.active}
-                      onClick={() => handleAnswerOption(idx)}
-                      className={`p-2.5 sm:p-3 rounded-xl text-left text-xs sm:text-sm font-bold leading-tight transition active:scale-95 cursor-pointer flex items-center gap-2.5 shadow-md ${optClass}`}
-                    >
-                      <span className="text-base shrink-0">
-                        {letters[idx] || `${idx + 1}.`}
-                      </span>
-                      <span className="line-clamp-2 flex-1 font-bold">{opt}</span>
-                      {selectedOption !== null && isCorrect && (
-                        <CheckCircle2 className="size-4 text-white shrink-0" />
-                      )}
-                    </button>
-                  );
-                })}
-              </div>
-            )}
-
-            {/* Botón de Salto Cómodo para esquivar obstáculos mientras corres */}
-            <div className="pt-0.5 flex gap-2">
+              {/* Gran Botón de Salto Cómodo */}
               <button
                 onClick={triggerJump}
-                className="flex-1 h-10 sm:h-11 rounded-xl bg-gradient-to-r from-purple-600 via-indigo-600 to-cyan-600 hover:brightness-110 active:scale-98 text-white text-xs font-black flex items-center justify-center gap-2 border border-purple-400/40 shadow-lg shadow-purple-500/20 transition cursor-pointer"
+                className="w-full h-14 rounded-2xl bg-gradient-to-r from-purple-600 via-indigo-600 to-cyan-600 hover:brightness-110 active:scale-98 text-white font-display text-sm sm:text-base font-black flex items-center justify-center gap-3 border border-cyan-400/40 shadow-xl shadow-purple-500/30 transition cursor-pointer"
               >
-                <ArrowUp className="size-4" />
-                <span>SALTAR OBSTÁCULO (ESPACIO / W)</span>
+                <ArrowUp className="size-5 stroke-[3]" />
+                <span>SALTAR OBSTÁCULO (ESPACIO / W / TOCA AQUÍ)</span>
               </button>
             </div>
-          </div>
+          ) : (
+            /* 🚨 TARJETA DE PREGUNTA DE EMERGENCIA (NITRO <= 20%) */
+            <div className="w-full shrink-0 border-t-2 border-rose-500/70 bg-slate-900/98 p-3 sm:p-4 space-y-2.5 z-30 max-w-2xl mx-auto shadow-2xl animate-fade-in backdrop-blur">
+              {/* Top Bar de la Tarjeta: Nitro Crítico + Temporizador 7s */}
+              <div className="flex items-center justify-between gap-2 text-xs">
+                {/* Barra de Energía Nitro en Alerta */}
+                <div className="flex-1 flex items-center gap-2 bg-rose-950/40 px-2.5 py-1 rounded-xl border border-rose-500/40 animate-pulse">
+                  <Zap className="size-3.5 text-rose-400 fill-rose-400" />
+                  <span className="text-[11px] font-black text-rose-300">
+                    🚨 ¡NITRO CRÍTICO! {energyPercent}%
+                  </span>
+                  <div className="flex-1 h-2 bg-slate-900 rounded-full overflow-hidden border border-slate-800">
+                    <div
+                      className="h-full rounded-full bg-rose-500"
+                      style={{ width: `${energyPercent}%` }}
+                    />
+                  </div>
+                </div>
+
+                {/* Countdown Timer 7s */}
+                <div className="flex items-center gap-1.5 font-black bg-rose-950/60 px-3 py-1 rounded-xl border border-rose-500/50 shrink-0">
+                  <Clock className="size-3.5 text-amber-400" />
+                  <span
+                    className={`text-xs font-mono font-black ${
+                      qTimer <= 3 ? "text-rose-400 animate-pulse" : "text-amber-300"
+                    }`}
+                  >
+                    ⏱️ {qTimer}s
+                  </span>
+                </div>
+              </div>
+
+              {/* Barra de tiempo de la pregunta */}
+              <div className="h-1.5 w-full bg-slate-950 rounded-full overflow-hidden border border-slate-800">
+                <div
+                  className={`h-full transition-all duration-300 ${
+                    qTimer <= 3
+                      ? "bg-rose-500"
+                      : "bg-gradient-to-r from-amber-500 to-rose-400"
+                  }`}
+                  style={{ width: `${timerPercentage}%` }}
+                />
+              </div>
+
+              {/* Texto de la Pregunta */}
+              {currentQuestion ? (
+                <div className="space-y-1">
+                  <div className="flex items-center justify-between text-[10px] text-slate-400 font-semibold px-0.5">
+                    <span className="truncate max-w-[280px] text-rose-300 font-bold">
+                      ⚡ Acierta para recargar +30% Nitro: {currentQuestion.topic || currentTheme.badge}
+                    </span>
+                    <span className="text-cyan-400 font-mono">
+                      Pregunta {currentQIndex + 1} de {questionsPool.length}
+                    </span>
+                  </div>
+                  <h3 className="text-sm sm:text-base font-extrabold text-white leading-snug px-0.5 line-clamp-2 min-h-[38px] flex items-center drop-shadow-sm">
+                    {currentQuestion.question}
+                  </h3>
+                </div>
+              ) : (
+                <div className="text-xs text-slate-400 italic min-h-[38px] flex items-center">
+                  Cargando pregunta de estudio...
+                </div>
+              )}
+
+              {/* Opciones de Respuesta con letras grandes 🅰️ 🅱️ 🅲️ 🅳️ */}
+              {currentQuestion && (
+                <div
+                  className={`grid gap-2 ${
+                    currentQuestion.options.length === 2 ? "grid-cols-2" : "grid-cols-1 sm:grid-cols-2"
+                  }`}
+                >
+                  {currentQuestion.options.map((opt, idx) => {
+                    const letters = ["🅰️", "🅱️", "🅲️", "🅳️"];
+                    const isSelected = selectedOption === idx;
+                    const isCorrect = idx === currentQuestion.correctIndex;
+
+                    let optClass =
+                      "border-2 border-slate-700 bg-slate-800/90 hover:bg-slate-700 hover:border-purple-400 text-white";
+
+                    if (selectedOption !== null) {
+                      if (isCorrect) {
+                        optClass =
+                          "border-2 border-emerald-400 bg-emerald-600 text-white font-black shadow-lg shadow-emerald-500/30";
+                      } else if (isSelected) {
+                        optClass =
+                          "border-2 border-rose-400 bg-rose-600 text-white font-black shadow-lg shadow-rose-500/30";
+                      }
+                    }
+
+                    return (
+                      <button
+                        key={idx}
+                        disabled={selectedOption !== null || catchingSequenceRef.current.active}
+                        onClick={() => handleAnswerOption(idx)}
+                        className={`p-2.5 sm:p-3 rounded-xl text-left text-xs sm:text-sm font-bold leading-tight transition active:scale-95 cursor-pointer flex items-center gap-2.5 shadow-md ${optClass}`}
+                      >
+                        <span className="text-base shrink-0">
+                          {letters[idx] || `${idx + 1}.`}
+                        </span>
+                        <span className="line-clamp-2 flex-1 font-bold">{opt}</span>
+                        {selectedOption !== null && isCorrect && (
+                          <CheckCircle2 className="size-4 text-white shrink-0" />
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+
+              {/* Botón de Salto Cómodo mientras respondes */}
+              <div className="pt-0.5 flex gap-2">
+                <button
+                  onClick={triggerJump}
+                  className="flex-1 h-10 sm:h-11 rounded-xl bg-gradient-to-r from-purple-600 via-indigo-600 to-cyan-600 hover:brightness-110 active:scale-98 text-white text-xs font-black flex items-center justify-center gap-2 border border-purple-400/40 shadow-lg shadow-purple-500/20 transition cursor-pointer"
+                >
+                  <ArrowUp className="size-4" />
+                  <span>SALTAR OBSTÁCULO (ESPACIO / W)</span>
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       )}
 
