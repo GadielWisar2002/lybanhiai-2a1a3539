@@ -13,7 +13,7 @@ import {
   Play, Pause, Zap, Shield, Clock, Magnet, Snowflake, CheckCircle2,
   XCircle, Award, GraduationCap, ChevronRight, Upload, Shirt,
   Lock, Check, Star, RefreshCw, BookOpen, AlertTriangle, ArrowUp,
-  Heart, AlertCircle, FileText, PlusCircle
+  Heart, AlertCircle, FileText, PlusCircle, BatteryCharging, Battery
 } from "lucide-react";
 import { toast } from "sonner";
 import streakCap from "@/assets/streak-cap.png";
@@ -277,6 +277,9 @@ function SmartEscapeGame() {
     "home" | "world_select" | "material_select" | "level_map" | "upload" | "playing" | "gameover" | "victory" | "closet"
   >("home");
 
+  // FASE DEL JUEGO: "running" (carrera libre, saltos y esquives) vs "question" (recarga de energía / responder)
+  const [gamePhase, setGamePhase] = useState<"running" | "question">("running");
+
   // Configuración de partida
   const [selectedWorld, setSelectedWorld] = useState<WorldId>("quimica");
   const [selectedTopicId, setSelectedTopicId] = useState<string>("materia-mezclas");
@@ -330,6 +333,10 @@ function SmartEscapeGame() {
   const [qTimerMax, setQTimerMax] = useState(15);
   const [selectedOption, setSelectedOption] = useState<number | null>(null);
 
+  // Sistema de Energía (0% a 100%)
+  const [energyPercent, setEnergyPercent] = useState<number>(100);
+  const energyRef = useRef<number>(100);
+
   // Runner Gameplay Metrics
   const [lives, setLives] = useState(3);
   const [playerDistanceMeters, setPlayerDistanceMeters] = useState(0);
@@ -374,7 +381,7 @@ function SmartEscapeGame() {
   const timerIntervalRef = useRef<any>(null);
 
   // Web Audio Synth
-  const playSfx = (type: "jump" | "coin" | "correct" | "wrong" | "turbo" | "gameover" | "victory") => {
+  const playSfx = (type: "jump" | "coin" | "correct" | "wrong" | "turbo" | "recharge" | "gameover" | "victory") => {
     if (!soundEnabled) return;
     try {
       const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
@@ -397,6 +404,13 @@ function SmartEscapeGame() {
         gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.16);
         osc.start();
         osc.stop(ctx.currentTime + 0.16);
+      } else if (type === "recharge") {
+        osc.frequency.setValueAtTime(300, ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(880, ctx.currentTime + 0.25);
+        gain.gain.setValueAtTime(0.15, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.25);
+        osc.start();
+        osc.stop(ctx.currentTime + 0.25);
       } else if (type === "correct") {
         osc.frequency.setValueAtTime(523.25, ctx.currentTime);
         osc.frequency.setValueAtTime(659.25, ctx.currentTime + 0.08);
@@ -443,7 +457,7 @@ function SmartEscapeGame() {
     } catch {}
   };
 
-  // Jump Action
+  // Jump Action (Saltar obstáculo)
   const triggerJump = useCallback(() => {
     if (isJumpingRef.current || catchingSequenceRef.current.active) return;
     isJumpingRef.current = true;
@@ -459,7 +473,7 @@ function SmartEscapeGame() {
       if (e.key === "ArrowUp" || e.key === "w" || e.key === "W" || e.key === " ") {
         e.preventDefault();
         triggerJump();
-      } else if (e.key === "1" || e.key === "2" || e.key === "3" || e.key === "4") {
+      } else if (gamePhase === "question" && (e.key === "1" || e.key === "2" || e.key === "3" || e.key === "4")) {
         e.preventDefault();
         const optIdx = parseInt(e.key, 10) - 1;
         if (selectedOption === null && currentQuestion && optIdx < 4) {
@@ -470,7 +484,7 @@ function SmartEscapeGame() {
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [screen, isPaused, selectedOption, currentQuestion, triggerJump]);
+  }, [screen, isPaused, gamePhase, selectedOption, currentQuestion, triggerJump]);
 
   // Identificar materiales guardados
   const getSubjectMaterials = (worldId: WorldId): SubjectTopic[] => {
@@ -628,6 +642,11 @@ function SmartEscapeGame() {
     setQTimerMax(firstQuestionTime);
     setSelectedOption(null);
 
+    // Inicia en MODO CARRERA LIBRE con 100% de energía
+    setGamePhase("running");
+    energyRef.current = 100;
+    setEnergyPercent(100);
+
     setLives(3);
     playerYOffsetRef.current = 0;
     playerYVelRef.current = 0;
@@ -660,9 +679,9 @@ function SmartEscapeGame() {
     setScreen("playing");
   };
 
-  // Temporizador de preguntas
+  // Temporizador de preguntas (solo activo en gamePhase === "question")
   useEffect(() => {
-    if (screen !== "playing" || isPaused || selectedOption !== null || catchingSequenceRef.current.active) return;
+    if (screen !== "playing" || isPaused || gamePhase !== "question" || selectedOption !== null || catchingSequenceRef.current.active) return;
 
     timerIntervalRef.current = setInterval(() => {
       setQTimer((prev) => {
@@ -676,14 +695,14 @@ function SmartEscapeGame() {
     }, 1000);
 
     return () => clearInterval(timerIntervalRef.current);
-  }, [screen, isPaused, selectedOption, currentQuestion]);
+  }, [screen, isPaused, gamePhase, selectedOption, currentQuestion]);
 
   const handleTimeOut = () => {
     if (selectedOption !== null || !currentQuestion || catchingSequenceRef.current.active) return;
     handleAnswerOption(-1);
   };
 
-  // Manejar respuesta
+  // Manejar respuesta en fase de recarga
   const handleAnswerOption = (optionIndex: number) => {
     if (selectedOption !== null || !currentQuestion || catchingSequenceRef.current.active) return;
     setSelectedOption(optionIndex);
@@ -693,66 +712,77 @@ function SmartEscapeGame() {
 
     if (isCorrect) {
       playSfx("correct");
+      playSfx("recharge");
       setCorrectAnswersCount((c) => c + 1);
       setStreak((s) => {
         const next = s + 1;
         if (next > maxStreak) setMaxStreak(next);
         return next;
       });
-      setGameXp((xp) => xp + 50 + streak * 10);
-      setCollectedCoins((c) => c + 2);
+      setGameXp((xp) => xp + 60 + streak * 10);
+      setCollectedCoins((c) => c + 3);
 
-      // Efecto en Gameplay: El jugador acelera y aleja al perseguidor suavemente
-      targetSpeedRef.current = 1.25;
-      targetMonsterDistRef.current = Math.min(220, targetMonsterDistRef.current + 55);
-      answerBannerRef.current = { text: "¡CORRECTO! ⚡ +15% VELOCIDAD", color: "#10b981", timer: 1.8 };
+      // ¡Recarga 100% de Energía + Mega Nitro Boost!
+      energyRef.current = 100;
+      setEnergyPercent(100);
+      targetSpeedRef.current = 1.35;
+      targetMonsterDistRef.current = Math.min(220, targetMonsterDistRef.current + 60);
+      answerBannerRef.current = { text: "⚡ ¡ENERGÍA AL 100%! 🚀 NITRO BOOST ACTIVADO", color: "#10b981", timer: 2.2 };
+
+      // Volver a Carrera Libre tras 1.2 segundos
+      setTimeout(() => {
+        setGamePhase("running");
+        setSelectedOption(null);
+        // Cargar siguiente pregunta para el próximo agotamiento
+        const nextIdx = (currentQIndex + 1) % questionsPool.length;
+        setCurrentQIndex(nextIdx);
+        setCurrentQuestion(questionsPool[nextIdx]);
+        const nextTime = calculateQuestionTime(questionsPool[nextIdx], selectedLevel);
+        setQTimer(nextTime);
+        setQTimerMax(nextTime);
+      }, 1200);
 
       setTimeout(() => {
         targetSpeedRef.current = 1.0;
-      }, 2600);
+      }, 3500);
     } else {
       if (hasShield) {
         setHasShield(false);
         toast.info("🛡️ ¡El Escudo absorbió el fallo!");
-        answerBannerRef.current = { text: "🛡️ ¡ESCUDO TE PROTEGIÓ!", color: "#38bdf8", timer: 1.8 };
+        energyRef.current = 60;
+        setEnergyPercent(60);
+        answerBannerRef.current = { text: "🛡️ ¡ESCUDO TE PROTEGIÓ! ENERGÍA PARCIAL", color: "#38bdf8", timer: 2.0 };
+        setTimeout(() => {
+          setGamePhase("running");
+          setSelectedOption(null);
+        }, 1200);
       } else {
         playSfx("wrong");
         setWrongAnswersCount((w) => w + 1);
         setStreak(0);
         setLives((l) => Math.max(0, l - 1));
 
-        // Efecto en Gameplay: El jugador frena y el monstruo se acerca visiblemente paso a paso
-        targetSpeedRef.current = 0.78;
-        targetMonsterDistRef.current = Math.max(0, targetMonsterDistRef.current - 55);
+        // Recarga de emergencia pequeña (40%) pero el monstruo se acerca peligrosamente
+        energyRef.current = 40;
+        setEnergyPercent(40);
+        targetSpeedRef.current = 0.8;
+        targetMonsterDistRef.current = Math.max(0, targetMonsterDistRef.current - 50);
         screenShakeRef.current = 8;
-        answerBannerRef.current = { text: "¡INCORRECTO! 👾 EL ENEMIGO SE ACERCA", color: "#ef4444", timer: 1.8 };
+        answerBannerRef.current = { text: "❌ ¡FALLO! 👾 EL ENEMIGO SE ACERCA", color: "#ef4444", timer: 2.0 };
+
+        if (lives <= 1) {
+          // Última vida perdida
+          targetMonsterDistRef.current = 0;
+          return;
+        }
 
         setTimeout(() => {
+          setGamePhase("running");
+          setSelectedOption(null);
           targetSpeedRef.current = 1.0;
-        }, 2200);
+        }, 1200);
       }
     }
-
-    if (!isCorrect && !hasShield && lives <= 1) {
-      // Perdió su última vida -> El monstruo va a atraparlo
-      targetMonsterDistRef.current = 0;
-      return;
-    }
-
-    setTimeout(() => {
-      const nextIdx = currentQIndex + 1;
-      if (nextIdx >= questionsPool.length || playerDistanceRef.current >= lvlConfig.targetDistance) {
-        triggerVictory();
-      } else {
-        const nextQuestionObj = questionsPool[nextIdx];
-        const nextTime = calculateQuestionTime(nextQuestionObj, selectedLevel);
-        setCurrentQIndex(nextIdx);
-        setCurrentQuestion(nextQuestionObj);
-        setQTimer(nextTime);
-        setQTimerMax(nextTime);
-        setSelectedOption(null);
-      }
-    }, 1100);
   };
 
   const triggerGameOver = () => {
@@ -765,11 +795,11 @@ function SmartEscapeGame() {
     setScreen("victory");
 
     const lvlConfig = LEVELS_CONFIG[selectedLevel - 1] || LEVELS_CONFIG[0];
-    const earnedXp = lvlConfig.bonusXp + correctAnswersCount * 25;
+    const earnedXp = lvlConfig.bonusXp + correctAnswersCount * 30;
     const earnedCoins = lvlConfig.bonusCoins + collectedCoins;
 
     const accuracy = questionsPool.length > 0 ? (correctAnswersCount / questionsPool.length) * 100 : 100;
-    const stars = accuracy >= 85 ? 3 : accuracy >= 60 ? 2 : 1;
+    const stars = accuracy >= 80 ? 3 : accuracy >= 50 ? 2 : 1;
 
     const key = `${selectedWorld}-${selectedLevel}`;
     const newStars = { ...levelStars, [key]: Math.max(levelStars[key] || 0, stars) };
@@ -792,7 +822,7 @@ function SmartEscapeGame() {
   };
 
   // ========================================================
-  // MOTOR DEL VIDEOJUEGO (ANIMACIÓN, PERSONAJES Y PERSECUCIÓN REAL)
+  // MOTOR DEL VIDEOJUEGO (60 FPS RUNNER + CONSUMO DE ENERGÍA)
   // ========================================================
   useEffect(() => {
     if (screen !== "playing") return;
@@ -858,7 +888,6 @@ function SmartEscapeGame() {
           catchingSequenceRef.current.timer -= dt;
           screenShakeRef.current = Math.min(10, screenShakeRef.current + 0.5);
 
-          // Si terminó la animación de captura -> Pantalla de Game Over
           if (catchingSequenceRef.current.timer <= 0) {
             triggerGameOver();
             return;
@@ -874,7 +903,26 @@ function SmartEscapeGame() {
           setPlayerDistanceMeters(Math.round(playerDistanceRef.current));
           setTimeElapsed((t) => t + dt);
 
-          // 3. Física de Salto del Jugador
+          // Verificar si llegó a la meta
+          if (playerDistanceRef.current >= lvlConfig.targetDistance) {
+            triggerVictory();
+            return;
+          }
+
+          // 3. FÍSICA Y CONSUMO DE ENERGÍA DURANTE CARRERA LIBRE
+          if (gamePhase === "running") {
+            // Se consume aprox 5.5% de energía por segundo
+            energyRef.current = Math.max(0, energyRef.current - 5.5 * dt);
+            setEnergyPercent(Math.round(energyRef.current));
+
+            // Si la energía llega a 0 -> ¡Pasa a MODO PREGUNTA DE RECARGA!
+            if (energyRef.current <= 0) {
+              setGamePhase("question");
+              toast.info("⚡ ¡ENERGÍA AGOTADA! Responde para recargar el Nitro.");
+            }
+          }
+
+          // 4. Física de Salto del Jugador
           if (isJumpingRef.current) {
             playerYOffsetRef.current += playerYVelRef.current * dt;
             playerYVelRef.current -= 950 * dt; // gravedad
@@ -885,18 +933,15 @@ function SmartEscapeGame() {
             }
           }
 
-          // 4. Persecución Suave y Gradual del Monstruo (Lerp continuo hacia targetMonsterDist)
+          // 5. Persecución Suave del Monstruo
           if (activeFreezeTime <= 0) {
-            // Si la velocidad del jugador baja de 1.0, el monstruo gana terreno poco a poco
             if (speed < 1.0) {
               targetMonsterDistRef.current = Math.max(0, targetMonsterDistRef.current - (1.0 - speed) * 20 * dt);
             }
 
-            // Lerp de la distancia visual para que se vea cómo corre y se acerca gradualmente
             relativeMonsterDistanceRef.current +=
               (targetMonsterDistRef.current - relativeMonsterDistanceRef.current) * Math.min(1, dt * 2.2);
 
-            // Si el monstruo alcanza físicamente al jugador (< 22px), INICIA SECUENCIA DE CAPTURA DRAMÁTICA
             if (relativeMonsterDistanceRef.current <= 22) {
               catchingSequenceRef.current = { active: true, timer: 1.4, duration: 1.4 };
               playSfx("wrong");
@@ -904,7 +949,7 @@ function SmartEscapeGame() {
             }
           }
 
-          // 5. Screen Shake y Banner timer
+          // 6. Screen Shake y Banner timer
           if (screenShakeRef.current > 0) {
             screenShakeRef.current = Math.max(0, screenShakeRef.current - dt * 15);
           }
@@ -913,7 +958,7 @@ function SmartEscapeGame() {
             if (answerBannerRef.current.timer <= 0) answerBannerRef.current = null;
           }
 
-          // 6. Desplazamiento del Escenario (Parallax Layers)
+          // 7. Desplazamiento del Escenario (Parallax Layers)
           groundOffset = (groundOffset + scrollSpeedPx) % 60;
           bgHillsOffset = (bgHillsOffset + scrollSpeedPx * 0.3) % 400;
           cloudOffset = (cloudOffset + scrollSpeedPx * 0.1) % 600;
@@ -926,7 +971,7 @@ function SmartEscapeGame() {
             }
           });
 
-          // 7. Desplazar Monedas y Obstáculos
+          // 8. Desplazar Monedas y Obstáculos en el camino
           trackItems.forEach((item) => {
             item.x -= scrollSpeedPx;
 
@@ -936,15 +981,22 @@ function SmartEscapeGame() {
                 playSfx("coin");
                 setCollectedCoins((c) => c + 1);
                 setGameXp((xp) => xp + 15);
+                // Recolectar moneda recarga +5% de energía
+                energyRef.current = Math.min(100, energyRef.current + 5);
+                setEnergyPercent(Math.round(energyRef.current));
                 item.x = -100;
               } else if (item.type === "obstacle") {
                 if (playerYOffsetRef.current > 20) {
-                  // Saltado con éxito
+                  // Saltado con éxito sobre obstáculo -> +3% de energía
+                  energyRef.current = Math.min(100, energyRef.current + 3);
+                  setEnergyPercent(Math.round(energyRef.current));
                 } else {
-                  // Golpe con obstáculo -> El monstruo gana distancia visiblemente
+                  // Golpe con obstáculo
                   playSfx("wrong");
                   targetSpeedRef.current = 0.8;
                   targetMonsterDistRef.current = Math.max(0, targetMonsterDistRef.current - 35);
+                  energyRef.current = Math.max(0, energyRef.current - 12);
+                  setEnergyPercent(Math.round(energyRef.current));
                   setLives((l) => Math.max(0, l - 1));
                   screenShakeRef.current = 7;
                   item.x = -100;
@@ -964,7 +1016,7 @@ function SmartEscapeGame() {
       }
 
       // ==========================================
-      // DIBUJAR VIDEOJUEGO DE CARRERA Y PERSECUCIÓN
+      // RENDERIZADO DEL VIDEOJUEGO (60 FPS)
       // ==========================================
       const w = canvas.width || 450;
       const h = canvas.height || 220;
@@ -977,7 +1029,7 @@ function SmartEscapeGame() {
         ctx.translate(shakeX, shakeY);
       }
 
-      const roadY = h - 45; // Nivel del suelo del camino
+      const roadY = h - 45;
 
       // 1. Cielo Gradiente Parallax
       const skyGrad = ctx.createLinearGradient(0, 0, 0, roadY);
@@ -997,7 +1049,7 @@ function SmartEscapeGame() {
         ctx.fill();
       }
 
-      // Montañas / Colinas en el fondo (Parallax)
+      // Montañas en el fondo
       ctx.fillStyle = theme.groundColor;
       ctx.beginPath();
       ctx.moveTo(0, roadY);
@@ -1009,7 +1061,7 @@ function SmartEscapeGame() {
       ctx.closePath();
       ctx.fill();
 
-      // 2. Elementos Decorativos del Escenario (Árboles, Rocas, Señales)
+      // 2. Elementos Decorativos del Escenario
       sceneryObjects.forEach((obj) => {
         if (obj.type === "tree") {
           ctx.fillStyle = "#3f2715";
@@ -1094,7 +1146,6 @@ function SmartEscapeGame() {
       const monsterBob = Math.abs(Math.sin(timestamp * 0.018)) * 4;
 
       ctx.save();
-      // Si está atrapando, el monstruo salta hacia el corredor
       const catchLungeX = isCatching ? (1.4 - catchingSequenceRef.current.timer) * 20 : 0;
       ctx.translate(monsterScreenX + catchLungeX, roadY - monsterBob - (isCatching ? 15 : 0));
 
@@ -1134,7 +1185,7 @@ function SmartEscapeGame() {
       ctx.lineTo(10, -50);
       ctx.fill();
 
-      // Brazos y Garras persiguiendo hacia adelante (más agresivas si está cerca)
+      // Brazos y Garras
       ctx.fillStyle = theme.monsterSecondary;
       ctx.fillRect(8, isCatching ? -50 : -40, isCatching ? 26 : 18, 8);
       ctx.fillStyle = "#ffffff";
@@ -1188,7 +1239,6 @@ function SmartEscapeGame() {
       ctx.save();
       ctx.translate(playerScreenX, playerY - playerBob);
 
-      // Si fue atrapado, rotación de tropiezo/caída
       if (isCatching) {
         ctx.rotate(0.45);
       }
@@ -1212,16 +1262,15 @@ function SmartEscapeGame() {
         ctx.stroke();
       }
 
-      // Piernas y Tenis del Jugador
+      // Piernas y Tenis
       ctx.fillStyle = "#1e293b";
       ctx.fillRect(-6, -14 + legOffset, 5, 14);
       ctx.fillRect(2, -14 - legOffset, 5, 14);
-      // Tenis de color
       ctx.fillStyle = "#38bdf8";
       ctx.fillRect(-7, -2 + legOffset, 8, 4);
       ctx.fillRect(1, -2 - legOffset, 8, 4);
 
-      // Torso / Atuendo
+      // Torso
       ctx.fillStyle = equippedOutfit.color;
       ctx.beginPath();
       ctx.roundRect(-8, -32, 16, 20, 4);
@@ -1231,7 +1280,7 @@ function SmartEscapeGame() {
       ctx.fillStyle = "#475569";
       ctx.fillRect(-12, -30, 4, 14);
 
-      // Brazo balanceándose
+      // Brazo
       ctx.fillStyle = equippedOutfit.color;
       ctx.fillRect(-4 + armOffset, -28, 5, 12);
 
@@ -1250,7 +1299,6 @@ function SmartEscapeGame() {
       // Ojos y Rostro
       ctx.fillStyle = "#0f172a";
       if (isCatching) {
-        // Ojos asustados / estrellas
         ctx.font = "bold 9px sans-serif";
         ctx.fillText("✖", 2, -36);
         ctx.fillText("✖", 6, -36);
@@ -1261,7 +1309,7 @@ function SmartEscapeGame() {
 
       ctx.restore();
 
-      // 6. Alerta Visual de Proximidad si el Monstruo está muy cerca (< 60px)
+      // 6. Alerta Visual si el Monstruo está muy cerca (< 60px)
       if (relativeMonsterDistanceRef.current < 65 && !isCatching) {
         ctx.save();
         ctx.fillStyle = "rgba(239, 68, 68, 0.25)";
@@ -1312,7 +1360,7 @@ function SmartEscapeGame() {
       window.removeEventListener("resize", resizeCanvas);
       if (animFrameIdRef.current) cancelAnimationFrame(animFrameIdRef.current);
     };
-  }, [screen, isPaused, selectedWorld, selectedLevel, activeFreezeTime]);
+  }, [screen, isPaused, gamePhase, selectedWorld, selectedLevel, activeFreezeTime]);
 
   const handleBuyItem = (item: CustomizationItem) => {
     if (coinsBalance < item.cost) {
@@ -1379,7 +1427,7 @@ function SmartEscapeGame() {
                 SMART ESCAPE
               </h1>
               <p className="text-xs text-slate-400 max-w-xs mx-auto leading-relaxed">
-                ¡Corre por el camino, esquiva obstáculos y responde antes de que el enemigo te alcance!
+                ¡Corre libremente, salta obstáculos y responde preguntas para recargar tu energía y nitro!
               </p>
             </div>
 
@@ -1641,8 +1689,7 @@ function SmartEscapeGame() {
                       </span>
                       <div className="flex items-center gap-2 text-[10px] text-slate-400 mt-0.5">
                         <span>🏁 Meta: {lvl.targetDistance}m</span>
-                        <span>📚 {lvl.reqQuestions} preguntas</span>
-                        <span>⏱️ 15s - 25s por pregunta</span>
+                        <span>⚡ Sistema de Energía y Nitro</span>
                       </div>
                     </div>
 
@@ -1762,7 +1809,7 @@ function SmartEscapeGame() {
       )}
 
       {/* ======================================================== */}
-      {/* 5. PANTALLA COMPLETA DE PARTIDA (VIDEOJUEGO DE PERSECUCIÓN) */}
+      {/* 5. PANTALLA COMPLETA DE PARTIDA (RUNNER + FASES DE ENERGÍA) */}
       {/* ======================================================== */}
       {screen === "playing" && (
         <div className="fixed inset-0 z-50 w-full h-full max-h-screen flex flex-col justify-between overflow-hidden bg-slate-950 text-white select-none">
@@ -1814,109 +1861,144 @@ function SmartEscapeGame() {
           </header>
 
           {/* Centro: Escenario Completo de Persecución (60 FPS) */}
-          <div className="flex-1 w-full min-h-[140px] max-h-[40vh] md:max-h-[46vh] relative overflow-hidden bg-slate-950">
+          <div className="flex-1 w-full min-h-[160px] relative overflow-hidden bg-slate-950">
             <canvas ref={canvasRef} className="w-full h-full block" />
           </div>
 
           {/* ======================================================== */}
-          {/* PARTE INFERIOR: TARJETA DE PREGUNTA & 4 OPCIONES */}
+          {/* FASE A: MODO CARRERA LIBRE (JUGAR, SALTAR Y RECOGER) */}
           {/* ======================================================== */}
-          <div className="w-full shrink-0 border-t-2 border-purple-500/40 bg-slate-900 p-3 sm:p-4 space-y-2.5 z-30 max-w-2xl mx-auto shadow-2xl">
-            {/* Header de la Pregunta + Temporizador Dinámico */}
-            <div className="flex items-center justify-between text-xs">
-              <span className="text-[11px] font-extrabold px-3 py-1 rounded-full bg-purple-600 text-white shadow-sm line-clamp-1 max-w-[280px]">
-                📖 {currentQuestion?.topic || `Pregunta ${currentQIndex + 1}`}
-              </span>
+          {gamePhase === "running" && (
+            <div className="w-full shrink-0 border-t-2 border-cyan-500/40 bg-slate-900/98 p-3 sm:p-4 space-y-3 z-30 max-w-2xl mx-auto shadow-2xl animate-fade-in">
+              {/* Barra de Energía Nitro */}
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="font-extrabold flex items-center gap-1.5 text-cyan-300">
+                    <Zap className={`size-4 ${energyPercent < 25 ? "text-rose-400 animate-bounce" : "text-cyan-400"}`} />
+                    <span>ENERGÍA NITRO: {energyPercent}%</span>
+                  </span>
+                  <span className="text-[11px] text-slate-400">
+                    {energyPercent < 25 ? "⚠️ ¡Energía baja! Prepárate para recargar" : "🪙 Junta monedas o salta para recargar"}
+                  </span>
+                </div>
 
-              {/* Countdown Timer */}
-              <div className="flex items-center gap-1.5 font-black bg-slate-950 px-2.5 py-1 rounded-full border border-slate-800">
-                <Clock className="size-3.5 text-amber-400" />
-                <span
-                  className={`text-xs font-mono ${
-                    qTimer <= 4 ? "text-rose-400 font-black animate-pulse" : qTimer <= 8 ? "text-amber-400" : "text-emerald-300"
-                  }`}
+                <div className="h-3 w-full bg-slate-950 rounded-full overflow-hidden border border-slate-800 p-0.5">
+                  <div
+                    className={`h-full rounded-full transition-all duration-200 ${
+                      energyPercent < 25
+                        ? "bg-rose-500 animate-pulse"
+                        : energyPercent < 50
+                        ? "bg-amber-400"
+                        : "bg-gradient-to-r from-cyan-500 via-teal-400 to-emerald-400 shadow-lg shadow-cyan-500/50"
+                    }`}
+                    style={{ width: `${energyPercent}%` }}
+                  />
+                </div>
+              </div>
+
+              {/* Botón Gigante de Salto */}
+              <div>
+                <button
+                  onClick={triggerJump}
+                  className="w-full h-14 rounded-2xl bg-gradient-to-r from-purple-600 via-indigo-600 to-cyan-600 active:brightness-125 text-white font-display text-sm sm:text-base font-black flex items-center justify-center gap-2.5 shadow-xl shadow-purple-500/30 transition active:scale-95 cursor-pointer"
+                  title="Saltar Obstáculo (Espacio / W)"
                 >
-                  ⏱️ {qTimer}s
+                  <ArrowUp className="size-5" />
+                  <span>SALTAR OBSTÁCULO (ESPACIO / W)</span>
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* ======================================================== */}
+          {/* FASE B: MODO RECARGA DE ENERGÍA (PREGUNTA DE ESTUDIO) */}
+          {/* ======================================================== */}
+          {gamePhase === "question" && (
+            <div className="w-full shrink-0 border-t-2 border-purple-500/60 bg-slate-900 p-3 sm:p-4 space-y-2.5 z-30 max-w-2xl mx-auto shadow-2xl animate-fade-in">
+              {/* Header de Recarga + Temporizador */}
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-[11px] font-extrabold px-3 py-1 rounded-full bg-purple-600 text-white shadow-sm flex items-center gap-1.5">
+                  <Zap className="size-3.5 fill-amber-300 text-amber-300" />
+                  <span>RECARGA DE NITRO: {currentQuestion?.topic || "Pregunta"}</span>
                 </span>
+
+                {/* Countdown Timer */}
+                <div className="flex items-center gap-1.5 font-black bg-slate-950 px-2.5 py-1 rounded-full border border-slate-800">
+                  <Clock className="size-3.5 text-amber-400" />
+                  <span
+                    className={`text-xs font-mono ${
+                      qTimer <= 4 ? "text-rose-400 font-black animate-pulse" : qTimer <= 8 ? "text-amber-400" : "text-emerald-300"
+                    }`}
+                  >
+                    ⏱️ {qTimer}s
+                  </span>
+                </div>
               </div>
-            </div>
 
-            {/* Barra de tiempo de la pregunta */}
-            <div className="h-2 w-full bg-slate-950 rounded-full overflow-hidden border border-slate-800">
-              <div
-                className={`h-full transition-all duration-300 ${
-                  qTimer <= 4
-                    ? "bg-rose-500"
-                    : qTimer <= 8
-                    ? "bg-amber-400"
-                    : "bg-gradient-to-r from-purple-500 via-cyan-400 to-emerald-400"
-                }`}
-                style={{ width: `${timerPercentage}%` }}
-              />
-            </div>
-
-            {/* Texto de la Pregunta */}
-            {currentQuestion ? (
-              <h3 className="text-sm sm:text-base font-extrabold text-white leading-snug px-1 line-clamp-2 min-h-[36px] flex items-center drop-shadow-sm">
-                {currentQuestion.question}
-              </h3>
-            ) : (
-              <div className="text-xs text-slate-400 italic min-h-[36px] flex items-center">
-                Cargando siguiente pregunta del material...
+              {/* Barra de tiempo de la pregunta */}
+              <div className="h-2 w-full bg-slate-950 rounded-full overflow-hidden border border-slate-800">
+                <div
+                  className={`h-full transition-all duration-300 ${
+                    qTimer <= 4
+                      ? "bg-rose-500"
+                      : qTimer <= 8
+                      ? "bg-amber-400"
+                      : "bg-gradient-to-r from-purple-500 via-cyan-400 to-emerald-400"
+                  }`}
+                  style={{ width: `${timerPercentage}%` }}
+                />
               </div>
-            )}
 
-            {/* 4 Opciones de Respuesta con letras grandes 🅰️ 🅱️ 🅲️ 🅳️ */}
-            {currentQuestion && (
-              <div className="grid grid-cols-2 gap-2">
-                {currentQuestion.options.map((opt, idx) => {
-                  const letters = ["🅰️", "🅱️", "🅲️", "🅳️"];
-                  const isSelected = selectedOption === idx;
-                  const isCorrect = idx === currentQuestion.correctIndex;
+              {/* Texto de la Pregunta */}
+              {currentQuestion ? (
+                <h3 className="text-sm sm:text-base font-extrabold text-white leading-snug px-1 line-clamp-2 min-h-[36px] flex items-center drop-shadow-sm">
+                  {currentQuestion.question}
+                </h3>
+              ) : (
+                <div className="text-xs text-slate-400 italic min-h-[36px] flex items-center">
+                  Cargando pregunta de recarga...
+                </div>
+              )}
 
-                  let optClass = "border-2 border-slate-700 bg-slate-800 hover:bg-slate-700 hover:border-purple-400 text-white";
+              {/* 4 Opciones de Respuesta con letras grandes 🅰️ 🅱️ 🅲️ 🅳️ */}
+              {currentQuestion && (
+                <div className="grid grid-cols-2 gap-2">
+                  {currentQuestion.options.map((opt, idx) => {
+                    const letters = ["🅰️", "🅱️", "🅲️", "🅳️"];
+                    const isSelected = selectedOption === idx;
+                    const isCorrect = idx === currentQuestion.correctIndex;
 
-                  if (selectedOption !== null) {
-                    if (isCorrect) {
-                      optClass = "border-2 border-emerald-400 bg-emerald-600 text-white font-black shadow-lg shadow-emerald-500/20";
-                    } else if (isSelected) {
-                      optClass = "border-2 border-rose-400 bg-rose-600 text-white font-black shadow-lg shadow-rose-500/20";
+                    let optClass = "border-2 border-slate-700 bg-slate-800 hover:bg-slate-700 hover:border-purple-400 text-white";
+
+                    if (selectedOption !== null) {
+                      if (isCorrect) {
+                        optClass = "border-2 border-emerald-400 bg-emerald-600 text-white font-black shadow-lg shadow-emerald-500/20";
+                      } else if (isSelected) {
+                        optClass = "border-2 border-rose-400 bg-rose-600 text-white font-black shadow-lg shadow-rose-500/20";
+                      }
                     }
-                  }
 
-                  return (
-                    <button
-                      key={idx}
-                      disabled={selectedOption !== null || catchingSequenceRef.current.active}
-                      onClick={() => handleAnswerOption(idx)}
-                      className={`p-2.5 sm:p-3 rounded-xl text-left text-xs sm:text-sm font-bold leading-tight transition active:scale-95 cursor-pointer flex items-center gap-2 shadow-md ${optClass}`}
-                    >
-                      <span className="text-base shrink-0">
-                        {letters[idx]}
-                      </span>
-                      <span className="line-clamp-2 flex-1 text-white font-bold">{opt}</span>
-                      {selectedOption !== null && isCorrect && (
-                        <CheckCircle2 className="size-4 text-white shrink-0" />
-                      )}
-                    </button>
-                  );
-                })}
-              </div>
-            )}
-
-            {/* Botón de Salto táctil */}
-            <div className="pt-1">
-              <button
-                onClick={triggerJump}
-                disabled={catchingSequenceRef.current.active}
-                className="w-full h-11 rounded-xl bg-gradient-to-r from-purple-600 via-indigo-600 to-cyan-600 active:brightness-125 text-white font-display text-xs sm:text-sm font-black flex items-center justify-center gap-2 shadow-lg transition active:scale-95 cursor-pointer disabled:opacity-50"
-                title="Saltar Obstáculo (Espacio / W)"
-              >
-                <ArrowUp className="size-4" />
-                <span>SALTAR OBSTÁCULO (ESPACIO)</span>
-              </button>
+                    return (
+                      <button
+                        key={idx}
+                        disabled={selectedOption !== null || catchingSequenceRef.current.active}
+                        onClick={() => handleAnswerOption(idx)}
+                        className={`p-2.5 sm:p-3 rounded-xl text-left text-xs sm:text-sm font-bold leading-tight transition active:scale-95 cursor-pointer flex items-center gap-2 shadow-md ${optClass}`}
+                      >
+                        <span className="text-base shrink-0">
+                          {letters[idx]}
+                        </span>
+                        <span className="line-clamp-2 flex-1 text-white font-bold">{opt}</span>
+                        {selectedOption !== null && isCorrect && (
+                          <CheckCircle2 className="size-4 text-white shrink-0" />
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
             </div>
-          </div>
+          )}
         </div>
       )}
 
@@ -1997,7 +2079,7 @@ function SmartEscapeGame() {
           <div className="p-4 rounded-3xl border border-emerald-500/30 bg-emerald-950/20 space-y-2 text-xs text-left">
             <div className="flex justify-between py-1 border-b border-slate-800">
               <span className="text-slate-400">⭐ Experiencia:</span>
-              <span className="font-bold text-cyan-400">+{currentLvlConfig.bonusXp + correctAnswersCount * 25} XP</span>
+              <span className="font-bold text-cyan-400">+{currentLvlConfig.bonusXp + correctAnswersCount * 30} XP</span>
             </div>
             <div className="flex justify-between py-1 border-b border-slate-800">
               <span className="text-slate-400">🪙 Monedas:</span>
