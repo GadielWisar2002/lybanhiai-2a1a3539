@@ -226,11 +226,41 @@ const WORLDS: Record<WorldId, WorldTheme> = {
 };
 
 const LEVELS_CONFIG = [
-  { level: 1, name: "Principiante", reqQuestions: 5, targetDistance: 500, timePerQ: 10, bonusCoins: 5, bonusXp: 50 },
-  { level: 2, name: "Explorador", reqQuestions: 8, targetDistance: 750, timePerQ: 8, bonusCoins: 10, bonusXp: 100 },
-  { level: 3, name: "Experto", reqQuestions: 10, targetDistance: 1000, timePerQ: 7, bonusCoins: 15, bonusXp: 175 },
-  { level: 4, name: "Maestro", reqQuestions: 12, targetDistance: 1250, timePerQ: 5, bonusCoins: 25, bonusXp: 250 },
+  { level: 1, name: "Principiante", reqQuestions: 5, targetDistance: 500, bonusCoins: 5, bonusXp: 50 },
+  { level: 2, name: "Explorador", reqQuestions: 8, targetDistance: 750, bonusCoins: 10, bonusXp: 100 },
+  { level: 3, name: "Experto", reqQuestions: 10, targetDistance: 1000, bonusCoins: 15, bonusXp: 175 },
+  { level: 4, name: "Maestro", reqQuestions: 12, targetDistance: 1250, bonusCoins: 25, bonusXp: 250 },
 ];
+
+/**
+ * Calcula el tiempo asignado a una pregunta (mínimo 15s, hasta 26s para lecturas/complejas)
+ */
+function calculateQuestionTime(question: GameQuestion, level: number): number {
+  const baseByLevel = [18, 17, 16, 15][Math.max(0, Math.min(3, level - 1))] || 16;
+  const qLen = (question.question || "").length;
+  const optsLen = (question.options || []).reduce((acc, opt) => acc + opt.length, 0);
+
+  let bonusTime = 0;
+  if (qLen > 130) bonusTime += 6;
+  else if (qLen > 70) bonusTime += 3;
+
+  if (optsLen > 80) bonusTime += 4;
+  else if (optsLen > 40) bonusTime += 2;
+
+  const topicLower = (question.topic || "").toLowerCase();
+  if (
+    topicLower.includes("matem") ||
+    topicLower.includes("quim") ||
+    topicLower.includes("fisic") ||
+    topicLower.includes("lector") ||
+    topicLower.includes("exani") ||
+    topicLower.includes("paa")
+  ) {
+    bonusTime += 3;
+  }
+
+  return Math.max(15, Math.min(28, baseByLevel + bonusTime));
+}
 
 function SmartEscapeGame() {
   const navigate = useNavigate();
@@ -296,8 +326,8 @@ function SmartEscapeGame() {
   const [questionsPool, setQuestionsPool] = useState<GameQuestion[]>([]);
   const [currentQIndex, setCurrentQIndex] = useState(0);
   const [currentQuestion, setCurrentQuestion] = useState<GameQuestion | null>(null);
-  const [qTimer, setQTimer] = useState(10);
-  const [qTimerMax, setQTimerMax] = useState(10);
+  const [qTimer, setQTimer] = useState(15);
+  const [qTimerMax, setQTimerMax] = useState(15);
   const [selectedOption, setSelectedOption] = useState<number | null>(null);
 
   // Runner Gameplay Metrics
@@ -322,7 +352,16 @@ function SmartEscapeGame() {
   const playerYVelRef = useRef<number>(0);
   const isJumpingRef = useRef<boolean>(false);
   const playerDistanceRef = useRef<number>(0);
-  const relativeMonsterDistanceRef = useRef<number>(140); // Distancia visual en píxeles (0 = atrapado, 220 = lejos)
+
+  // Persecución Suave y Gradual
+  const relativeMonsterDistanceRef = useRef<number>(160); // Distancia visual en píxeles actual (lerp)
+  const targetMonsterDistRef = useRef<number>(160); // Distancia visual objetivo
+  const catchingSequenceRef = useRef<{ active: boolean; timer: number; duration: number }>({
+    active: false,
+    timer: 0,
+    duration: 1.4,
+  });
+
   const targetSpeedRef = useRef<number>(1.0);
   const currentSpeedRef = useRef<number>(1.0);
   const screenShakeRef = useRef<number>(0);
@@ -395,27 +434,27 @@ function SmartEscapeGame() {
       } else if (type === "gameover") {
         osc.type = "sawtooth";
         osc.frequency.setValueAtTime(300, ctx.currentTime);
-        osc.frequency.linearRampToValueAtTime(60, ctx.currentTime + 0.5);
-        gain.gain.setValueAtTime(0.2, ctx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.5);
+        osc.frequency.linearRampToValueAtTime(60, ctx.currentTime + 0.6);
+        gain.gain.setValueAtTime(0.22, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.6);
         osc.start();
-        osc.stop(ctx.currentTime + 0.5);
+        osc.stop(ctx.currentTime + 0.6);
       }
     } catch {}
   };
 
   // Jump Action
   const triggerJump = useCallback(() => {
-    if (isJumpingRef.current) return;
+    if (isJumpingRef.current || catchingSequenceRef.current.active) return;
     isJumpingRef.current = true;
-    playerYVelRef.current = 420; // impulso de salto
+    playerYVelRef.current = 420;
     playSfx("jump");
   }, [soundEnabled]);
 
   // Teclado
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (screen !== "playing" || isPaused) return;
+      if (screen !== "playing" || isPaused || catchingSequenceRef.current.active) return;
 
       if (e.key === "ArrowUp" || e.key === "w" || e.key === "W" || e.key === " ") {
         e.preventDefault();
@@ -580,11 +619,13 @@ function SmartEscapeGame() {
     setSelectedTopicId(topicId);
     setSelectedLevel(levelNum);
 
+    const firstQuestionTime = calculateQuestionTime(questions[0], levelNum);
+
     setQuestionsPool(questions);
     setCurrentQIndex(0);
     setCurrentQuestion(questions[0]);
-    setQTimer(lvlConfig.timePerQ);
-    setQTimerMax(lvlConfig.timePerQ);
+    setQTimer(firstQuestionTime);
+    setQTimerMax(firstQuestionTime);
     setSelectedOption(null);
 
     setLives(3);
@@ -592,7 +633,12 @@ function SmartEscapeGame() {
     playerYVelRef.current = 0;
     isJumpingRef.current = false;
     playerDistanceRef.current = 0;
-    relativeMonsterDistanceRef.current = 140; // distancia inicial segura
+
+    // Distancia inicial amplia y segura
+    targetMonsterDistRef.current = 165;
+    relativeMonsterDistanceRef.current = 165;
+    catchingSequenceRef.current = { active: false, timer: 0, duration: 1.4 };
+
     targetSpeedRef.current = 1.0;
     currentSpeedRef.current = 1.0;
     screenShakeRef.current = 0;
@@ -608,6 +654,7 @@ function SmartEscapeGame() {
     setTimeElapsed(0);
     setIsPaused(false);
     setActiveTurboTime(0);
+    setActiveFreezeTime(0);
     setHasShield(false);
 
     setScreen("playing");
@@ -615,7 +662,7 @@ function SmartEscapeGame() {
 
   // Temporizador de preguntas
   useEffect(() => {
-    if (screen !== "playing" || isPaused || selectedOption !== null) return;
+    if (screen !== "playing" || isPaused || selectedOption !== null || catchingSequenceRef.current.active) return;
 
     timerIntervalRef.current = setInterval(() => {
       setQTimer((prev) => {
@@ -632,13 +679,13 @@ function SmartEscapeGame() {
   }, [screen, isPaused, selectedOption, currentQuestion]);
 
   const handleTimeOut = () => {
-    if (selectedOption !== null || !currentQuestion) return;
+    if (selectedOption !== null || !currentQuestion || catchingSequenceRef.current.active) return;
     handleAnswerOption(-1);
   };
 
   // Manejar respuesta
   const handleAnswerOption = (optionIndex: number) => {
-    if (selectedOption !== null || !currentQuestion) return;
+    if (selectedOption !== null || !currentQuestion || catchingSequenceRef.current.active) return;
     setSelectedOption(optionIndex);
 
     const isCorrect = optionIndex === currentQuestion.correctIndex;
@@ -655,14 +702,14 @@ function SmartEscapeGame() {
       setGameXp((xp) => xp + 50 + streak * 10);
       setCollectedCoins((c) => c + 2);
 
-      // Efecto en Gameplay: El jugador acelera y aleja al perseguidor
+      // Efecto en Gameplay: El jugador acelera y aleja al perseguidor suavemente
       targetSpeedRef.current = 1.25;
-      relativeMonsterDistanceRef.current = Math.min(220, relativeMonsterDistanceRef.current + 45);
+      targetMonsterDistRef.current = Math.min(220, targetMonsterDistRef.current + 55);
       answerBannerRef.current = { text: "¡CORRECTO! ⚡ +15% VELOCIDAD", color: "#10b981", timer: 1.8 };
 
       setTimeout(() => {
         targetSpeedRef.current = 1.0;
-      }, 2500);
+      }, 2600);
     } else {
       if (hasShield) {
         setHasShield(false);
@@ -674,18 +721,11 @@ function SmartEscapeGame() {
         setStreak(0);
         setLives((l) => Math.max(0, l - 1));
 
-        // Efecto en Gameplay: El jugador frena y el monstruo se acerca peligrosamente
-        targetSpeedRef.current = 0.75;
-        relativeMonsterDistanceRef.current = relativeMonsterDistanceRef.current - 45;
+        // Efecto en Gameplay: El jugador frena y el monstruo se acerca visiblemente paso a paso
+        targetSpeedRef.current = 0.78;
+        targetMonsterDistRef.current = Math.max(0, targetMonsterDistRef.current - 55);
         screenShakeRef.current = 8;
         answerBannerRef.current = { text: "¡INCORRECTO! 👾 EL ENEMIGO SE ACERCA", color: "#ef4444", timer: 1.8 };
-
-        if (relativeMonsterDistanceRef.current <= 15) {
-          setTimeout(() => {
-            triggerGameOver();
-          }, 600);
-          return;
-        }
 
         setTimeout(() => {
           targetSpeedRef.current = 1.0;
@@ -694,9 +734,8 @@ function SmartEscapeGame() {
     }
 
     if (!isCorrect && !hasShield && lives <= 1) {
-      setTimeout(() => {
-        triggerGameOver();
-      }, 800);
+      // Perdió su última vida -> El monstruo va a atraparlo
+      targetMonsterDistRef.current = 0;
       return;
     }
 
@@ -705,10 +744,12 @@ function SmartEscapeGame() {
       if (nextIdx >= questionsPool.length || playerDistanceRef.current >= lvlConfig.targetDistance) {
         triggerVictory();
       } else {
+        const nextQuestionObj = questionsPool[nextIdx];
+        const nextTime = calculateQuestionTime(nextQuestionObj, selectedLevel);
         setCurrentQIndex(nextIdx);
-        setCurrentQuestion(questionsPool[nextIdx]);
-        setQTimer(lvlConfig.timePerQ);
-        setQTimerMax(lvlConfig.timePerQ);
+        setCurrentQuestion(nextQuestionObj);
+        setQTimer(nextTime);
+        setQTimerMax(nextTime);
         setSelectedOption(null);
       }
     }, 1100);
@@ -812,96 +853,114 @@ function SmartEscapeGame() {
       lastTimeRef.current = timestamp;
 
       if (!isPaused) {
-        // 1. Interpolación de velocidad
-        currentSpeedRef.current += (targetSpeedRef.current - currentSpeedRef.current) * Math.min(1, dt * 3);
-        const speed = currentSpeedRef.current;
-        const scrollSpeedPx = speed * 180 * dt;
+        // Chequear si estamos en secuencia de captura
+        if (catchingSequenceRef.current.active) {
+          catchingSequenceRef.current.timer -= dt;
+          screenShakeRef.current = Math.min(10, screenShakeRef.current + 0.5);
 
-        // 2. Distancia recorrida
-        playerDistanceRef.current += speed * 16 * dt;
-        setPlayerDistanceMeters(Math.round(playerDistanceRef.current));
-        setTimeElapsed((t) => t + dt);
-
-        // 3. Física de Salto del Jugador
-        if (isJumpingRef.current) {
-          playerYOffsetRef.current += playerYVelRef.current * dt;
-          playerYVelRef.current -= 950 * dt; // gravedad
-          if (playerYOffsetRef.current <= 0) {
-            playerYOffsetRef.current = 0;
-            playerYVelRef.current = 0;
-            isJumpingRef.current = false;
-          }
-        }
-
-        // 4. Persecución gradual del monstruo
-        if (activeFreezeTime <= 0) {
-          // El monstruo se acerca lentamente si la velocidad es baja
-          const approachRate = (1.05 - speed) * 22 * dt;
-          relativeMonsterDistanceRef.current -= approachRate;
-          if (relativeMonsterDistanceRef.current <= 15) {
+          // Si terminó la animación de captura -> Pantalla de Game Over
+          if (catchingSequenceRef.current.timer <= 0) {
             triggerGameOver();
             return;
           }
-        }
+        } else {
+          // 1. Interpolación de velocidad fluida
+          currentSpeedRef.current += (targetSpeedRef.current - currentSpeedRef.current) * Math.min(1, dt * 3);
+          const speed = currentSpeedRef.current;
+          const scrollSpeedPx = speed * 180 * dt;
 
-        // 5. Screen Shake y Banner timer
-        if (screenShakeRef.current > 0) {
-          screenShakeRef.current = Math.max(0, screenShakeRef.current - dt * 15);
-        }
-        if (answerBannerRef.current) {
-          answerBannerRef.current.timer -= dt;
-          if (answerBannerRef.current.timer <= 0) answerBannerRef.current = null;
-        }
+          // 2. Distancia recorrida
+          playerDistanceRef.current += speed * 16 * dt;
+          setPlayerDistanceMeters(Math.round(playerDistanceRef.current));
+          setTimeElapsed((t) => t + dt);
 
-        // 6. Desplazamiento del Escenario (Parallax Layers)
-        groundOffset = (groundOffset + scrollSpeedPx) % 60;
-        bgHillsOffset = (bgHillsOffset + scrollSpeedPx * 0.3) % 400;
-        cloudOffset = (cloudOffset + scrollSpeedPx * 0.1) % 600;
-
-        // Desplazar árboles y rocas del fondo
-        sceneryObjects.forEach((obj) => {
-          obj.x -= scrollSpeedPx;
-          if (obj.x < -60) {
-            obj.x = (canvas.width || 500) + Math.random() * 120;
-          }
-        });
-
-        // 7. Desplazar Monedas y Obstáculos
-        trackItems.forEach((item) => {
-          item.x -= scrollSpeedPx;
-
-          // Colisión con el jugador (El jugador está ubicado en playerScreenX)
-          const playerScreenX = Math.max(160, Math.min((canvas.width || 400) * 0.58, 280));
-          if (Math.abs(item.x - playerScreenX) < 22) {
-            if (item.type === "coin") {
-              playSfx("coin");
-              setCollectedCoins((c) => c + 1);
-              setGameXp((xp) => xp + 15);
-              item.x = -100;
-            } else if (item.type === "obstacle") {
-              // Si está en el aire (saltando), salta el obstáculo
-              if (playerYOffsetRef.current > 20) {
-                // Saltado con éxito
-              } else {
-                // Golpe con obstáculo
-                playSfx("wrong");
-                targetSpeedRef.current = 0.8;
-                relativeMonsterDistanceRef.current = Math.max(18, relativeMonsterDistanceRef.current - 25);
-                setLives((l) => Math.max(0, l - 1));
-                screenShakeRef.current = 6;
-                item.x = -100;
-                setTimeout(() => {
-                  targetSpeedRef.current = 1.0;
-                }, 2000);
-              }
+          // 3. Física de Salto del Jugador
+          if (isJumpingRef.current) {
+            playerYOffsetRef.current += playerYVelRef.current * dt;
+            playerYVelRef.current -= 950 * dt; // gravedad
+            if (playerYOffsetRef.current <= 0) {
+              playerYOffsetRef.current = 0;
+              playerYVelRef.current = 0;
+              isJumpingRef.current = false;
             }
           }
 
-          if (item.x < -60) {
-            item.x = (canvas.width || 500) + Math.random() * 200 + 150;
-            item.type = Math.random() > 0.5 ? "coin" : "obstacle";
+          // 4. Persecución Suave y Gradual del Monstruo (Lerp continuo hacia targetMonsterDist)
+          if (activeFreezeTime <= 0) {
+            // Si la velocidad del jugador baja de 1.0, el monstruo gana terreno poco a poco
+            if (speed < 1.0) {
+              targetMonsterDistRef.current = Math.max(0, targetMonsterDistRef.current - (1.0 - speed) * 20 * dt);
+            }
+
+            // Lerp de la distancia visual para que se vea cómo corre y se acerca gradualmente
+            relativeMonsterDistanceRef.current +=
+              (targetMonsterDistRef.current - relativeMonsterDistanceRef.current) * Math.min(1, dt * 2.2);
+
+            // Si el monstruo alcanza físicamente al jugador (< 22px), INICIA SECUENCIA DE CAPTURA DRAMÁTICA
+            if (relativeMonsterDistanceRef.current <= 22) {
+              catchingSequenceRef.current = { active: true, timer: 1.4, duration: 1.4 };
+              playSfx("wrong");
+              screenShakeRef.current = 12;
+            }
           }
-        });
+
+          // 5. Screen Shake y Banner timer
+          if (screenShakeRef.current > 0) {
+            screenShakeRef.current = Math.max(0, screenShakeRef.current - dt * 15);
+          }
+          if (answerBannerRef.current) {
+            answerBannerRef.current.timer -= dt;
+            if (answerBannerRef.current.timer <= 0) answerBannerRef.current = null;
+          }
+
+          // 6. Desplazamiento del Escenario (Parallax Layers)
+          groundOffset = (groundOffset + scrollSpeedPx) % 60;
+          bgHillsOffset = (bgHillsOffset + scrollSpeedPx * 0.3) % 400;
+          cloudOffset = (cloudOffset + scrollSpeedPx * 0.1) % 600;
+
+          // Desplazar árboles y rocas del fondo
+          sceneryObjects.forEach((obj) => {
+            obj.x -= scrollSpeedPx;
+            if (obj.x < -60) {
+              obj.x = (canvas.width || 500) + Math.random() * 120;
+            }
+          });
+
+          // 7. Desplazar Monedas y Obstáculos
+          trackItems.forEach((item) => {
+            item.x -= scrollSpeedPx;
+
+            const playerScreenX = Math.max(160, Math.min((canvas.width || 400) * 0.58, 280));
+            if (Math.abs(item.x - playerScreenX) < 22) {
+              if (item.type === "coin") {
+                playSfx("coin");
+                setCollectedCoins((c) => c + 1);
+                setGameXp((xp) => xp + 15);
+                item.x = -100;
+              } else if (item.type === "obstacle") {
+                if (playerYOffsetRef.current > 20) {
+                  // Saltado con éxito
+                } else {
+                  // Golpe con obstáculo -> El monstruo gana distancia visiblemente
+                  playSfx("wrong");
+                  targetSpeedRef.current = 0.8;
+                  targetMonsterDistRef.current = Math.max(0, targetMonsterDistRef.current - 35);
+                  setLives((l) => Math.max(0, l - 1));
+                  screenShakeRef.current = 7;
+                  item.x = -100;
+                  setTimeout(() => {
+                    targetSpeedRef.current = 1.0;
+                  }, 2000);
+                }
+              }
+            }
+
+            if (item.x < -60) {
+              item.x = (canvas.width || 500) + Math.random() * 200 + 150;
+              item.type = Math.random() > 0.5 ? "coin" : "obstacle";
+            }
+          });
+        }
       }
 
       // ==========================================
@@ -953,10 +1012,8 @@ function SmartEscapeGame() {
       // 2. Elementos Decorativos del Escenario (Árboles, Rocas, Señales)
       sceneryObjects.forEach((obj) => {
         if (obj.type === "tree") {
-          // Tronco
           ctx.fillStyle = "#3f2715";
           ctx.fillRect(obj.x - 3, roadY - obj.size, 6, obj.size);
-          // Copa del Árbol
           ctx.fillStyle = theme.monsterColor;
           ctx.beginPath();
           ctx.arc(obj.x, roadY - obj.size - 10, obj.size * 0.45, 0, Math.PI * 2);
@@ -982,7 +1039,7 @@ function SmartEscapeGame() {
       ctx.fillStyle = theme.roadColor;
       ctx.fillRect(0, roadY, w, h - roadY);
 
-      // Borde Superior del Camino (Línea de césped/neón)
+      // Borde Superior del Camino
       ctx.strokeStyle = theme.roadLineColor;
       ctx.lineWidth = 3;
       ctx.beginPath();
@@ -990,7 +1047,7 @@ function SmartEscapeGame() {
       ctx.lineTo(w, roadY);
       ctx.stroke();
 
-      // Líneas punteadas del camino que se desplazan
+      // Líneas punteadas del camino
       ctx.strokeStyle = "rgba(255, 255, 255, 0.4)";
       ctx.lineWidth = 2;
       ctx.setLineDash([20, 15]);
@@ -1001,7 +1058,7 @@ function SmartEscapeGame() {
       ctx.stroke();
       ctx.setLineDash([]);
 
-      // 4. Dibujar Monedas y Obstáculos en el Camino
+      // 4. Dibujar Monedas y Obstáculos
       trackItems.forEach((item) => {
         if (item.type === "coin") {
           ctx.fillStyle = "#facc15";
@@ -1013,7 +1070,6 @@ function SmartEscapeGame() {
           ctx.textAlign = "center";
           ctx.fillText("🪙", item.x, roadY - 10);
         } else if (item.type === "obstacle") {
-          // Obstáculo Valla / Roca de videojuego
           ctx.fillStyle = "#ef4444";
           ctx.fillRect(item.x - 12, roadY - 18, 24, 18);
           ctx.fillStyle = "#fca5a5";
@@ -1025,10 +1081,11 @@ function SmartEscapeGame() {
         }
       });
 
-      // 5. POSICIONES DE LOS PERSONAJES EN PANTALLA
+      // 5. POSICIONES DE LOS PERSONAJES
       const playerScreenX = Math.max(160, Math.min(w * 0.58, 280));
       const monsterScreenX = playerScreenX - relativeMonsterDistanceRef.current;
-      const playerY = roadY - playerYOffsetRef.current;
+      const isCatching = catchingSequenceRef.current.active;
+      const playerY = roadY - playerYOffsetRef.current + (isCatching ? 12 : 0);
 
       // ==========================================
       // 👾 DIBUJAR AL PERSEGUIDOR (ENEMIGO VISIBLE DETRÁS)
@@ -1037,12 +1094,14 @@ function SmartEscapeGame() {
       const monsterBob = Math.abs(Math.sin(timestamp * 0.018)) * 4;
 
       ctx.save();
-      ctx.translate(monsterScreenX, roadY - monsterBob);
+      // Si está atrapando, el monstruo salta hacia el corredor
+      const catchLungeX = isCatching ? (1.4 - catchingSequenceRef.current.timer) * 20 : 0;
+      ctx.translate(monsterScreenX + catchLungeX, roadY - monsterBob - (isCatching ? 15 : 0));
 
       // Sombra del Monstruo
       ctx.fillStyle = "rgba(0,0,0,0.5)";
       ctx.beginPath();
-      ctx.ellipse(0, 0, 22, 6, 0, 0, Math.PI * 2);
+      ctx.ellipse(0, 0, 24, 7, 0, 0, Math.PI * 2);
       ctx.fill();
 
       // Piernas del Monstruo
@@ -1058,7 +1117,7 @@ function SmartEscapeGame() {
       // Cuerpo del Monstruo
       ctx.fillStyle = theme.monsterColor;
       ctx.shadowColor = theme.monsterColor;
-      ctx.shadowBlur = 15;
+      ctx.shadowBlur = isCatching ? 25 : 15;
       ctx.beginPath();
       ctx.roundRect(-20, -50, 40, 36, 10);
       ctx.fill();
@@ -1075,14 +1134,14 @@ function SmartEscapeGame() {
       ctx.lineTo(10, -50);
       ctx.fill();
 
-      // Brazos y Garras persiguiendo hacia adelante
+      // Brazos y Garras persiguiendo hacia adelante (más agresivas si está cerca)
       ctx.fillStyle = theme.monsterSecondary;
-      ctx.fillRect(8, -40, 18, 8);
+      ctx.fillRect(8, isCatching ? -50 : -40, isCatching ? 26 : 18, 8);
       ctx.fillStyle = "#ffffff";
       ctx.beginPath();
-      ctx.moveTo(26, -42);
-      ctx.lineTo(34, -36);
-      ctx.lineTo(26, -30);
+      ctx.moveTo(isCatching ? 34 : 26, isCatching ? -52 : -42);
+      ctx.lineTo(isCatching ? 44 : 34, isCatching ? -46 : -36);
+      ctx.lineTo(isCatching ? 34 : 26, isCatching ? -40 : -30);
       ctx.fill();
 
       // Ojos Rojos Amenazantes
@@ -1100,7 +1159,7 @@ function SmartEscapeGame() {
       // Boca con Colmillos Afilados
       ctx.fillStyle = "#0f172a";
       ctx.beginPath();
-      ctx.roundRect(-12, -28, 26, 10, 4);
+      ctx.roundRect(-12, -28, 26, isCatching ? 16 : 10, 4);
       ctx.fill();
       ctx.fillStyle = "#ffffff";
       ctx.beginPath();
@@ -1119,15 +1178,20 @@ function SmartEscapeGame() {
       // 🏃 DIBUJAR AL PERSONAJE JUGADOR (CORREDOR VISIBLE)
       // ==========================================
       const runCycle = timestamp * 0.02 * currentSpeedRef.current;
-      const legOffset = Math.sin(runCycle) * 10;
-      const armOffset = Math.sin(runCycle + Math.PI) * 8;
-      const playerBob = Math.abs(Math.sin(runCycle)) * 3;
+      const legOffset = isCatching ? 0 : Math.sin(runCycle) * 10;
+      const armOffset = isCatching ? 0 : Math.sin(runCycle + Math.PI) * 8;
+      const playerBob = isCatching ? 0 : Math.abs(Math.sin(runCycle)) * 3;
 
       const equippedOutfit = CLOSET_ITEMS.find((c) => c.id === equippedItems.outfit) || CLOSET_ITEMS[4];
       const equippedHair = CLOSET_ITEMS.find((c) => c.id === equippedItems.hair) || CLOSET_ITEMS[0];
 
       ctx.save();
       ctx.translate(playerScreenX, playerY - playerBob);
+
+      // Si fue atrapado, rotación de tropiezo/caída
+      if (isCatching) {
+        ctx.rotate(0.45);
+      }
 
       // Sombra en el camino
       const shadowScale = Math.max(0.3, 1 - playerYOffsetRef.current / 80);
@@ -1137,7 +1201,7 @@ function SmartEscapeGame() {
       ctx.fill();
 
       // Estela de velocidad (Speed Lines)
-      if (currentSpeedRef.current > 1.05) {
+      if (currentSpeedRef.current > 1.05 && !isCatching) {
         ctx.strokeStyle = "rgba(56, 189, 248, 0.6)";
         ctx.lineWidth = 2;
         ctx.beginPath();
@@ -1167,7 +1231,7 @@ function SmartEscapeGame() {
       ctx.fillStyle = "#475569";
       ctx.fillRect(-12, -30, 4, 14);
 
-      // Brazo balanceándose hacia adelante y atrás
+      // Brazo balanceándose
       ctx.fillStyle = equippedOutfit.color;
       ctx.fillRect(-4 + armOffset, -28, 5, 12);
 
@@ -1183,22 +1247,57 @@ function SmartEscapeGame() {
       ctx.arc(0, -41, 10, Math.PI * 0.9, Math.PI * 2.1);
       ctx.fill();
 
-      // Ojos y Sonrisa enfocada
+      // Ojos y Rostro
       ctx.fillStyle = "#0f172a";
-      ctx.fillRect(2, -39, 2, 3);
-      ctx.fillRect(5, -39, 2, 3);
+      if (isCatching) {
+        // Ojos asustados / estrellas
+        ctx.font = "bold 9px sans-serif";
+        ctx.fillText("✖", 2, -36);
+        ctx.fillText("✖", 6, -36);
+      } else {
+        ctx.fillRect(2, -39, 2, 3);
+        ctx.fillRect(5, -39, 2, 3);
+      }
 
       ctx.restore();
 
-      // 6. Banner de Animación ("¡CORRECTO!" / "¡INCORRECTO!")
-      if (answerBannerRef.current) {
+      // 6. Alerta Visual de Proximidad si el Monstruo está muy cerca (< 60px)
+      if (relativeMonsterDistanceRef.current < 65 && !isCatching) {
+        ctx.save();
+        ctx.fillStyle = "rgba(239, 68, 68, 0.25)";
+        ctx.fillRect(0, 0, w, h);
+        ctx.fillStyle = "#ef4444";
+        ctx.font = "bold 12px sans-serif";
+        ctx.textAlign = "center";
+        ctx.shadowColor = "#ef4444";
+        ctx.shadowBlur = 8;
+        ctx.fillText(`⚠️ ¡${theme.monsterName.toUpperCase()} ESTÁ A PUNTO DE ALCANZARTE!`, w / 2, 30);
+        ctx.restore();
+      }
+
+      // 7. Banner de Secuencia de Captura
+      if (isCatching) {
+        ctx.save();
+        ctx.fillStyle = "rgba(15, 23, 42, 0.7)";
+        ctx.fillRect(0, 0, w, h);
+        ctx.fillStyle = "#ef4444";
+        ctx.font = "black 16px sans-serif";
+        ctx.textAlign = "center";
+        ctx.shadowColor = "#ef4444";
+        ctx.shadowBlur = 12;
+        ctx.fillText("👾 ¡EL PERSEGUIDOR TE ATRAPÓ!", w / 2, h / 2 - 10);
+        ctx.restore();
+      }
+
+      // 8. Banner de Animación ("¡CORRECTO!" / "¡INCORRECTO!")
+      if (answerBannerRef.current && !isCatching && relativeMonsterDistanceRef.current >= 65) {
         ctx.save();
         ctx.fillStyle = answerBannerRef.current.color;
-        ctx.font = "bold 14px sans-serif";
+        ctx.font = "bold 13px sans-serif";
         ctx.textAlign = "center";
         ctx.shadowColor = answerBannerRef.current.color;
         ctx.shadowBlur = 10;
-        ctx.fillText(answerBannerRef.current.text, w / 2, 35);
+        ctx.fillText(answerBannerRef.current.text, w / 2, 30);
         ctx.restore();
       }
 
@@ -1542,7 +1641,8 @@ function SmartEscapeGame() {
                       </span>
                       <div className="flex items-center gap-2 text-[10px] text-slate-400 mt-0.5">
                         <span>🏁 Meta: {lvl.targetDistance}m</span>
-                        <span>📚 {lvl.reqQuestions} preguntas del material</span>
+                        <span>📚 {lvl.reqQuestions} preguntas</span>
+                        <span>⏱️ 15s - 25s por pregunta</span>
                       </div>
                     </div>
 
@@ -1722,7 +1822,7 @@ function SmartEscapeGame() {
           {/* PARTE INFERIOR: TARJETA DE PREGUNTA & 4 OPCIONES */}
           {/* ======================================================== */}
           <div className="w-full shrink-0 border-t-2 border-purple-500/40 bg-slate-900 p-3 sm:p-4 space-y-2.5 z-30 max-w-2xl mx-auto shadow-2xl">
-            {/* Header de la Pregunta + Temporizador */}
+            {/* Header de la Pregunta + Temporizador Dinámico */}
             <div className="flex items-center justify-between text-xs">
               <span className="text-[11px] font-extrabold px-3 py-1 rounded-full bg-purple-600 text-white shadow-sm line-clamp-1 max-w-[280px]">
                 📖 {currentQuestion?.topic || `Pregunta ${currentQIndex + 1}`}
@@ -1731,7 +1831,11 @@ function SmartEscapeGame() {
               {/* Countdown Timer */}
               <div className="flex items-center gap-1.5 font-black bg-slate-950 px-2.5 py-1 rounded-full border border-slate-800">
                 <Clock className="size-3.5 text-amber-400" />
-                <span className={`text-xs font-mono ${qTimer <= 3 ? "text-rose-400 font-black animate-pulse" : "text-amber-300"}`}>
+                <span
+                  className={`text-xs font-mono ${
+                    qTimer <= 4 ? "text-rose-400 font-black animate-pulse" : qTimer <= 8 ? "text-amber-400" : "text-emerald-300"
+                  }`}
+                >
                   ⏱️ {qTimer}s
                 </span>
               </div>
@@ -1741,7 +1845,11 @@ function SmartEscapeGame() {
             <div className="h-2 w-full bg-slate-950 rounded-full overflow-hidden border border-slate-800">
               <div
                 className={`h-full transition-all duration-300 ${
-                  qTimer <= 3 ? "bg-rose-500" : "bg-gradient-to-r from-purple-500 via-cyan-400 to-emerald-400"
+                  qTimer <= 4
+                    ? "bg-rose-500"
+                    : qTimer <= 8
+                    ? "bg-amber-400"
+                    : "bg-gradient-to-r from-purple-500 via-cyan-400 to-emerald-400"
                 }`}
                 style={{ width: `${timerPercentage}%` }}
               />
@@ -1779,7 +1887,7 @@ function SmartEscapeGame() {
                   return (
                     <button
                       key={idx}
-                      disabled={selectedOption !== null}
+                      disabled={selectedOption !== null || catchingSequenceRef.current.active}
                       onClick={() => handleAnswerOption(idx)}
                       className={`p-2.5 sm:p-3 rounded-xl text-left text-xs sm:text-sm font-bold leading-tight transition active:scale-95 cursor-pointer flex items-center gap-2 shadow-md ${optClass}`}
                     >
@@ -1800,7 +1908,8 @@ function SmartEscapeGame() {
             <div className="pt-1">
               <button
                 onClick={triggerJump}
-                className="w-full h-11 rounded-xl bg-gradient-to-r from-purple-600 via-indigo-600 to-cyan-600 active:brightness-125 text-white font-display text-xs sm:text-sm font-black flex items-center justify-center gap-2 shadow-lg transition active:scale-95 cursor-pointer"
+                disabled={catchingSequenceRef.current.active}
+                className="w-full h-11 rounded-xl bg-gradient-to-r from-purple-600 via-indigo-600 to-cyan-600 active:brightness-125 text-white font-display text-xs sm:text-sm font-black flex items-center justify-center gap-2 shadow-lg transition active:scale-95 cursor-pointer disabled:opacity-50"
                 title="Saltar Obstáculo (Espacio / W)"
               >
                 <ArrowUp className="size-4" />
