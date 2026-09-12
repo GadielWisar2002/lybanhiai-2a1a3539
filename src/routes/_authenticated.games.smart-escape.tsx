@@ -226,10 +226,10 @@ const WORLDS: Record<WorldId, WorldTheme> = {
 };
 
 const LEVELS_CONFIG = [
-  { level: 1, name: "Principiante", reqQuestions: 5, targetDistance: 500, bonusCoins: 5, bonusXp: 50 },
-  { level: 2, name: "Explorador", reqQuestions: 8, targetDistance: 750, bonusCoins: 10, bonusXp: 100 },
-  { level: 3, name: "Experto", reqQuestions: 10, targetDistance: 1000, bonusCoins: 15, bonusXp: 175 },
-  { level: 4, name: "Maestro", reqQuestions: 12, targetDistance: 1250, bonusCoins: 25, bonusXp: 250 },
+  { level: 1, name: "Principiante", reqQuestions: 5, targetDistance: 1200, bonusCoins: 10, bonusXp: 100 },
+  { level: 2, name: "Explorador", reqQuestions: 8, targetDistance: 1800, bonusCoins: 20, bonusXp: 200 },
+  { level: 3, name: "Experto", reqQuestions: 10, targetDistance: 2500, bonusCoins: 30, bonusXp: 350 },
+  { level: 4, name: "Maestro", reqQuestions: 12, targetDistance: 3200, bonusCoins: 50, bonusXp: 500 },
 ];
 
 /**
@@ -960,50 +960,28 @@ function SmartEscapeGame() {
 
     const getNextSpawnType = (progress: number): TrackItemType => {
       const rand = Math.random();
-      if (progress < 0.25) {
-        // Zona Normal (0 - 25%)
-        if (rand < 0.50) return "coin";
-        if (rand < 0.85) {
-          const obs: ObstacleKind[] = ["rock", "box", "log"];
+      // 60% Obstáculos frecuentes, 28% Monedas, 12% Power-Ups
+      if (rand < 0.60) {
+        if (progress < 0.25) {
+          const obs: ObstacleKind[] = ["rock", "box", "log", "barrier"];
           return obs[Math.floor(Math.random() * obs.length)];
-        }
-        const pups: PowerUpKind[] = ["nitro", "shield", "magnet", "freeze"];
-        return pups[Math.floor(Math.random() * pups.length)];
-      } else if (progress < 0.50) {
-        // Zona Puente (25 - 50%)
-        if (rand < 0.40) return "coin";
-        if (rand < 0.85) {
-          const obs: ObstacleKind[] = ["barrier", "pit", "box", "log"];
+        } else if (progress < 0.50) {
+          const obs: ObstacleKind[] = ["barrier", "pit", "box", "log", "hazard"];
           return obs[Math.floor(Math.random() * obs.length)];
-        }
-        const pups: PowerUpKind[] = ["shield", "nitro", "freeze"];
-        return pups[Math.floor(Math.random() * pups.length)];
-      } else if (progress < 0.75) {
-        // Zona Peligrosa / Cañón (50 - 75%)
-        if (rand < 0.30) return "coin";
-        if (rand < 0.85) {
+        } else if (progress < 0.75) {
           const obs: ObstacleKind[] = ["hazard", "pit", "rock", "car", "barrier"];
           return obs[Math.floor(Math.random() * obs.length)];
-        }
-        const pups: PowerUpKind[] = ["nitro", "shield", "magnet"];
-        return pups[Math.floor(Math.random() * pups.length)];
-      } else if (progress < 0.90) {
-        // Zona Super Velocidad (75 - 90%)
-        if (rand < 0.45) return "coin";
-        if (rand < 0.75) {
-          const obs: ObstacleKind[] = ["barrier", "car", "rock"];
+        } else if (progress < 0.90) {
+          const obs: ObstacleKind[] = ["barrier", "car", "rock", "hazard"];
+          return obs[Math.floor(Math.random() * obs.length)];
+        } else {
+          const obs: ObstacleKind[] = ["rock", "box", "barrier", "hazard"];
           return obs[Math.floor(Math.random() * obs.length)];
         }
-        const pups: PowerUpKind[] = ["nitro", "magnet", "freeze", "shield"];
-        return pups[Math.floor(Math.random() * pups.length)];
+      } else if (rand < 0.88) {
+        return "coin";
       } else {
-        // Zona Final Sprint (90 - 100%)
-        if (rand < 0.50) return "coin";
-        if (rand < 0.85) {
-          const obs: ObstacleKind[] = ["rock", "box", "barrier"];
-          return obs[Math.floor(Math.random() * obs.length)];
-        }
-        const pups: PowerUpKind[] = ["nitro", "shield"];
+        const pups: PowerUpKind[] = ["nitro", "shield", "magnet", "freeze"];
         return pups[Math.floor(Math.random() * pups.length)];
       }
     };
@@ -1022,12 +1000,17 @@ function SmartEscapeGame() {
     ];
 
     let trackItems: TrackItem[] = [
-      { id: 1, x: 340, type: "coin" },
-      { id: 2, x: 480, type: "rock" },
-      { id: 3, x: 620, type: "nitro" },
-      { id: 4, x: 780, type: "coin" },
-      { id: 5, x: 940, type: "box" },
-      { id: 6, x: 1100, type: "shield" },
+      { id: 1, x: 260, type: "rock" },
+      { id: 2, x: 390, type: "coin" },
+      { id: 3, x: 520, type: "box" },
+      { id: 4, x: 650, type: "log" },
+      { id: 5, x: 780, type: "coin" },
+      { id: 6, x: 910, type: "barrier" },
+      { id: 7, x: 1040, type: "nitro" },
+      { id: 8, x: 1170, type: "pit" },
+      { id: 9, x: 1300, type: "coin" },
+      { id: 10, x: 1430, type: "hazard" },
+      { id: 11, x: 1560, type: "shield" },
     ];
 
     const resizeCanvas = () => {
@@ -1064,9 +1047,9 @@ function SmartEscapeGame() {
             return;
           }
         } else {
-          // 1. Interpolación de velocidad fluida
+          // 1. Interpolación de velocidad fluida y continua
           currentSpeedRef.current += (targetSpeedRef.current - currentSpeedRef.current) * Math.min(1, dt * 3.5);
-          const speed = currentSpeedRef.current;
+          const speed = Math.max(0.75, currentSpeedRef.current);
           const scrollSpeedPx = speed * 185 * dt;
 
           // 2. Distancia recorrida
@@ -1074,7 +1057,7 @@ function SmartEscapeGame() {
           setPlayerDistanceMeters(Math.round(playerDistanceRef.current));
           setTimeElapsed((t) => t + dt);
 
-          const raceProgress = Math.min(1, playerDistanceRef.current / (lvlConfig.targetDistance || 500));
+          const raceProgress = Math.min(1, playerDistanceRef.current / (lvlConfig.targetDistance || 1200));
 
           // Verificar si llegó a la meta
           if (playerDistanceRef.current >= lvlConfig.targetDistance) {
@@ -1083,9 +1066,9 @@ function SmartEscapeGame() {
           }
 
           // 3. FÍSICA Y CONSUMO DE COMBUSTIBLE NITRO
-          // El combustible Nitro se consume visible y continuamente a 6.5%/s durante la carrera libre
+          // El Nitro dura más tiempo (~23 segundos de carrera activa de 100% a 50%)
           if (!showQuestionCardRef.current) {
-            energyRef.current = Math.max(0, energyRef.current - 6.5 * dt);
+            energyRef.current = Math.max(0, energyRef.current - 2.2 * dt);
             setEnergyPercent(Math.round(energyRef.current));
           }
 
@@ -1279,7 +1262,7 @@ function SmartEscapeGame() {
             // Regenerar elementos fuera de pantalla con ritmo uniforme
             if (item.x < -80) {
               const maxX = trackItems.reduce((max, it) => Math.max(max, it.x), 0);
-              item.x = Math.max((canvas.width || 450) + 80, maxX + 180 + Math.random() * 120);
+              item.x = Math.max((canvas.width || 450) + 60, maxX + 130 + Math.random() * 60);
               item.type = getNextSpawnType(raceProgress);
             }
           });
@@ -1301,7 +1284,7 @@ function SmartEscapeGame() {
       }
 
       const roadY = h - 45;
-      const progress = Math.min(1, playerDistanceRef.current / (lvlConfig.targetDistance || 500));
+      const progress = Math.min(1, playerDistanceRef.current / (lvlConfig.targetDistance || 1200));
 
       // Configuración dinámica del bioma / zona según progreso
       let zoneColors = {
@@ -1777,7 +1760,7 @@ function SmartEscapeGame() {
       // ==========================================
       // 🏃 DIBUJAR AL PERSONAJE JUGADOR (CORREDOR)
       // ==========================================
-      const runCycle = timestamp * 0.02 * currentSpeedRef.current;
+      const runCycle = timestamp * 0.02 * Math.max(0.75, currentSpeedRef.current);
       const legOffset = isCatching ? 0 : Math.sin(runCycle) * 10;
       const armOffset = isCatching ? 0 : Math.sin(runCycle + Math.PI) * 8;
       const playerBob = isCatching ? 0 : Math.abs(Math.sin(runCycle)) * 3;
