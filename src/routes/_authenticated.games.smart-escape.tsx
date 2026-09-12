@@ -783,10 +783,10 @@ function SmartEscapeGame() {
       targetSpeedRef.current = 1.35;
       targetMonsterDistRef.current = Math.min(650, targetMonsterDistRef.current + 90);
 
-      if (energyRef.current >= 70) {
-        // Superó el 70%: La pregunta desaparece y vuelve a carrera libre
+      if (energyRef.current >= 80) {
+        // Superó el 80%: La pregunta se oculta y vuelve a carrera libre para seguir jugando
         answerBannerRef.current = {
-          text: `🚀 ¡NITRO AL ${Math.round(energyRef.current)}%! (≥70%) ¡MODO CARRERA LIBRE!`,
+          text: `🚀 ¡NITRO AL ${Math.round(energyRef.current)}%! (≥80%) ¡MODO CARRERA LIBRE!`,
           color: "#10b981",
           timer: 2.8,
         };
@@ -803,9 +803,9 @@ function SmartEscapeGame() {
           setQTimerMax(10);
         }, 500);
       } else {
-        // Sigue menor a 70%: Muestra banner de recarga y continúa recarga
+        // Sigue menor a 80%: Muestra banner de recarga
         answerBannerRef.current = {
-          text: `⚡ ¡+30% NITRO! (${Math.round(energyRef.current)}% / 70% meta)`,
+          text: `⚡ ¡+30% NITRO! (${Math.round(energyRef.current)}% / 80% para ocultar)`,
           color: "#38bdf8",
           timer: 2.0,
         };
@@ -816,7 +816,7 @@ function SmartEscapeGame() {
 
         setTimeout(() => {
           setSelectedOption(null);
-          if (energyRef.current < 70) {
+          if (energyRef.current < 80) {
             const nextIdx = (currentQIndex + 1) % (questionsPool.length || 1);
             setCurrentQIndex(nextIdx);
             const nextQ = questionsPool[nextIdx] || currentQuestion;
@@ -1086,7 +1086,7 @@ function SmartEscapeGame() {
           energyRef.current = Math.max(0, energyRef.current - 2.5 * dt);
           setEnergyPercent(Math.round(energyRef.current));
 
-          // REGLA: Preguntas SÓLO cuando energía < 30%. Al superar >= 70%, se desaparecen automáticamente.
+          // REGLA: Preguntas automáticas SÓLO con energía < 30%. Si supera >= 80%, se ocultan para seguir jugando.
           if (
             energyRef.current < 30 &&
             energyRef.current > 0 &&
@@ -1098,8 +1098,8 @@ function SmartEscapeGame() {
             setShowQuestionCard(true);
             setQTimer(10);
             setQTimerMax(10);
-          } else if (energyRef.current >= 70 && showQuestionCardRef.current) {
-            // Desaparecen automáticamente cuando la energía supera o iguala 70%
+          } else if (energyRef.current >= 80 && showQuestionCardRef.current) {
+            // Se oculta automáticamente para seguir jugando al superar o igualar 80%
             showQuestionCardRef.current = false;
             setShowQuestionCard(false);
           }
@@ -2506,20 +2506,20 @@ function SmartEscapeGame() {
               <div className="space-y-1">
                 <div className="flex items-center justify-between text-xs">
                   <div className="flex items-center gap-2">
-                    <Zap className={`size-4 ${energyPercent >= 70 ? "text-emerald-400 fill-emerald-400" : energyPercent >= 30 ? "text-amber-400 fill-amber-400" : "text-rose-400 fill-rose-400 animate-pulse"}`} />
+                    <Zap className={`size-4 ${energyPercent >= 80 ? "text-emerald-400 fill-emerald-400" : energyPercent >= 30 ? "text-amber-400 fill-amber-400" : "text-rose-400 fill-rose-400 animate-pulse"}`} />
                     <span className="font-black text-sm text-cyan-300">
                       ⚡ ENERGÍA NITRO: {energyPercent}%
                     </span>
                   </div>
-                  <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full border ${energyPercent >= 70 ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/30" : "bg-amber-500/20 text-amber-300 border-amber-500/30"}`}>
-                    {energyPercent >= 70 ? "🟢 CARRERA ACTIVA (≥70%)" : "🟡 ZONA DE CARRERA (≥30%)"}
+                  <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full border ${energyPercent >= 80 ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/30" : "bg-amber-500/20 text-amber-300 border-amber-500/30"}`}>
+                    {energyPercent >= 80 ? "🟢 CARRERA ACTIVA (≥80%)" : "🟡 ZONA DE CARRERA (≥30%)"}
                   </span>
                 </div>
 
                 <div className="h-3.5 w-full bg-slate-950 rounded-full overflow-hidden border border-slate-800 p-0.5 shadow-inner">
                   <div
                     className={`h-full rounded-full transition-all duration-300 shadow-md ${
-                      energyPercent >= 70
+                      energyPercent >= 80
                         ? "bg-gradient-to-r from-cyan-500 via-teal-400 to-emerald-400 shadow-emerald-500/30"
                         : energyPercent >= 30
                         ? "bg-gradient-to-r from-amber-500 to-amber-400"
@@ -2575,7 +2575,7 @@ function SmartEscapeGame() {
                 <div className="flex-1 flex items-center gap-2 bg-rose-950/40 px-2.5 py-1 rounded-xl border border-rose-500/40 animate-pulse">
                   <Zap className="size-3.5 text-rose-400 fill-rose-400" />
                   <span className="text-[11px] font-black text-rose-300">
-                    🚨 ¡ENERGÍA &lt; 30%! ({energyPercent}%) — Meta: ≥70%
+                    🚨 ¡ENERGÍA &lt; 30%! ({energyPercent}%) — Meta: ≥80%
                   </span>
                   <div className="flex-1 h-2 bg-slate-900 rounded-full overflow-hidden border border-slate-800">
                     <div
@@ -2597,6 +2597,32 @@ function SmartEscapeGame() {
                   </span>
                 </div>
               </div>
+
+              {/* Opción de Ocultar para seguir jugando cuando la energía sea >= 80% */}
+              {energyPercent >= 80 ? (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setShowQuestionCard(false);
+                    showQuestionCardRef.current = false;
+                    toast.success("¡Preguntas ocultadas! Continuando carrera libre 🏃⚡");
+                  }}
+                  className="w-full py-2 px-3 rounded-xl bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 hover:brightness-110 active:scale-98 text-white font-black text-xs sm:text-sm flex items-center justify-center gap-2 shadow-xl shadow-emerald-500/30 transition cursor-pointer border border-emerald-400/50 animate-pulse"
+                >
+                  <ChevronRight className="size-4" />
+                  <span>🏃 OCULTAR PREGUNTAS Y SEGUIR JUGANDO (Energía: {energyPercent}% ≥ 80%)</span>
+                </button>
+              ) : (
+                <div className="flex items-center justify-between px-3 py-1.5 bg-slate-950/80 rounded-xl border border-slate-800 text-[11px] text-slate-300">
+                  <span className="flex items-center gap-1.5">
+                    <Zap className="size-3.5 text-amber-400 fill-amber-400" />
+                    <span>Responde para recargar a <strong>≥80%</strong> y ocultar preguntas:</span>
+                  </span>
+                  <span className="font-mono font-bold text-amber-400 bg-amber-950/60 px-2 py-0.5 rounded-md border border-amber-500/40">
+                    {energyPercent}% / 80%
+                  </span>
+                </div>
+              )}
 
               {/* Barra de tiempo de la pregunta */}
               <div className="h-1.5 w-full bg-slate-950 rounded-full overflow-hidden border border-slate-800">
