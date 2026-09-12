@@ -705,7 +705,7 @@ function SmartEscapeGame() {
     setScreen("playing");
   };
 
-  // Temporizador de 10 segundos (activo únicamente cuando la tarjeta de pregunta se abre por Nitro < 30%)
+  // Temporizador de 10 segundos (activo únicamente cuando la tarjeta de pregunta se abre por Nitro <= 50%)
   useEffect(() => {
     if (
       screen !== "playing" ||
@@ -1089,9 +1089,9 @@ function SmartEscapeGame() {
             setEnergyPercent(Math.round(energyRef.current));
           }
 
-          // REGLA: Preguntas automáticas SÓLO con energía < 30%. Si supera >= 80%, se ocultan para seguir jugando.
+          // REGLA: Preguntas automáticas con energía <= 50%. Si supera >= 80%, se ocultan para seguir jugando.
           if (
-            energyRef.current < 30 &&
+            energyRef.current <= 50 &&
             energyRef.current > 0 &&
             !showQuestionCardRef.current &&
             !isQuestionCooldownRef.current &&
@@ -1136,14 +1136,14 @@ function SmartEscapeGame() {
 
           // 7. COMPORTAMIENTO DEL MONSTRUO:
           // - Si Congelar activo: se retrasa fuertemente
-          // - Con Nitro >= 30%: Desaparece por completo fuera de pantalla (650px) para enfocarse en la carrera
-          // - Con Nitro < 30%: Se asoma amenazante detrás del jugador (190px)
+          // - Con Nitro > 50%: Desaparece por completo fuera de pantalla (650px) para enfocarse en la carrera
+          // - Con Nitro <= 50%: Se asoma amenazante detrás del jugador (190px)
           // - Si Nitro llega a 0%: Se abalanza a toda velocidad (0px) y liquida con ¡PUM!
           if (activeFreezeTime > 0) {
             targetMonsterDistRef.current = 680;
             relativeMonsterDistanceRef.current +=
               (targetMonsterDistRef.current - relativeMonsterDistanceRef.current) * Math.min(1, dt * 1.5);
-          } else if (energyRef.current >= 30) {
+          } else if (energyRef.current > 50) {
             if (playerDistanceRef.current > 15) {
               targetMonsterDistRef.current = 650;
             }
@@ -2499,19 +2499,19 @@ function SmartEscapeGame() {
           {/* PARTE INFERIOR: HUD SEGÚN ESTADO DE NITRO */}
           {/* ======================================================== */}
           {!showQuestionCard ? (
-            /* 🟢 MODO CARRERA LIBRE (NITRO >= 30%) */
+            /* 🟢 MODO CARRERA LIBRE (NITRO > 50%) */
             <div className="w-full shrink-0 border-t-2 border-cyan-500/40 bg-slate-900/98 p-3 sm:p-4 space-y-2.5 z-30 max-w-2xl mx-auto shadow-2xl animate-fade-in backdrop-blur">
               {/* Barra de Nitro Destacada */}
               <div className="space-y-1">
                 <div className="flex items-center justify-between text-xs">
                   <div className="flex items-center gap-2">
-                    <Zap className={`size-4 ${energyPercent >= 80 ? "text-emerald-400 fill-emerald-400" : energyPercent >= 30 ? "text-amber-400 fill-amber-400" : "text-rose-400 fill-rose-400 animate-pulse"}`} />
+                    <Zap className={`size-4 ${energyPercent >= 80 ? "text-emerald-400 fill-emerald-400" : energyPercent > 50 ? "text-amber-400 fill-amber-400" : "text-rose-400 fill-rose-400 animate-pulse"}`} />
                     <span className="font-black text-sm text-cyan-300">
                       ⚡ ENERGÍA NITRO: {energyPercent}%
                     </span>
                   </div>
                   <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full border ${energyPercent >= 80 ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/30" : "bg-amber-500/20 text-amber-300 border-amber-500/30"}`}>
-                    {energyPercent >= 80 ? "🟢 CARRERA ACTIVA (≥80%)" : "🟡 ZONA DE CARRERA (≥30%)"}
+                    {energyPercent >= 80 ? "🟢 CARRERA ACTIVA (≥80%)" : "🟡 ZONA DE CARRERA (>50%)"}
                   </span>
                 </div>
 
@@ -2520,7 +2520,7 @@ function SmartEscapeGame() {
                     className={`h-full rounded-full transition-all duration-300 shadow-md ${
                       energyPercent >= 80
                         ? "bg-gradient-to-r from-cyan-500 via-teal-400 to-emerald-400 shadow-emerald-500/30"
-                        : energyPercent >= 30
+                        : energyPercent > 50
                         ? "bg-gradient-to-r from-amber-500 to-amber-400"
                         : "bg-rose-500 animate-pulse"
                     }`}
@@ -2566,7 +2566,7 @@ function SmartEscapeGame() {
               </div>
             </div>
           ) : (
-            /* 🚨 TARJETA DE PREGUNTA DE EMERGENCIA (ENERGÍA < 30%) */
+            /* 🚨 TARJETA DE PREGUNTA DE EMERGENCIA (ENERGÍA <= 50%) */
             <div className="w-full shrink-0 border-t-2 border-rose-500/70 bg-slate-900/98 p-3 sm:p-4 space-y-2.5 z-30 max-w-2xl mx-auto shadow-2xl animate-fade-in backdrop-blur">
               {/* Top Bar de la Tarjeta: Nitro Crítico + Temporizador 10s */}
               <div className="flex items-center justify-between gap-2 text-xs">
@@ -2574,7 +2574,7 @@ function SmartEscapeGame() {
                 <div className="flex-1 flex items-center gap-2 bg-rose-950/40 px-2.5 py-1 rounded-xl border border-rose-500/40 animate-pulse">
                   <Zap className="size-3.5 text-rose-400 fill-rose-400" />
                   <span className="text-[11px] font-black text-rose-300">
-                    🚨 ¡ENERGÍA &lt; 30%! ({energyPercent}%) — Meta: ≥80%
+                    🚨 ¡ENERGÍA ≤ 50%! ({energyPercent}%) — Meta: ≥80%
                   </span>
                   <div className="flex-1 h-2 bg-slate-900 rounded-full overflow-hidden border border-slate-800">
                     <div
