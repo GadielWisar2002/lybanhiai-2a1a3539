@@ -355,6 +355,11 @@ function SmartEscapeGame() {
   const [activeMagnetTime, setActiveMagnetTime] = useState(0);
   const [hasShield, setHasShield] = useState(false);
 
+  const activeTurboTimeRef = useRef<number>(0);
+  const activeFreezeTimeRef = useRef<number>(0);
+  const activeMagnetTimeRef = useRef<number>(0);
+  const hasShieldRef = useRef<boolean>(false);
+
   // Smooth Physics & Game Loop State (Mutable Refs for 60 FPS)
   const playerYOffsetRef = useRef<number>(0);
   const playerYVelRef = useRef<number>(0);
@@ -698,8 +703,13 @@ function SmartEscapeGame() {
     setMaxStreak(0);
     setTimeElapsed(0);
     setIsPaused(false);
+    activeTurboTimeRef.current = 0;
+    activeFreezeTimeRef.current = 0;
+    activeMagnetTimeRef.current = 0;
+    hasShieldRef.current = false;
     setActiveTurboTime(0);
     setActiveFreezeTime(0);
+    setActiveMagnetTime(0);
     setHasShield(false);
 
     setScreen("playing");
@@ -834,7 +844,8 @@ function SmartEscapeGame() {
         targetSpeedRef.current = 1.0;
       }, 2500);
     } else {
-      if (hasShield) {
+      if (hasShieldRef.current) {
+        hasShieldRef.current = false;
         setHasShield(false);
         toast.info("🛡️ ¡El Escudo absorbió el fallo!");
         answerBannerRef.current = { text: "🛡️ ¡ESCUDO TE PROTEGIÓ!", color: "#38bdf8", timer: 2.0 };
@@ -1025,17 +1036,27 @@ function SmartEscapeGame() {
     resizeCanvas();
     window.addEventListener("resize", resizeCanvas);
 
+    let hudTimer = 0;
+
     const gameLoop = (timestamp: number) => {
       if (!lastTimeRef.current) lastTimeRef.current = timestamp;
       const dt = Math.min(0.08, (timestamp - lastTimeRef.current) / 1000);
       lastTimeRef.current = timestamp;
 
       if (!isPaused) {
-        // Actualizar temporizadores de Power-Ups
-        if (activeTurboTime > 0) setActiveTurboTime((t) => Math.max(0, t - dt));
-        if (activeFreezeTime > 0) setActiveFreezeTime((t) => Math.max(0, t - dt));
-        if (activeMagnetTime > 0) setActiveMagnetTime((t) => Math.max(0, t - dt));
-        if (playerStumbleTimerRef.current > 0) playerStumbleTimerRef.current = Math.max(0, playerStumbleTimerRef.current - dt);
+        // Actualizar temporizadores de Power-Ups en REFs
+        if (activeTurboTimeRef.current > 0) {
+          activeTurboTimeRef.current = Math.max(0, activeTurboTimeRef.current - dt);
+        }
+        if (activeFreezeTimeRef.current > 0) {
+          activeFreezeTimeRef.current = Math.max(0, activeFreezeTimeRef.current - dt);
+        }
+        if (activeMagnetTimeRef.current > 0) {
+          activeMagnetTimeRef.current = Math.max(0, activeMagnetTimeRef.current - dt);
+        }
+        if (playerStumbleTimerRef.current > 0) {
+          playerStumbleTimerRef.current = Math.max(0, playerStumbleTimerRef.current - dt);
+        }
 
         // Chequear si estamos en secuencia de captura
         if (catchingSequenceRef.current.active) {
@@ -1047,15 +1068,26 @@ function SmartEscapeGame() {
             return;
           }
         } else {
-          // 1. Interpolación de velocidad fluida y continua
+          // 1. Interpolación de velocidad fluida y continua (mínimo 1.0 para carrera ágil)
           currentSpeedRef.current += (targetSpeedRef.current - currentSpeedRef.current) * Math.min(1, dt * 3.5);
-          const speed = Math.max(0.75, currentSpeedRef.current);
-          const scrollSpeedPx = speed * 185 * dt;
+          const speed = Math.max(1.0, currentSpeedRef.current);
+          const scrollSpeedPx = speed * 210 * dt;
 
           // 2. Distancia recorrida
-          playerDistanceRef.current += speed * 16 * dt;
-          setPlayerDistanceMeters(Math.round(playerDistanceRef.current));
-          setTimeElapsed((t) => t + dt);
+          playerDistanceRef.current += speed * 18 * dt;
+
+          // 3. Sincronización periódica de métricas del HUD (throttled a 10Hz para máximo rendimiento y evitar parálisis)
+          hudTimer += dt;
+          if (hudTimer >= 0.1) {
+            hudTimer = 0;
+            setPlayerDistanceMeters(Math.round(playerDistanceRef.current));
+            setTimeElapsed((t) => t + 0.1);
+            setEnergyPercent(Math.round(energyRef.current));
+            setActiveTurboTime(activeTurboTimeRef.current);
+            setActiveFreezeTime(activeFreezeTimeRef.current);
+            setActiveMagnetTime(activeMagnetTimeRef.current);
+            setHasShield(hasShieldRef.current);
+          }
 
           const raceProgress = Math.min(1, playerDistanceRef.current / (lvlConfig.targetDistance || 1200));
 
@@ -1065,11 +1097,10 @@ function SmartEscapeGame() {
             return;
           }
 
-          // 3. FÍSICA Y CONSUMO DE COMBUSTIBLE NITRO
-          // El Nitro dura más tiempo (~23 segundos de carrera activa de 100% a 50%)
+          // 4. FÍSICA Y CONSUMO DE COMBUSTIBLE NITRO
+          // Consumo calibrado muy suave (0.45%/s) para que el Nitro dure más de 100 segundos
           if (!showQuestionCardRef.current) {
-            energyRef.current = Math.max(0, energyRef.current - 2.2 * dt);
-            setEnergyPercent(Math.round(energyRef.current));
+            energyRef.current = Math.max(0, energyRef.current - 0.45 * dt);
           }
 
           // REGLA: Preguntas automáticas con energía <= 50%. Si supera >= 80%, se ocultan para seguir jugando.
@@ -1090,7 +1121,7 @@ function SmartEscapeGame() {
             setShowQuestionCard(false);
           }
 
-          // 4. Física de Salto del Jugador
+          // 5. Física de Salto del Jugador
           if (isJumpingRef.current) {
             playerYOffsetRef.current += playerYVelRef.current * dt;
             playerYVelRef.current -= 950 * dt; // gravedad
@@ -1101,11 +1132,11 @@ function SmartEscapeGame() {
             }
           }
 
-          // 5. Interpolación de Movimiento Lateral (X)
+          // 6. Interpolación de Movimiento Lateral (X)
           playerXRef.current += (playerTargetXRef.current - playerXRef.current) * Math.min(1, dt * 9);
 
-          // 6. Efecto del Imán de Monedas
-          if (activeMagnetTime > 0) {
+          // 7. Efecto del Imán de Monedas
+          if (activeMagnetTimeRef.current > 0) {
             const pX = playerXRef.current;
             trackItems.forEach((it) => {
               if (it.type === "coin") {
@@ -1117,12 +1148,12 @@ function SmartEscapeGame() {
             });
           }
 
-          // 7. COMPORTAMIENTO DEL MONSTRUO:
+          // 8. COMPORTAMIENTO DEL MONSTRUO:
           // - Si Congelar activo: se retrasa fuertemente
           // - Con Nitro > 50%: Desaparece por completo fuera de pantalla (650px) para enfocarse en la carrera
           // - Con Nitro <= 50%: Se asoma amenazante detrás del jugador (190px)
           // - Si Nitro llega a 0%: Se abalanza a toda velocidad (0px) y liquida con ¡PUM!
-          if (activeFreezeTime > 0) {
+          if (activeFreezeTimeRef.current > 0) {
             targetMonsterDistRef.current = 680;
             relativeMonsterDistanceRef.current +=
               (targetMonsterDistRef.current - relativeMonsterDistanceRef.current) * Math.min(1, dt * 1.5);
@@ -1149,7 +1180,7 @@ function SmartEscapeGame() {
             }
           }
 
-          // 8. Screen Shake y Banner timer
+          // 9. Screen Shake y Banner timer
           if (screenShakeRef.current > 0) {
             screenShakeRef.current = Math.max(0, screenShakeRef.current - dt * 15);
           }
@@ -1158,7 +1189,7 @@ function SmartEscapeGame() {
             if (answerBannerRef.current.timer <= 0) answerBannerRef.current = null;
           }
 
-          // 9. Desplazamiento del Escenario (Parallax)
+          // 10. Desplazamiento del Escenario (Parallax)
           groundOffset = (groundOffset + scrollSpeedPx) % 60;
           bgHillsOffset = (bgHillsOffset + scrollSpeedPx * 0.3) % 400;
           cloudOffset = (cloudOffset + scrollSpeedPx * 0.1) % 600;
@@ -1171,7 +1202,7 @@ function SmartEscapeGame() {
             }
           });
 
-          // 10. Desplazamiento y Colisiones de Elementos del Camino
+          // 11. Desplazamiento y Colisiones de Elementos del Camino
           trackItems.forEach((item) => {
             item.x -= scrollSpeedPx;
 
@@ -1183,33 +1214,33 @@ function SmartEscapeGame() {
                 playSfx("coin");
                 setCollectedCoins((c) => c + 1);
                 setGameXp((xp) => xp + 15);
+                energyRef.current = Math.min(100, energyRef.current + 1.0);
                 item.x = -150;
               } else if (item.type === "nitro") {
                 playSfx("turbo");
-                energyRef.current = Math.min(100, energyRef.current + 10);
-                setEnergyPercent(Math.round(energyRef.current));
-                setActiveTurboTime(4.0);
+                energyRef.current = Math.min(100, energyRef.current + 25);
+                activeTurboTimeRef.current = 4.0;
                 targetSpeedRef.current = 1.45;
                 targetMonsterDistRef.current = Math.min(700, targetMonsterDistRef.current + 120);
-                answerBannerRef.current = { text: "🚀 ¡TURBO NITRO +10%! ⚡", color: "#38bdf8", timer: 2.2 };
+                answerBannerRef.current = { text: "🚀 ¡TURBO NITRO +25%! ⚡", color: "#38bdf8", timer: 2.2 };
                 item.x = -150;
                 setTimeout(() => {
                   targetSpeedRef.current = 1.0;
                 }, 4000);
               } else if (item.type === "shield") {
                 playSfx("powerup");
-                setHasShield(true);
+                hasShieldRef.current = true;
                 answerBannerRef.current = { text: "🛡️ ¡ESCUDO DE PROTECCIÓN ACTIVADO!", color: "#34d399", timer: 2.2 };
                 item.x = -150;
               } else if (item.type === "freeze") {
                 playSfx("correct");
-                setActiveFreezeTime(5.0);
+                activeFreezeTimeRef.current = 5.0;
                 targetMonsterDistRef.current = Math.min(700, targetMonsterDistRef.current + 140);
                 answerBannerRef.current = { text: "❄️ ¡ENEMIGO CONGELADO POR 5s!", color: "#67e8f9", timer: 2.2 };
                 item.x = -150;
               } else if (item.type === "magnet") {
                 playSfx("powerup");
-                setActiveMagnetTime(6.0);
+                activeMagnetTimeRef.current = 6.0;
                 answerBannerRef.current = { text: "🧲 ¡IMÁN DE MONEDAS ACTIVO!", color: "#f472b6", timer: 2.2 };
                 item.x = -150;
               } else {
@@ -1231,29 +1262,24 @@ function SmartEscapeGame() {
                   item.x = -150;
                 } else if (playerStumbleTimerRef.current <= 0) {
                   // Colisión con obstáculo
-                  if (hasShield) {
-                    setHasShield(false);
+                  if (hasShieldRef.current) {
+                    hasShieldRef.current = false;
                     playSfx("wrong");
                     answerBannerRef.current = { text: "🛡️ ¡ESCUDO ABSORBIÓ EL IMPACTO!", color: "#38bdf8", timer: 1.8 };
                     screenShakeRef.current = 4;
                     item.x = -150;
                   } else {
-                    playerStumbleTimerRef.current = 0.8;
+                    playerStumbleTimerRef.current = 0.4;
                     playSfx("wrong");
-                    targetSpeedRef.current = 0.65;
-                    energyRef.current = Math.max(0, energyRef.current - 12);
-                    setEnergyPercent(Math.round(energyRef.current));
-                    setLives((l) => Math.max(0, l - 1));
-
-                    targetMonsterDistRef.current = Math.max(25, targetMonsterDistRef.current - 50);
-                    relativeMonsterDistanceRef.current = Math.max(25, relativeMonsterDistanceRef.current - 40);
-                    screenShakeRef.current = 9;
-                    answerBannerRef.current = { text: "💥 ¡CHOQUE CON OBSTÁCULO! 👾 EL ENEMIGO SE ACERCA", color: "#ef4444", timer: 1.8 };
+                    targetSpeedRef.current = 0.95;
+                    energyRef.current = Math.max(0, energyRef.current - 3);
+                    screenShakeRef.current = 6;
+                    answerBannerRef.current = { text: "⚠️ ¡CUIDADO CON EL OBSTÁCULO! SALTA CON ⬆️", color: "#f59e0b", timer: 1.5 };
                     item.x = -150;
 
                     setTimeout(() => {
                       targetSpeedRef.current = 1.0;
-                    }, 1200);
+                    }, 600);
                   }
                 }
               }
@@ -1268,6 +1294,7 @@ function SmartEscapeGame() {
           });
         }
       }
+
 
       // ==========================================
       // RENDERIZADO DEL VIDEOJUEGO (60 FPS)
@@ -1670,7 +1697,7 @@ function SmartEscapeGame() {
       // 👾 DIBUJAR AL PERSEGUIDOR (SOLO SI ESTÁ EN PANTALLA)
       // ==========================================
       if (monsterScreenX > -90 && monsterScreenX < w + 80) {
-        const monsterStride = Math.sin(timestamp * 0.018 * (activeFreezeTime > 0 ? 0.3 : currentSpeedRef.current)) * 8;
+        const monsterStride = Math.sin(timestamp * 0.018 * (activeFreezeTimeRef.current > 0 ? 0.3 : currentSpeedRef.current)) * 8;
         const monsterBob = Math.abs(Math.sin(timestamp * 0.018)) * 4;
 
         ctx.save();
@@ -1678,7 +1705,7 @@ function SmartEscapeGame() {
         ctx.translate(monsterScreenX + catchLungeX, roadY - monsterBob - (isCatching ? 15 : 0));
 
         // Aura de Hielo si está congelado
-        if (activeFreezeTime > 0) {
+        if (activeFreezeTimeRef.current > 0) {
           ctx.fillStyle = "rgba(6, 182, 212, 0.35)";
           ctx.beginPath();
           ctx.arc(0, -30, 36, 0, Math.PI * 2);
@@ -1692,13 +1719,13 @@ function SmartEscapeGame() {
         ctx.fill();
 
         // Piernas del Monstruo
-        ctx.fillStyle = activeFreezeTime > 0 ? "#0891b2" : theme.monsterSecondary;
+        ctx.fillStyle = activeFreezeTimeRef.current > 0 ? "#0891b2" : theme.monsterSecondary;
         ctx.fillRect(-12, -18 + monsterStride, 8, 18);
         ctx.fillRect(4, -18 - monsterStride, 8, 18);
 
         // Cuerpo del Monstruo
-        ctx.fillStyle = activeFreezeTime > 0 ? "#22d3ee" : theme.monsterColor;
-        ctx.shadowColor = activeFreezeTime > 0 ? "#06b6d4" : theme.monsterColor;
+        ctx.fillStyle = activeFreezeTimeRef.current > 0 ? "#22d3ee" : theme.monsterColor;
+        ctx.shadowColor = activeFreezeTimeRef.current > 0 ? "#06b6d4" : theme.monsterColor;
         ctx.shadowBlur = isCatching ? 30 : 15;
         ctx.beginPath();
         ctx.roundRect(-20, -50, 40, 36, 10);
@@ -1706,7 +1733,7 @@ function SmartEscapeGame() {
         ctx.shadowBlur = 0;
 
         // Cuernos / Espinas
-        ctx.fillStyle = activeFreezeTime > 0 ? "#a5f3fc" : "#f59e0b";
+        ctx.fillStyle = activeFreezeTimeRef.current > 0 ? "#a5f3fc" : "#f59e0b";
         ctx.beginPath();
         ctx.moveTo(-16, -50);
         ctx.lineTo(-24, -64);
@@ -1717,7 +1744,7 @@ function SmartEscapeGame() {
         ctx.fill();
 
         // Brazos y Garras
-        ctx.fillStyle = activeFreezeTime > 0 ? "#0891b2" : theme.monsterSecondary;
+        ctx.fillStyle = activeFreezeTimeRef.current > 0 ? "#0891b2" : theme.monsterSecondary;
         ctx.fillRect(8, isCatching ? -50 : -40, isCatching ? 26 : 18, 8);
         ctx.fillStyle = "#ffffff";
         ctx.beginPath();
@@ -1732,7 +1759,7 @@ function SmartEscapeGame() {
         ctx.arc(-4, -40, 6, 0, Math.PI * 2);
         ctx.arc(8, -40, 6, 0, Math.PI * 2);
         ctx.fill();
-        ctx.fillStyle = activeFreezeTime > 0 ? "#0284c7" : "#ef4444";
+        ctx.fillStyle = activeFreezeTimeRef.current > 0 ? "#0284c7" : "#ef4444";
         ctx.beginPath();
         ctx.arc(-3, -40, 3.5, 0, Math.PI * 2);
         ctx.arc(9, -40, 3.5, 0, Math.PI * 2);
@@ -1760,7 +1787,7 @@ function SmartEscapeGame() {
       // ==========================================
       // 🏃 DIBUJAR AL PERSONAJE JUGADOR (CORREDOR)
       // ==========================================
-      const runCycle = timestamp * 0.02 * Math.max(0.75, currentSpeedRef.current);
+      const runCycle = timestamp * 0.022 * Math.max(1.0, currentSpeedRef.current);
       const legOffset = isCatching ? 0 : Math.sin(runCycle) * 10;
       const armOffset = isCatching ? 0 : Math.sin(runCycle + Math.PI) * 8;
       const playerBob = isCatching ? 0 : Math.abs(Math.sin(runCycle)) * 3;
@@ -1788,7 +1815,7 @@ function SmartEscapeGame() {
       ctx.fill();
 
       // Efecto de Escudo Activo
-      if (hasShield && !isCatching) {
+      if (hasShieldRef.current && !isCatching) {
         ctx.strokeStyle = "rgba(56, 189, 248, 0.85)";
         ctx.fillStyle = "rgba(56, 189, 248, 0.18)";
         ctx.lineWidth = 2.5;
@@ -1799,7 +1826,7 @@ function SmartEscapeGame() {
       }
 
       // Efecto de Imán Activo (Chispas)
-      if (activeMagnetTime > 0 && !isCatching) {
+      if (activeMagnetTimeRef.current > 0 && !isCatching) {
         ctx.strokeStyle = "rgba(244, 114, 182, 0.8)";
         ctx.lineWidth = 1.5;
         const magAngle = timestamp * 0.008;
@@ -1810,7 +1837,7 @@ function SmartEscapeGame() {
       }
 
       // Estela de Turbo Fuego
-      if (activeTurboTime > 0 && !isCatching) {
+      if (activeTurboTimeRef.current > 0 && !isCatching) {
         ctx.fillStyle = "#f97316";
         ctx.beginPath();
         ctx.moveTo(-16, -26);
@@ -1934,7 +1961,7 @@ function SmartEscapeGame() {
       window.removeEventListener("resize", resizeCanvas);
       if (animFrameIdRef.current) cancelAnimationFrame(animFrameIdRef.current);
     };
-  }, [screen, isPaused, selectedWorld, selectedLevel, activeFreezeTime, activeTurboTime, activeMagnetTime, hasShield]);
+  }, [screen, isPaused, selectedWorld, selectedLevel]);
 
   const handleBuyItem = (item: CustomizationItem) => {
     if (coinsBalance < item.cost) {
