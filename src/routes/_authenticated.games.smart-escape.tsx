@@ -1083,8 +1083,11 @@ function SmartEscapeGame() {
           }
 
           // 3. FÍSICA Y CONSUMO DE COMBUSTIBLE NITRO
-          energyRef.current = Math.max(0, energyRef.current - 2.5 * dt);
-          setEnergyPercent(Math.round(energyRef.current));
+          // El combustible Nitro se consume visible y continuamente a 6.5%/s durante la carrera libre
+          if (!showQuestionCardRef.current) {
+            energyRef.current = Math.max(0, energyRef.current - 6.5 * dt);
+            setEnergyPercent(Math.round(energyRef.current));
+          }
 
           // REGLA: Preguntas automáticas SÓLO con energía < 30%. Si supera >= 80%, se ocultan para seguir jugando.
           if (
@@ -1197,17 +1200,15 @@ function SmartEscapeGame() {
                 playSfx("coin");
                 setCollectedCoins((c) => c + 1);
                 setGameXp((xp) => xp + 15);
-                energyRef.current = Math.min(100, energyRef.current + 1.5);
-                setEnergyPercent(Math.round(energyRef.current));
                 item.x = -150;
               } else if (item.type === "nitro") {
                 playSfx("turbo");
-                energyRef.current = Math.min(100, energyRef.current + 25);
+                energyRef.current = Math.min(100, energyRef.current + 10);
                 setEnergyPercent(Math.round(energyRef.current));
                 setActiveTurboTime(4.0);
                 targetSpeedRef.current = 1.45;
                 targetMonsterDistRef.current = Math.min(700, targetMonsterDistRef.current + 120);
-                answerBannerRef.current = { text: "🚀 ¡TURBO NITRO +25%! ⚡", color: "#38bdf8", timer: 2.2 };
+                answerBannerRef.current = { text: "🚀 ¡TURBO NITRO +10%! ⚡", color: "#38bdf8", timer: 2.2 };
                 item.x = -150;
                 setTimeout(() => {
                   targetSpeedRef.current = 1.0;
@@ -1243,8 +1244,6 @@ function SmartEscapeGame() {
 
                 if (playerYOffsetRef.current > reqH) {
                   // Salto exitoso sobre el obstáculo
-                  energyRef.current = Math.min(100, energyRef.current + 3);
-                  setEnergyPercent(Math.round(energyRef.current));
                   setGameXp((xp) => xp + 20);
                   item.x = -150;
                 } else if (playerStumbleTimerRef.current <= 0) {
@@ -1259,7 +1258,7 @@ function SmartEscapeGame() {
                     playerStumbleTimerRef.current = 0.8;
                     playSfx("wrong");
                     targetSpeedRef.current = 0.65;
-                    energyRef.current = Math.max(0, energyRef.current - 10);
+                    energyRef.current = Math.max(0, energyRef.current - 12);
                     setEnergyPercent(Math.round(energyRef.current));
                     setLives((l) => Math.max(0, l - 1));
 
